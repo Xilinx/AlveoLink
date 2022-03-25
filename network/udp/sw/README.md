@@ -1,4 +1,6 @@
-# This folder contains software code to build netConfig.exe and arpDisc.exe. netConfig.exe is used to configure UDP-based network system. arpDisc.exe is used to run ARP discovery on each of the Alveo card.
+# Introduction
+
+This folder contains software code to build netConfig.exe and arpDisc.exe. netConfig.exe is used to configure UDP-based network system. arpDisc.exe is used to run ARP discovery on each of the Alveo card.
 
 # Build steps
 
