@@ -14,8 +14,8 @@
  * limitations under the License.
 */
 
-#include "common/xNativeFPGA.hpp"
-#include "common/xNativeFPGAExpection.hpp"
+#include "xNativeFPGA.hpp"
+#include "xNativeFPGAExpection.hpp"
 
 namespace AlveoLink {
 namespace common {
