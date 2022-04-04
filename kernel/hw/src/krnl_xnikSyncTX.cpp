@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "hw/interface.hpp"
+#include "interface.hpp"
 #include "xnikSync.hpp"
 
-typedef typename AlveoLink::kernel::HopCtrlPkt<XANS_netDataBits, XANS_destBits>::TypeAXIS UdpPktType;
+typedef typename AlveoLink::kernel::HopCtrlPkt<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
 
-extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<XANS_netDataBits> >& p_nhop2xnikStr,
-                                 hls::stream<ap_uint<XANS_netDataBits> >& p_rxStr,
-                                 hls::stream<ap_uint<XANS_netDataBits> >& p_txStr,
+extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<AL_netDataBits> >& p_nhop2xnikStr,
+                                 hls::stream<ap_uint<AL_netDataBits> >& p_rxStr,
+                                 hls::stream<ap_uint<AL_netDataBits> >& p_txStr,
                                  hls::stream<UdpPktType>& p_outStr) {
     AXIS(p_nhop2xnikStr)
     AXIS(p_rxStr)
@@ -30,6 +30,6 @@ extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<XANS_netDataBits> >& p_nhop2
     AXIS(p_outStr)
     AP_CTRL_NONE(return)
 
-    AlveoLink::kernel::xnikSync_TX<XANS_netDataBits, XANS_destBits> l_xnikSyncTX;
+    AlveoLink::kernel::xnikSync_TX<AL_netDataBits, AL_destBits> l_xnikSyncTX;
     l_xnikSyncTX.process(p_nhop2xnikStr,p_rxStr,p_txStr,p_outStr);
 }

@@ -28,13 +28,13 @@
 #include "manager.hpp"
 
 
-constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
+constexpr unsigned int t_NetDataBytes = XANS_netDataBits / 8;
 
 int main(int argc, char** argv) {
     if (argc !=4  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
         std::cout << argv[0] << " <ip_file> <flushCounter> <microSeconds>" << std::endl;
-        std::cout << "manager.exe -help";
+        std::cout << "server.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
     }
@@ -42,9 +42,12 @@ int main(int argc, char** argv) {
     std::string l_ipFileName = argv[l_idx++];
     int l_flushCounter = atoi(argv[l_idx++]);
     int l_microSeconds = atoi(argv[l_idx++]);
-    std::cout << "manager is starting..."<< std::endl;
-    AlveoLink::kernel::Manager<t_NetDataBytes> l_manager(l_ipFileName);
-    double l_timeSec = l_manager.process(l_flushCounter, l_microSeconds);
-    std::cout << "INFO: run time = " << l_timeSec << " seconds" << std::endl;
+    
+    std::cout << "Please enter ctrl+c to stop the manager." << std::endl;
+    xilinx_apps::graph_sync::Manager<t_NetDataBytes> l_manager(l_ipFileName);
+    do {
+        double l_timeMs = l_manager.process(l_flushCounter, l_microSeconds);
+        std::cout << "INFO: system run time = " << l_timeMs << " ms" << std::endl;
+    } while (1);
     return EXIT_SUCCESS;
 }
