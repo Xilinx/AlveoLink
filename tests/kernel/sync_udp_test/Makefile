@@ -117,16 +117,20 @@ endif
 #Inclue Required Host Source Files
 ifeq ($(TARGET),hw)
 HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_udp_test/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
+SERVER_SRCS += $(XFLIB_DIR)/tests/kernel/sync_udp_test/host/server.cpp
 endif
 CXXFLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16 
-CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_udp_test/host -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/common/sw/include
+CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_udp_test/host -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
-CXXFLAGS += -g 
+CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
 EXE_NAME := host.exe
+SERVER_EXE_NAME := server.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
+SERVER_EXE_FILE := $(BUILD_DIR)/$(SERVER_EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
+SERVER_EXE_FILE_DEPS := $(SERVER_SRCS) $(SERVER_EXE_FILE_DEPS)
 
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16
@@ -185,6 +189,9 @@ $(EXE_FILE): $(EXE_FILE_DEPS) |  check_xrt
 	mkdir -p $(BUILD_DIR)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
+$(SERVER_EXE_FILE): $(SERVER_EXE_FILE_DEPS)
+	mkdir -p $(BUILD_DIR)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 else
 $(EXE_FILE): $(EXE_FILE_DEPS) |  check_sysroot
 	mkdir -p $(BUILD_DIR)
@@ -254,9 +261,10 @@ else
 all:  check_vpp check_platform check_sysroot $(EXE_FILE) $(BINARY_CONTAINERS) emconfig sd_card
 endif
 
-.PHONY: host
+.PHONY: host server
 ifeq ($(HOST_ARCH), x86)
 host:  check_xrt $(EXE_FILE)
+server: $(SERVER_EXE_FILE)
 else
 host:  check_sysroot $(EXE_FILE)
 endif
@@ -274,7 +282,7 @@ endif
 
 ############################## Cleaning Rules ##############################
 cleanh:
-	-$(RMDIR) $(EXE_FILE) vitis_* TempConfig system_estimate.xtxt *.rpt .run/
+	-$(RMDIR) $(EXE_FILE) $(SERVER_EXE_FILE)  vitis_* TempConfig system_estimate.xtxt *.rpt .run/
 	-$(RMDIR) src/*.ll _xocc_* .Xil dltmp* xmltmp* *.log *.jou *.wcfg *.wdb sample_link.ini sample_compile.ini obj*  bin* *.csv *.jpg *.jpeg *.png
 
 cleank:

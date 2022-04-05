@@ -19,7 +19,7 @@ on db4, navigate to tests/kernel/sync_udp_test
 ../../../network/udp/scripts/run_netConfig.sh ./config_1_3.txt ./ip.txt
 ```
 
-## 4. compile test host code and manager code
+## 4. compile test host code and server code
 
 ```sh
 on db4, navigate to tests/kernel/sync_udp_test
@@ -31,7 +31,9 @@ on db4, navigate to tests/kernel/sync_udp_test
 
 ```sh
 on db4,  navigate to tests/kernel/sync_udp_test and run
-../../../kernel/sw/build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/manager.exe ./ip.txt 2 100
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/server.exe ./ip.txt 2 100
+
+run following commands repeatively without restarting server:
 
 on db1, navigate to tests/kernel/sync_udp_test and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16537448 4 50

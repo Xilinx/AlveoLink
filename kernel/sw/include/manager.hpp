@@ -85,7 +85,7 @@ class Manager {
             return (p_pkt[2] >> 4);
         }
         uint16_t getSrcId(const std::vector<uint8_t>& p_pkt) {
-            return(p_pkt[4]<<8 + p_pkt[3]);
+            return((p_pkt[4]<<8) + p_pkt[3]);
         }
         bool hasRecAllDevIds(const std::vector<uint16_t>& p_devIds){
             bool l_res = true;

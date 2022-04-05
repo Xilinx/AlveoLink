@@ -5,11 +5,9 @@
 CUR_DIR=$(pwd)
 AlveoLinkPath=$(awk 'sub(/AlveoLink.*/, "")' <<< "$CUR_DIR")AlveoLink
 
-#make manager
-cd $AlveoLinkPath/kernel/sw
+#make server 
 make clean TARGET=hw
-make TARGET=hw
-cd $CUR_DIR
+make server TARGET=hw
 
 while IFS=' ' read -r hostname ipAddr xclbin devId
 do

@@ -28,7 +28,7 @@
 #include "manager.hpp"
 
 
-constexpr unsigned int t_NetDataBytes = XANS_netDataBits / 8;
+constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 
 int main(int argc, char** argv) {
     if (argc !=4  || (std::string(argv[1]) == "-help")) {
@@ -44,10 +44,10 @@ int main(int argc, char** argv) {
     int l_microSeconds = atoi(argv[l_idx++]);
     
     std::cout << "Please enter ctrl+c to stop the manager." << std::endl;
-    xilinx_apps::graph_sync::Manager<t_NetDataBytes> l_manager(l_ipFileName);
+    AlveoLink::kernel::Manager<t_NetDataBytes> l_manager(l_ipFileName);
     do {
-        double l_timeMs = l_manager.process(l_flushCounter, l_microSeconds);
-        std::cout << "INFO: system run time = " << l_timeMs << " ms" << std::endl;
+        double l_seconds = l_manager.process(l_flushCounter, l_microSeconds);
+        std::cout << "INFO: system run time = " << l_seconds << " seconds" << std::endl;
     } while (1);
     return EXIT_SUCCESS;
 }
