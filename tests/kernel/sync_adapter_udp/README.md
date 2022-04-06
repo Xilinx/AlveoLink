@@ -1,4 +1,4 @@
-# Test xnik kernel with two cards sending and receiving data to and from each other
+# Test xnik kernel + adapter with two cards sending and receiving data to and from each other
 ## 1. set up Vitis 2021.2_released environemnts
 
 ## 2. build hw
@@ -36,8 +36,8 @@ on db4,  navigate to tests/kernel/sync_udp_test and run
 run following commands repeatively without restarting server:
 
 on db1, navigate to tests/kernel/sync_udp_test and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16537448 4 50
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16 4 50
 
 on db3, navigate to tests/kernel/sync_udp_test and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/host.exe ./xsj-dxgradb03_0_sockets.txt ./ip.txt 16537448 4 50
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/host.exe ./xsj-dxgradb03_0_sockets.txt ./ip.txt 16 4 50
 ```

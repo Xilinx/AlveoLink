@@ -139,7 +139,7 @@ class Manager {
                 l_cliaddrs[i].sin_port = htons(PORT);
 
                 std::vector<uint8_t> l_sendPkt(t_NetDataBytes);
-                l_sendPkt[0] = i;
+                l_sendPkt[0] = 0;
                 l_sendPkt[1] = 0;
                 l_sendPkt[2] = p_pktType;
                 l_sendPkt[2] = l_sendPkt[2] << 4;
