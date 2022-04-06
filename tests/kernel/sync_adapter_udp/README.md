@@ -4,7 +4,7 @@
 ## 2. build hw
 
 ```sh
-navigate to tests/kernel/sync_udp_test
+navigate to tests/kernel/sync_adapter_udp
 
 make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=0
 ```
@@ -12,7 +12,7 @@ make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx
 ## 3. compile and run netConfig 
 
 ```sh
-on db4, navigate to tests/kernel/sync_udp_test
+on db4, navigate to tests/kernel/sync_adapter_udp
 
 ../../../network/udp/scripts/run_compile.sh ./config_1_3.txt
 
@@ -22,7 +22,7 @@ on db4, navigate to tests/kernel/sync_udp_test
 ## 4. compile test host code and server code
 
 ```sh
-on db4, navigate to tests/kernel/sync_udp_test
+on db4, navigate to tests/kernel/sync_adapter_udp
 
 ./run_compile.sh ./config_1_3.txt
 ```
@@ -30,14 +30,14 @@ on db4, navigate to tests/kernel/sync_udp_test
 ## 5. run tests
 
 ```sh
-on db4,  navigate to tests/kernel/sync_udp_test and run
+on db4,  navigate to tests/kernel/sync_adapter_udp and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb04/server.exe ./ip.txt 2 100
 
 run following commands repeatively without restarting server:
 
-on db1, navigate to tests/kernel/sync_udp_test and run
+on db1, navigate to tests/kernel/sync_adapter_udp and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16 4 50
 
-on db3, navigate to tests/kernel/sync_udp_test and run
+on db3, navigate to tests/kernel/sync_adapter_udp and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/host.exe ./xsj-dxgradb03_0_sockets.txt ./ip.txt 16 4 50
 ```
