@@ -33,10 +33,11 @@ typedef enum {
 } XNIK_PKT_TYPE;
 
 template <unsigned int t_DataBits,
-          unsigned int t_DestBits>
+          unsigned int t_DestBits,
+          unsigned int t_UserBits=1>
 class PktUDP {
     public:
-        typedef ap_axiu<t_DataBits, 0, 1, t_DestBits> TypeAXIS;
+        typedef ap_axiu<t_DataBits, t_UserBits, 1, t_DestBits> TypeAXIS;
     public:
         PktUDP() {
 #pragma HLS INLINE

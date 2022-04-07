@@ -117,7 +117,7 @@ endif
 #Inclue Required Host Source Files
 HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 SERVER_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/server.cpp
-CXXFLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=0 -D AL_destBits=16 
+CXXFLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16 
 CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 

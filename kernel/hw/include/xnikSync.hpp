@@ -237,11 +237,11 @@ LOOP_XNIK2NHOP:
     
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
-    class xnikSync_manager {//simple manager only for testing
+    class xnikSync_dummyManager {//simple manager only for hw_emu
         public:
             typedef typename HopCtrlPkt<t_NetDataBits, t_DestBits>::TypeAXIS UdpPktType;
         public:
-            xnikSync_manager() {
+            xnikSync_dummyManager() {
             }
             void process(hls::stream<UdpPktType>& p_inStr,
                          hls::stream<UdpPktType>& p_outStr) {
@@ -249,16 +249,19 @@ LOOP_XNIK2NHOP:
 LOOP_MANAGER:
                     while (!p_inStr.empty()) {
 #pragma HLS PIPELINE II=1
-                        if (l_ctrlPkt.readAxisNB(p_inStr)) {
-                            ap_uint<t_DestBits> l_dest = l_ctrlPkt.getDest();
-                            if (l_ctrlPkt.isDoneWork() && (l_dest(7,0) == 0)) {
-                                l_ctrlPkt.setType(PKT_TYPE::query_status);
-                            }
-                            else if (l_ctrlPkt.isDoneNothing() && (l_dest(7,0) == 0)) {
-                                l_ctrlPkt.setType(PKT_TYPE::terminate);
-                            }
-                            l_ctrlPkt.writeAxis(p_outStr);
+                        UdpPktType l_val = p_inStr.read();
+                        l_ctrlPkt.setCtrlPkt(l_val.data);
+                        ap_uint<t_DestBits> l_pktDest = l_val.dest;
+
+                        ap_uint<t_DestBits> l_typeSeq = l_ctrlPkt.getDest();
+                        if (l_ctrlPkt.isDoneWork() && (l_typeSeq(7,0) == 0)) {
+                            l_ctrlPkt.setType(PKT_TYPE::query_status);
                         }
+                        else if (l_ctrlPkt.isDoneNothing() && (l_typeSeq(7,0) == 0)) {
+                            l_ctrlPkt.setType(PKT_TYPE::terminate);
+                        }
+                        l_val.data = l_ctrlPkt.getCtrlPkt();
+                        p_outStr.write(l_val); 
                     }
             }
     };

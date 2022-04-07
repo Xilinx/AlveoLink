@@ -36,7 +36,7 @@ on db4,  navigate to tests/kernel/sync_adapter_udp and run
 run following commands repeatively without restarting server:
 
 on db1, navigate to tests/kernel/sync_adapter_udp and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16 4 50
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe ./xsj-dxgradb01_0_sockets.txt ./ip.txt 16 4 50 
 
 on db3, navigate to tests/kernel/sync_adapter_udp and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/host.exe ./xsj-dxgradb03_0_sockets.txt ./ip.txt 16 4 50
@@ -45,8 +45,8 @@ on db3, navigate to tests/kernel/sync_adapter_udp and run
 # Run hw_emu on db4
 
 ```sh
-make -f hw_emu.mk xclbin TARGET=hw_emu
-make -f hw_emu.mk emconfig TARGET=hw_emu
+make -f hw_emu.mk xclbin TARGET=hw_emu DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm
 make -f hw_emu.mk emconfig TARGET=hw_emu PLATFORM_REPO_PATHS=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms
-XCL_EMULATION_MODE=hw_emu ./build_dir.hw_emu.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb04/host.exe ./sockets.txt ./ip.txt 16 4 50
+make -f hw_emu.mk host TARGET=hw_emu PLATFORM_REPO_PATHS=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms
+XCL_EMULATION_MODE=hw_emu ./build_dir.hw_emu.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb04/host.exe ./sockets.txt ./ip.txt 128 8 1 2
 ```

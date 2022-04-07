@@ -18,7 +18,7 @@
 
 typedef typename AlveoLink::kernel::HopCtrlPkt<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
-AlveoLink::kernel::xnikSync_manager<AL_netDataBits, AL_destBits> l_xnikSyncManager;
+AlveoLink::kernel::xnikSync_dummyManager<AL_netDataBits, AL_destBits> l_xnikSyncManager;
 
 extern "C" void krnl_dummyManager(hls::stream<UdpPktType>& p_inStr,
                                  hls::stream<UdpPktType>& p_outStr) {

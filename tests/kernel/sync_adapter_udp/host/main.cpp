@@ -33,9 +33,9 @@ constexpr unsigned int t_DestBytes = AL_destBits / 8;
 
 
 int main(int argc, char** argv) {
-    if (argc !=6  || (std::string(argv[1]) == "-help")) {
+    if (argc <6  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <socket_file> <ip_file> <numPkts> <batchPkts> <timeOutCycles>" << std::endl;
+        std::cout << argv[0] << " <socket_file> <ip_file> <numPkts> <batchPkts> <timeOutCycles> [num_of_runs]" << std::endl;
         std::cout << "xnikSyncTest.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
@@ -47,7 +47,10 @@ int main(int argc, char** argv) {
     unsigned int l_numPkts = atoi(argv[l_idx++]);
     unsigned int l_batchPkts = atoi(argv[l_idx++]) - 1;
     unsigned int l_timeOutCycles = atoi(argv[l_idx++]) - 1;
-
+    unsigned int l_numRuns = 1;
+    if (argc > 6) {
+        l_numRuns = atoi(argv[l_idx++]);
+    }
     
     std::string l_hostName;
     std::string l_xclbinName;
@@ -122,8 +125,11 @@ int main(int argc, char** argv) {
         std::memcpy(l_transBuf + i*t_NetDataBytes, l_pkt.data(), t_NetDataBytes); 
     }
     l_basicHost.sendBO();
-    l_basicHost.runCU(l_myID, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles);
-    uint8_t* l_resBuf = (uint8_t*)(l_basicHost.getRes());
+    uint8_t* l_resBuf;
+    for (unsigned int i=0; i<l_numRuns; ++i) {
+        l_basicHost.runCU(l_myID, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles);
+        l_resBuf = (uint8_t*)(l_basicHost.getRes());
+    }
 
     int l_dataErr = 0;
     for (unsigned int i=0; i<l_numPkts; ++i) {
