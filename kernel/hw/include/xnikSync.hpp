@@ -250,10 +250,11 @@ LOOP_MANAGER:
                     while (!p_inStr.empty()) {
 #pragma HLS PIPELINE II=1
                         if (l_ctrlPkt.readAxisNB(p_inStr)) {
-                            if (l_ctrlPkt.isDoneWork()) {
+                            ap_uint<t_DestBits> l_dest = l_ctrlPkt.getDest();
+                            if (l_ctrlPkt.isDoneWork() && (l_dest(7,0) == 0)) {
                                 l_ctrlPkt.setType(PKT_TYPE::query_status);
                             }
-                            else if (l_ctrlPkt.isDoneNothing()) {
+                            else if (l_ctrlPkt.isDoneNothing() && (l_dest(7,0) == 0)) {
                                 l_ctrlPkt.setType(PKT_TYPE::terminate);
                             }
                             l_ctrlPkt.writeAxis(p_outStr);

@@ -101,6 +101,7 @@ BLOCK_TRAN_DATA:
                     m_pktLastBuf[l_dest][l_nextSeqNo] = l_xnikPkt.getLast();
                 }
                 else {
+                    l_xnikPkt.setTypeSeq(0);
                     l_xnikPkt.write(p_outPktStr);
                 }
             }

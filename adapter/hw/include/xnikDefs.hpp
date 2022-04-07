@@ -26,7 +26,7 @@ namespace AlveoLink {
 namespace adapter {
 
 typedef enum {
-    DATA,
+    DATA=0,
     ACK,
     RECEIVED,
     RETRAN
@@ -187,6 +187,7 @@ class AckPkt : public PktType<t_TypeBits,
             ap_uint<t_AckPktBits> l_dat;
             l_dat.range(t_TypeSeqBits-1, 0) = this->getTypeSeq();
             l_dat.range(t_AckPktBits-1, t_TypeSeqBits) = m_dest;
+            l_dat.range(t_NetDataBits-1, t_AckPktBits) = 0;
             p_ackStr.write(l_dat);            
         }
         void send(hls::stream<AxisPktType>& p_axisStr) {
@@ -237,6 +238,10 @@ class PktXNIK : public PktUDP<t_NetDataBits,
 #pragma HLS INLINE
             return (m_pktType.getSeqNo());
         }
+        void setTypeSeq(const ap_uint<t_TypeSeqBits> p_typeSeq) {
+#pragma HLS INLINE
+            m_pktType.setTypeSeq(p_typeSeq);
+        }
         void read(hls::stream<AxisPktType>& p_str) {
 #pragma HLS INLINE
             p_str.read(this->m_pkt);
@@ -254,6 +259,8 @@ class PktXNIK : public PktUDP<t_NetDataBits,
         }
         void write(hls::stream<AxisPktType>& p_str) {
 #pragma HLS INLINE
+            this->m_pkt.data(t_TypeSeqBits-1, 0) = m_pktType.getTypeSeq();
+            this->m_pkt.data(t_GraphPktBits-1, t_DestBits+4) = m_graphPktType;
             p_str.write(this->m_pkt);
         }
         void sendData(ap_uint<t_DestBits> p_dest, ap_uint<t_NetDataBits> p_dat, ap_uint<1> p_last,
