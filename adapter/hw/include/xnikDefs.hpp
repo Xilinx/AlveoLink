@@ -29,7 +29,8 @@ typedef enum {
     DATA=0,
     ACK,
     RECEIVED,
-    RETRAN
+    RETRAN,
+    QUERY
 } XNIK_PKT_TYPE;
 
 template <unsigned int t_DataBits,
@@ -137,6 +138,10 @@ class PktType {
 #pragma HLS INLINE
             return (m_type == XNIK_PKT_TYPE::RETRAN);
         }
+        bool isQuery() {
+#pragma HLS INLINE
+            return (m_type == XNIK_PKT_TYPE::QUERY);
+        }
     protected:
         ap_uint<t_TypeBits> m_type;
         ap_uint<t_SeqBits> m_seqNo;
@@ -234,6 +239,10 @@ class PktXNIK : public PktUDP<t_NetDataBits,
         bool isAck() {
 #pragma HLS INLINE
             return (m_pktType.isAck());
+        }
+        bool isQuery() {
+#pragma HLS INLINE
+            return (m_pktType.isQuery());
         }
         ap_uint<t_SeqBits> getSeqNo() {
 #pragma HLS INLINE
