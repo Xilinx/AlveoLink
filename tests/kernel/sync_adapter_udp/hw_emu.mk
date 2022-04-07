@@ -145,6 +145,7 @@ VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_tx += --hls.clock 300000000:krnl_xnik_tx
 VPP_FLAGS_krnl_xnik_rx += --hls.clock 300000000:krnl_xnik_rx
 VPP_FLAGS_krnl_dummyManager += --hls.clock 300000000:krnl_dummyManager
+VPP_FLAGS_krnl_pktDropper += --hls.clock 300000000:krnl_pktDropper
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000
 else
@@ -183,6 +184,11 @@ $(TEMP_DIR)/krnl_dummyManager.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/ker
 	$(ECHO) "Compiling Kernel: krnl_dummyManager"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_dummyManager) $(VPP_FLAGS) -k krnl_dummyManager -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+$(TEMP_DIR)/krnl_pktDropper.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_pktDropper.cpp 
+	$(ECHO) "Compiling Kernel: krnl_pktDropper"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_pktDropper) $(VPP_FLAGS) -k krnl_pktDropper -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+
 
 
 BINARY_CONTAINER_krnl_testApp_OBJS += $(TEMP_DIR)/krnl_testApp.xo
@@ -196,6 +202,8 @@ BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_rx.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_dummyManager.xo
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_pktDropper.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)
 

@@ -283,7 +283,7 @@ class PktXNIK : public PktUDP<t_NetDataBits,
             this->setData(l_dat);
             this->setDest(p_dest);
             this->setLast(p_last);
-            write(p_str);
+            p_str.write(this->m_pkt);
         }
         void send(ap_uint<t_SeqBits> p_seqNo, hls::stream<AxisPktType>& p_str) {
 #pragma HLS INLINE

@@ -1,0 +1,2 @@
+xsj-dxgradb03 192.168.1.131 /proj/rdi-xsj/staff/lingl/nobkup/xclbins/xnikSync_tests/krnl_testXnikSync.xclbin  0
+xsj-dxgradb03 192.168.1.141 /proj/rdi-xsj/staff/lingl/nobkup/xclbins/xnikSync_tests/krnl_testXnikSync.xclbin  1
