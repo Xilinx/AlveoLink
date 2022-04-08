@@ -25,8 +25,8 @@ extern "C" void krnl_pktDropper(hls::stream<UdpPktType>& p_inStr,
     AXIS(p_inStr)
     AXIS(p_outStr)
     AP_CTRL_NONE(return)
-    uint16_t t_startSeq = 21;
-    uint16_t t_dropPkts = 2;
+    uint16_t t_startSeq = 16;
+    uint16_t t_dropPkts = 3;
 
     while (!p_inStr.empty()) {
 #pragma HLS PIPELINE II=1

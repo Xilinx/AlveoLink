@@ -93,14 +93,14 @@ CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XIL
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
 VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps 
 #VPP_LDFLAGS += --optimize 2 -R 2
-VPP_LDFLAGS += --debug 
+VPP_LDFLAGS += --debug.chipscope networklayer_0:S_AXIS_sk2nl --debug.chipscope networklayer_0:M_AXIS_nl2sk 
 else ifeq ($(HOST_ARCH), aarch64)
 CXXFLAGS +=  -fmessage-length=0 --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(SYSROOT)/usr/lib -L$(XILINX_VITIS_AIETOOLS)/lib/aarch64.o -Wl,--as-needed -lxilinxopencl -lxrt_coreutil 
 VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps
  
 #VPP_LDFLAGS += --optimize 2 -R 2 
-VPP_LDFLAGS += --debug
+VPP_LDFLAGS += --debug.chipscope networklayer_0:S_AXIS_sk2nl --debug.chipscope networklayer_0:M_AXIS_nl2sk
 endif
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)

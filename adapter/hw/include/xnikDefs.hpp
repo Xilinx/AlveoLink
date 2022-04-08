@@ -203,6 +203,7 @@ class AckPkt : public PktType<t_TypeBits,
             l_val.data(t_NetDataBits-1, t_TypeSeqBits) = 0;
             l_val.dest = m_dest;
             l_val.last = 1;
+            l_val.keep = -1;
             p_axisStr.write(l_val);
         }
     private:
