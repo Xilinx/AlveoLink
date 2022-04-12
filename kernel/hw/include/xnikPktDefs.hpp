@@ -85,7 +85,7 @@ namespace kernel {
 #pragma HLS INLINE
                 m_dest = p_dest;
             }
-            void getType() {
+            ap_uint<4> getType() {
 #pragma HLS INLINE
                 return m_type;
             }
@@ -106,7 +106,7 @@ namespace kernel {
     class HopCtrlPkt : public HopPktHeader<t_DestBits> {
         public:
             static const unsigned int t_HopPktHeaderBits = HopPktHeader<t_DestBits>::t_PktBits; 
-            static const unsigned int t_CtrlPktBits = t_HopPktHeaderBits+t_DestBits*2 + 64;
+            static const unsigned int t_CtrlPktBits = t_HopPktHeaderBits+t_DestBits*2 + 96;
             static const unsigned int t_UnusedBits = t_NetDataBits - t_CtrlPktBits;
 
             typedef ap_axiu<t_NetDataBits, t_UserBits, 1, t_DestBits> TypeAXIS;
@@ -120,6 +120,7 @@ namespace kernel {
                 l_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits) = m_numDevs;
                 l_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits) = m_batchPkts;
                 l_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32) = m_timeOutCycles;
+                l_val(t_HopPktHeaderBits+2*t_DestBits+95, t_HopPktHeaderBits+2*t_DestBits+64) = m_waitCycles;
                 l_val(t_NetDataBits-1, t_CtrlPktBits) = m_rest;
                 return l_val;
             }
@@ -130,6 +131,7 @@ namespace kernel {
                 m_numDevs = p_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits);
                 m_batchPkts = p_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits);
                 m_timeOutCycles = p_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32);
+                m_waitCycles = p_val(t_HopPktHeaderBits+2*t_DestBits+95, t_HopPktHeaderBits+2*t_DestBits+64);
                 m_rest = p_val(t_NetDataBits-1, t_CtrlPktBits);
             
             }
@@ -164,6 +166,14 @@ namespace kernel {
             void setTimeOutCycles(const uint32_t p_timeOutCycles) {
 #pragma HLS INLINE
                 m_timeOutCycles = p_timeOutCycles;
+            }
+            uint32_t getWaitCycles() {
+#pragma HLS INLINE
+                return m_waitCycles;
+            }
+            void setWaitCycles(const uint32_t p_waitCycles) {
+#pragma HLS INLINE
+                m_waitCycles = p_waitCycles;
             }
             bool readNB(hls::stream<ap_uint<t_NetDataBits> >& p_str) {
 #pragma HLS INLINE
@@ -227,6 +237,7 @@ namespace kernel {
             ap_uint<t_UnusedBits> m_rest;
             uint32_t m_batchPkts;
             uint32_t m_timeOutCycles;
+            uint32_t m_waitCycles;
     };
 
 }

@@ -115,20 +115,16 @@ CXXFLAGS += -D HW_EMU_TEST
 endif
 
 #Inclue Required Host Source Files
-HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
-SERVER_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/server.cpp
+HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/hw_emu/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 CXXFLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16 
-CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
+CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/hw_emu -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
 EXE_NAME := host.exe
-SERVER_EXE_NAME := server.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
-SERVER_EXE_FILE := $(BUILD_DIR)/$(SERVER_EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
-SERVER_EXE_FILE_DEPS := $(SERVER_SRCS) $(SERVER_EXE_FILE_DEPS)
 
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=0 -D AL_destBits=16
@@ -144,8 +140,10 @@ VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_tx += --hls.clock 300000000:krnl_xnik_tx
 VPP_FLAGS_krnl_xnik_rx += --hls.clock 300000000:krnl_xnik_rx
-VPP_FLAGS_krnl_dummyManager += --hls.clock 300000000:krnl_dummyManager
+VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_pktDropper += --hls.clock 300000000:krnl_pktDropper
+VPP_FLAGS_krnl_switch += --hls.clock 300000000:krnl_switch
+VPP_FLAGS_krnl_merger += --hls.clock 300000000:krnl_merger
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000
 else
@@ -180,14 +178,23 @@ $(TEMP_DIR)/krnl_xnik_rx.xo: $(XFLIB_DIR)/adapter/hw/src/krnl_xnik_rx.cpp
 	$(ECHO) "Compiling Kernel: krnl_xnik_rx"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnik_rx) $(VPP_FLAGS) -k krnl_xnik_rx -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_dummyManager.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_dummyManager.cpp 
-	$(ECHO) "Compiling Kernel: krnl_dummyManager"
+$(TEMP_DIR)/krnl_xnikSyncManager.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncManager.cpp 
+	$(ECHO) "Compiling Kernel: krnl_xnikSyncManager"
 	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_dummyManager) $(VPP_FLAGS) -k krnl_dummyManager -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncManager) $(VPP_FLAGS) -k krnl_xnikSyncManager -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 $(TEMP_DIR)/krnl_pktDropper.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_pktDropper.cpp 
 	$(ECHO) "Compiling Kernel: krnl_pktDropper"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_pktDropper) $(VPP_FLAGS) -k krnl_pktDropper -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+$(TEMP_DIR)/krnl_switch.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_switch.cpp 
+	$(ECHO) "Compiling Kernel: krnl_switch"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_switch) $(VPP_FLAGS) -k krnl_switch -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+$(TEMP_DIR)/krnl_merger.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_merger.cpp 
+	$(ECHO) "Compiling Kernel: krnl_merger"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_merger) $(VPP_FLAGS) -k krnl_merger -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+
 
 
 
@@ -201,9 +208,13 @@ BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_tx.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_rx.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_dummyManager.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncManager.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_pktDropper.xo
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_switch.xo
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_merger.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)
 
@@ -217,9 +228,6 @@ $(EXE_FILE): $(EXE_FILE_DEPS) |  check_xrt
 	mkdir -p $(BUILD_DIR)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
-$(SERVER_EXE_FILE): $(SERVER_EXE_FILE_DEPS)
-	mkdir -p $(BUILD_DIR)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 else
 $(EXE_FILE): $(EXE_FILE_DEPS) |  check_sysroot
 	mkdir -p $(BUILD_DIR)
@@ -289,10 +297,9 @@ else
 all:  check_vpp check_platform check_sysroot $(EXE_FILE) $(BINARY_CONTAINERS) emconfig sd_card
 endif
 
-.PHONY: host server
+.PHONY: host
 ifeq ($(HOST_ARCH), x86)
 host:  check_xrt $(EXE_FILE)
-server: $(SERVER_EXE_FILE)
 else
 host:  check_sysroot $(EXE_FILE)
 endif
@@ -310,7 +317,7 @@ endif
 
 ############################## Cleaning Rules ##############################
 cleanh:
-	-$(RMDIR) $(EXE_FILE) $(SERVER_EXE_FILE)  vitis_* TempConfig system_estimate.xtxt *.rpt .run/
+	-$(RMDIR) $(EXE_FILE) vitis_* TempConfig system_estimate.xtxt *.rpt .run/
 	-$(RMDIR) src/*.ll _xocc_* .Xil dltmp* xmltmp* *.log *.jou *.wcfg *.wdb sample_link.ini sample_compile.ini obj*  bin* *.csv *.jpg *.jpeg *.png
 
 cleank:

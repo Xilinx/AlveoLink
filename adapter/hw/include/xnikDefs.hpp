@@ -17,6 +17,7 @@
 #ifndef ALVEOLINK_ADAPTER_XNIKDEFS_HPP
 #define ALVEOLINK_ADAPTER_XNIKDEFS_HPP
 
+#include <cstdint>
 #include "ap_axi_sdata.h"
 #include "ap_int.h"
 #include "hls_stream.h"
@@ -27,9 +28,9 @@ namespace adapter {
 
 typedef enum {
     DATA=0,
-    ACK,
-    RECEIVED,
-    RETRAN,
+    ACK,  //pkt type used in network pkt
+    SEND_ACK, //pkt type used in ackStr
+    REC_ACK, //pkt type used in ackStr
     QUERY
 } XNIK_PKT_TYPE;
 
@@ -130,13 +131,13 @@ class PktType {
 #pragma HLS INLINE
             return (m_type == XNIK_PKT_TYPE::ACK);
         }
-        bool isReceived() {
+        bool isSendAck() {
 #pragma HLS INLINE
-            return (m_type == XNIK_PKT_TYPE::RECEIVED);
+            return (m_type == XNIK_PKT_TYPE::SEND_ACK);
         }
-        bool isRetran() {
+        bool isRecAck() {
 #pragma HLS INLINE
-            return (m_type == XNIK_PKT_TYPE::RETRAN);
+            return (m_type == XNIK_PKT_TYPE::REC_ACK);
         }
         bool isQuery() {
 #pragma HLS INLINE
@@ -229,6 +230,14 @@ class PktXNIK : public PktUDP<t_NetDataBits,
 #pragma HLS INLINE
             return (m_graphPktType == AlveoLink::kernel::PKT_TYPE::workload);
         }
+        bool isStart() {
+#pragma HLS INLINE
+            return (m_graphPktType == AlveoLink::kernel::PKT_TYPE::start);
+        }
+        bool isDone() {
+#pragma HLS INLINE
+            return (m_graphPktType == AlveoLink::kernel::PKT_TYPE::done);
+        }
         bool isLast() {
 #pragma HLS INLINE
             return (this->m_pkt.last == 1);
@@ -241,6 +250,14 @@ class PktXNIK : public PktUDP<t_NetDataBits,
 #pragma HLS INLINE
             return (m_pktType.isAck());
         }
+        bool isSendAck() {
+#pragma HLS INLINE
+            return (m_pktType.isSendAck());
+        }
+        bool isRecAck() {
+#pragma HLS INLINE
+            return (m_pktType.isRecAck());
+        }
         bool isQuery() {
 #pragma HLS INLINE
             return (m_pktType.isQuery());
@@ -252,6 +269,10 @@ class PktXNIK : public PktUDP<t_NetDataBits,
         void setTypeSeq(const ap_uint<t_TypeSeqBits> p_typeSeq) {
 #pragma HLS INLINE
             m_pktType.setTypeSeq(p_typeSeq);
+        }
+        uint32_t getWaitCycles() {
+#pragma HLS INLINE
+            return this->m_pkt.data(151,120);
         }
         void read(hls::stream<AxisPktType>& p_str) {
 #pragma HLS INLINE

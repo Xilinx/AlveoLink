@@ -30,6 +30,13 @@ namespace kernel {
         state_done
     } SYNC_STATE;
 
+    typedef enum {
+        manager_idle = 0,
+        manager_active,
+        query,
+        termination
+    } MANAGER_STATE;
+
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
     class xnikSync_TX {
@@ -236,6 +243,147 @@ LOOP_XNIK2NHOP:
     };
     
     template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits,
+              unsigned int t_MaxConnections=16>
+    class xnikSync_Manager {
+        public:
+            typedef typename HopCtrlPkt<t_NetDataBits, t_DestBits>::TypeAXIS UdpPktType;
+        public:
+            xnikSync_Manager() {
+                m_state = MANAGER_STATE::manager_idle;
+                m_numDevs = 1;
+                m_waitCycles = 0;
+                m_flushCounter = 1;
+                m_recStatus = -1;
+            }
+            void recAllPkts(const PKT_TYPE p_pktType, hls::stream<UdpPktType>& p_inStr) {
+                m_recStatus(m_numDevs-1, 0) = 0;
+                bool l_exit = m_recStatus.and_reduce();
+LOOP_MANAGER_RECALL:
+                while (!l_exit) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt = p_inStr.read();
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setCtrlPkt(l_udpPkt.data);
+                    if (l_ctrlPkt.getType() == p_pktType) {
+                        m_recStatus[l_udpPkt.dest] = 1;
+                    }
+                    l_exit =  m_recStatus.and_reduce();
+                }
+            }
+            void recAllDonePkts(hls::stream<UdpPktType>& p_inStr, bool& p_allIdle) {
+                m_recStatus(m_numDevs-1, 0) = 0;
+                p_allIdle = true;
+                bool l_exit = m_recStatus.and_reduce();
+LOOP_MANAGER_RECALLDONE:
+                while (!l_exit) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt = p_inStr.read();
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setCtrlPkt(l_udpPkt.data);
+                    if ((l_ctrlPkt.getType() == PKT_TYPE::done) || (l_ctrlPkt.getType() == PKT_TYPE::idle_after_done)) {
+                        m_recStatus[l_udpPkt.dest] = 1;
+                        if (l_ctrlPkt.getType() == PKT_TYPE::done) {
+                            p_allIdle = false;
+                        }
+                    }
+                    l_exit =  m_recStatus.and_reduce();
+                }
+            }
+            void sendAllPkts(const PKT_TYPE p_pktType, hls::stream<UdpPktType>& p_outStr) {
+LOOP_MANAGER_SENDALL:
+                for (unsigned int i=0; i<m_numDevs; ++i) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt;
+                    l_udpPkt.dest = i;
+                    l_udpPkt.last = 1;
+                    l_udpPkt.keep = -1;
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setType(p_pktType);
+                    if (p_pktType == PKT_TYPE::start) {
+                        l_ctrlPkt.setWaitCycles((uint32_t)m_waitCycles);
+                    }
+                    l_udpPkt.data = l_ctrlPkt.getCtrlPkt();
+                    p_outStr.write(l_udpPkt);
+                }
+            }
+
+            void process(uint16_t* p_config,
+                         hls::stream<UdpPktType>& p_inStr,
+                         hls::stream<UdpPktType>& p_outStr) {
+
+                    m_numDevs = p_config[0];
+                    m_waitCycles = p_config[1];
+                    m_flushCounter = p_config[2];
+                    uint16_t l_flushCounter = m_flushCounter;
+                    bool l_allIdle =true;
+                    bool l_exit = false;
+LOOP_MANAGER:
+                    while (!l_exit) {
+                        switch (m_state) {
+                            case MANAGER_STATE::manager_idle:
+                                recAllPkts(PKT_TYPE::start, p_inStr);
+                                if (m_recStatus.and_reduce()) {
+                                    sendAllPkts(PKT_TYPE::start, p_outStr);
+                                    m_state = MANAGER_STATE::manager_active;
+                                }
+                            break;
+                            case MANAGER_STATE::manager_active:
+                                recAllDonePkts(p_inStr, l_allIdle);
+                                if (m_recStatus.and_reduce()) {
+                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                    m_state = MANAGER_STATE::query;
+                                }
+                            break;
+                            case MANAGER_STATE::query:
+                                recAllDonePkts(p_inStr, l_allIdle);
+                                if (m_recStatus.and_reduce()) {
+                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                    if (l_allIdle) {
+                                        m_state = MANAGER_STATE::termination;
+                                    }
+                                }
+                            break;
+                            case MANAGER_STATE::termination:
+                                recAllDonePkts(p_inStr, l_allIdle);
+                                if (l_allIdle) {
+                                    if (l_flushCounter == 0) {
+                                        sendAllPkts(PKT_TYPE::terminate, p_outStr);
+                                        l_exit = true;
+                                        m_state = MANAGER_STATE::manager_idle;
+                                    }
+                                    else {
+                                        //sleep
+                                        uint16_t l_cycleCounter = m_waitCycles;
+LOOP_MANAGER_SLEEPCYCLE:
+                                        while (l_cycleCounter != 0) {
+#pragma HLS PIPELINE II=1
+                                            l_cycleCounter--;
+                                        }
+                                        if (l_cycleCounter == 0) {
+                                            sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                            l_flushCounter--;
+                                        }
+                                    }
+                                }
+                                else {
+                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                    l_flushCounter = m_flushCounter;
+                                    m_state = MANAGER_STATE::query;
+                                }
+                            break;
+                        }
+                    }
+            }
+        private:
+            MANAGER_STATE m_state;
+            uint16_t m_numDevs;
+            uint16_t m_waitCycles;
+            uint16_t m_flushCounter;
+            ap_uint<t_MaxConnections> m_recStatus; 
+    };
+    
+    template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
     class xnikSync_dummyManager {//simple manager only for hw_emu
         public:
@@ -265,6 +413,7 @@ LOOP_MANAGER:
                     }
             }
     };
+
 }
 }
 #endif
