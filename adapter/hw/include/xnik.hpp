@@ -34,10 +34,6 @@ typedef enum {
     tx_waitAck
 } TX_STATE;
 
-typedef enum {
-    rx_idle = 0,
-    rx_waitData
-} RX_STATE;
 
 //data transfer length is always aligned to t_NetDataBytes;
 template <unsigned int t_MaxConnections,
@@ -220,9 +216,10 @@ LOOP_INIT_SEQNO:
         for (unsigned int i=0; i<t_MaxConnections; ++i) {
 #pragma HLS PIPELINE II=1
             m_recSeqNoArr[i] = 0;
+            m_ackSeqNoArr[i] = 0;
+            m_waitArr[i] = false;
+            m_ackArr[i] = false;
         }
-        m_waitDest = 0;
-        m_state = RX_STATE::rx_idle;
     }
     
     void pktDec(hls::stream<UdpPktType>& p_inPktStr,
@@ -230,71 +227,67 @@ LOOP_INIT_SEQNO:
                 hls::stream<ap_uint<t_AckPktBits> >& p_outAckStr) {
         PktXNIK<t_NetDataBits, t_DestBits> l_xnikPkt;
 #pragma HLS ARRAY_PARTITION variable = m_recSeqNoArr complete dim=0
+#pragma HLS ARRAY_PARTITION variable = m_ackSeqNoArr complete dim=0
+#pragma HLS ARRAY_PARTITION variable = m_waitArr complete dim=0
+#pragma HLS ARRAY_PARTITION variable = m_ackArr complete dim=0
 LOOP_DECODER:
         while (!p_inPktStr.empty()) {
 #pragma HLS PIPELINE II=1
             l_xnikPkt.read(p_inPktStr);
             ap_uint<t_DestBits> l_dest = l_xnikPkt.getDest();
-            ap_uint<t_SeqBits> l_seqNo = l_xnikPkt.getSeqNo();
+            ap_uint<t_SeqBits> l_recSeqNo = l_xnikPkt.getSeqNo();
             ap_uint<t_SeqBits> l_expSeqNo = m_recSeqNoArr[l_dest];
+            ap_uint<t_SeqBits> l_ackSeqNo = m_ackSeqNoArr[l_dest];
+            bool l_wait = m_waitArr[l_dest];
+            bool l_hasAcked = m_ackArr[l_dest];
+
             AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> l_sendAckPkt(XNIK_PKT_TYPE::SEND_ACK, l_expSeqNo, l_dest);
-            AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> l_recAckPkt(XNIK_PKT_TYPE::REC_ACK, l_seqNo, l_dest);
-            bool l_isExpected = (l_seqNo == l_expSeqNo);
-            bool l_isMissingPkts = (l_seqNo > l_expSeqNo);
-            bool l_isLastBuffered = (l_seqNo >= t_MaxSeqNo) && l_xnikPkt.isLast();
-            switch (m_state) {
-                case RX_STATE::rx_idle:
-                    if (l_xnikPkt.isData() && l_isMissingPkts) {
-                        m_waitDest = l_dest;
+            AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> l_reSendAckPkt(XNIK_PKT_TYPE::SEND_ACK, l_ackSeqNo, l_dest);
+            AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> l_recAckPkt(XNIK_PKT_TYPE::REC_ACK, l_recSeqNo, l_dest);
+
+            bool l_isExpected = (l_recSeqNo == l_expSeqNo);
+            bool l_isMissingPkts = (l_recSeqNo > l_expSeqNo);
+            bool l_shouldAck = ((l_recSeqNo >= t_MaxSeqNo) && l_xnikPkt.isLast()) || (!l_xnikPkt.isWorkload());
+
+            if (l_xnikPkt.isData()) {
+                if (l_isExpected) {
+                    l_xnikPkt.write(p_outKrnlStr);
+                    m_waitArr[l_dest] = false;
+                    if (l_shouldAck) {
                         l_sendAckPkt.write(p_outAckStr);
-                        m_state = RX_STATE::rx_waitData;
+                        m_recSeqNoArr[l_dest] = 0;
+                        m_ackArr[l_dest] = true;
+                        m_ackSeqNoArr[l_dest] = l_recSeqNo;
                     }
-                    else if (l_xnikPkt.isData() && l_isExpected) {
-                        l_xnikPkt.write(p_outKrnlStr);
-                        if (l_isLastBuffered || !l_xnikPkt.isWorkload()) {
-                            l_sendAckPkt.write(p_outAckStr);
-                            m_recSeqNoArr[l_dest] = 0;
-                        }
-                        else {
-                            m_recSeqNoArr[l_dest] = m_recSeqNoArr[l_dest] + 1;
-                        }
+                    else {
+                        m_recSeqNoArr[l_dest] = l_recSeqNo + 1;
+                        m_ackArr[l_dest] = false;
                     }
-                    else if (l_xnikPkt.isAck()) {
-                        l_recAckPkt.write(p_outAckStr);
-                    }
-                    else if (l_xnikPkt.isQuery()) {
-                        l_sendAckPkt.write(p_outAckStr);
-                    }
-                break;
-                case RX_STATE::rx_waitData:
-                    if (l_xnikPkt.isData() && l_isExpected){
-                        l_xnikPkt.write(p_outKrnlStr);
-                        if (l_isLastBuffered || !l_xnikPkt.isWorkload()) {
-                            l_sendAckPkt.write(p_outAckStr);
-                            m_recSeqNoArr[l_dest] = 0;
-                        }
-                        else {
-                            m_recSeqNoArr[l_dest] = m_recSeqNoArr[l_dest] + 1;
-                        }
-                        if (l_dest == m_waitDest) {
-                            m_state = RX_STATE::rx_idle;
-                        }
-                    }
-                    else if (l_xnikPkt.isAck()) {
-                        l_recAckPkt.write(p_outAckStr);
-                    }
-                    else if (l_xnikPkt.isQuery()) {
-                        l_sendAckPkt.write(p_outAckStr);
-                    }
-                break;
+                }
+                else if (l_isMissingPkts && !l_wait) {//send ACK to sender to ask for misssing pkts
+                    l_sendAckPkt.write(p_outAckStr);
+                    m_waitArr[l_dest] = true;
+                }
+            }
+            else if (l_xnikPkt.isAck()) {
+                l_recAckPkt.write(p_outAckStr);
+            }
+            else if (l_xnikPkt.isQuery()) {
+                if (l_hasAcked) {
+                    l_reSendAckPkt.write(p_outAckStr);
+                }
+                else {
+                    l_sendAckPkt.write(p_outAckStr);
+                }
             }
         }
     }
 
 private:
         ap_uint<t_SeqBits> m_recSeqNoArr[t_MaxConnections];
-        ap_uint<t_DestBits> m_waitDest;
-        RX_STATE m_state;
+        ap_uint<t_SeqBits> m_ackSeqNoArr[t_MaxConnections];
+        bool m_waitArr[t_MaxConnections];
+        bool m_ackArr[t_MaxConnections];
 };
 
 }
