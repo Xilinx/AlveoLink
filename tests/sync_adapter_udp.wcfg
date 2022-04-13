@@ -22,15 +22,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="9,465.238 ns"></ZoomStartTime>
-      <ZoomEndTime time="9,513.633 ns"></ZoomEndTime>
-      <Cursor1Time time="9,526.905 ns"></Cursor1Time>
+      <ZoomStartTime time="104,705.201 ns"></ZoomStartTime>
+      <ZoomEndTime time="105,290.202 ns"></ZoomEndTime>
+      <Cursor1Time time="104,946.701 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="204"></NameColumnWidth>
-      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+      <NameColumnWidth column_width="192"></NameColumnWidth>
+      <ValueColumnWidth column_width="92"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="62" />
+   <WVObjectSize size="60" />
    <wvobject fp_name="divider579" type="divider">
       <obj_property name="label">xnik_tx</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -340,16 +340,6 @@
          <obj_property name="ObjectShortName">[0]</obj_property>
       </wvobject>
    </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_106/l_xnikTX_m_waitCyclesConfig">
-      <obj_property name="ElementShortName">l_xnikTX_m_waitCyclesConfig[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_xnikTX_m_waitCyclesConfig[15:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_106/l_xnikTX_m_waitCycles">
-      <obj_property name="ElementShortName">l_xnikTX_m_waitCycles[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_xnikTX_m_waitCycles[15:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
    <wvobject type="vbus" fp_name="vbus943">
       <obj_property name="label">p_inKrnlData[151:120]</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -481,6 +471,22 @@
          <obj_property name="ElementShortName">[120]</obj_property>
          <obj_property name="ObjectShortName">[120]</obj_property>
       </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_110/l_xnikTX_m_sentArr_V">
+      <obj_property name="ElementShortName">l_xnikTX_m_sentArr_V[15:0]</obj_property>
+      <obj_property name="ObjectShortName">l_xnikTX_m_sentArr_V[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_110/l_xnikTX_m_waitArr_V">
+      <obj_property name="ElementShortName">l_xnikTX_m_waitArr_V[15:0]</obj_property>
+      <obj_property name="ObjectShortName">l_xnikTX_m_waitArr_V[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_110/l_xnikTX_m_waitAck">
+      <obj_property name="ElementShortName">l_xnikTX_m_waitAck[0:0]</obj_property>
+      <obj_property name="ObjectShortName">l_xnikTX_m_waitAck[0:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_110/l_xnikTX_m_isDone">
+      <obj_property name="ElementShortName">l_xnikTX_m_isDone[0:0]</obj_property>
+      <obj_property name="ObjectShortName">l_xnikTX_m_isDone[0:0]</obj_property>
    </wvobject>
    <wvobject fp_name="divider431" type="divider">
       <obj_property name="label">xnik_rx</obj_property>
@@ -790,6 +796,15 @@
    <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_rx_0/p_outAckStr_TDATA">
       <obj_property name="ElementShortName">p_outAckStr_TDATA[31:0]</obj_property>
       <obj_property name="ObjectShortName">p_outAckStr_TDATA[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider1170" type="divider">
+      <obj_property name="label">testApp</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_testApp_0/inst/recData_U0/l_pktNum_fu_92">
+      <obj_property name="ElementShortName">l_pktNum_fu_92[31:0]</obj_property>
+      <obj_property name="ObjectShortName">l_pktNum_fu_92[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="divider708" type="divider">
       <obj_property name="label">Manager</obj_property>
@@ -1103,23 +1118,6 @@
    <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/p_outStr_TDEST">
       <obj_property name="ElementShortName">p_outStr_TDEST[15:0]</obj_property>
       <obj_property name="ObjectShortName">p_outStr_TDEST[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/l_cycleCounter_1_reg_525">
-      <obj_property name="ElementShortName">l_cycleCounter_1_reg_525[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_cycleCounter_1_reg_525[15:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/l_flushCounter_reg_531">
-      <obj_property name="ElementShortName">l_flushCounter_reg_531[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_flushCounter_reg_531[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/l_allIdle_1_fu_120">
-      <obj_property name="ElementShortName">l_allIdle_1_fu_120[0:0]</obj_property>
-      <obj_property name="ObjectShortName">l_allIdle_1_fu_120[0:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/trunc_ln319_fu_245_p1">
-      <obj_property name="ElementShortName">trunc_ln319_fu_245_p1[15:0]</obj_property>
-      <obj_property name="ObjectShortName">trunc_ln319_fu_245_p1[15:0]</obj_property>
    </wvobject>
    <wvobject fp_name="divider566" type="divider">
       <obj_property name="label">pktDropper</obj_property>
@@ -1948,13 +1946,5 @@
          <obj_property name="ElementShortName">[0]</obj_property>
          <obj_property name="ObjectShortName">[0]</obj_property>
       </wvobject>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/l_cycleCounter_fu_112">
-      <obj_property name="ElementShortName">l_cycleCounter_fu_112[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_cycleCounter_fu_112[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_process_r_fu_82/l_cycleCounter_2_fu_324_p2">
-      <obj_property name="ElementShortName">l_cycleCounter_2_fu_324_p2[15:0]</obj_property>
-      <obj_property name="ObjectShortName">l_cycleCounter_2_fu_324_p2[15:0]</obj_property>
    </wvobject>
 </wave_config>

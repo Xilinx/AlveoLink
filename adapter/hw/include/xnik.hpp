@@ -56,9 +56,11 @@ public:
 LOOP_INIT_SEQNO:
         m_state = TX_STATE::tx_idle;
         m_waitAck = false;
-        m_waitDest = 0;
+        m_isDone = false;
         m_waitCycles = 0;
         m_waitCyclesConfig = 0;
+        m_sentArr = 0;
+        m_waitArr = 0;
         for (unsigned int i=0; i<t_MaxConnections; ++i) {
 #pragma HLS PIPELINE II=1
             m_sendSeqNoArr[i] = 0;
@@ -86,12 +88,17 @@ LOOP_INIT_SEQNO:
             case TX_STATE::tx_ack:
                 if (l_received) {
                     m_sendSeqNoArr[m_ackDest] = 0;
-                    if (m_waitAck && (m_waitDest != m_ackDest)){
+                    m_waitArr[m_ackDest] = 0;
+                    m_waitAck = m_waitArr.or_reduce();
+                    if (m_waitAck){
                         m_waitCycles = m_waitCyclesConfig;
                         m_state = TX_STATE::tx_waitAck;
                     }
                     else {
-                        m_waitAck = false;
+                        if (m_isDone) {
+                            m_isDone = false;
+                            m_sentArr = 0;
+                        }
                         m_state = TX_STATE::tx_idle;
                     }
                 }
@@ -127,14 +134,21 @@ LOOP_INIT_SEQNO:
                 }
                 break;
             case TX_STATE::tx_sendData:
+TX_LOOP_SENDDATA:
                 while (p_inAckStr.empty() && !m_waitAck && !p_inKrnlStr.empty()) {
 #pragma HLS PIPELINE II=1
                     PktXNIK<t_NetDataBits, t_DestBits> l_xnikPkt;
                     l_xnikPkt.read(p_inKrnlStr);
                     ap_uint<t_DestBits> l_dest = l_xnikPkt.getDest();
                     ap_uint<t_SeqBits> l_nextSeqNo = m_sendSeqNoArr[l_dest];
-                    m_waitAck = (!(l_nextSeqNo < t_MaxTxSeqNo) && (l_xnikPkt.getLast() == 1)) || (!l_xnikPkt.isWorkload());
-                    m_waitDest = l_dest;
+                    m_waitArr[l_dest] = (!(l_nextSeqNo < t_MaxTxSeqNo) && (l_xnikPkt.getLast() == 1)) || (!l_xnikPkt.isWorkload());
+                    m_waitAck = m_waitArr.or_reduce();
+                    if (l_xnikPkt.isDone()) {
+                        m_isDone = true;
+                    }
+                    if (l_xnikPkt.isWorkload()) {
+                        m_sentArr[l_dest] = 1;
+                    }
                     l_xnikPkt.send(l_nextSeqNo, p_outPktStr);
                     if (!m_waitAck) {
                         m_sendSeqNoArr[l_dest] = l_nextSeqNo + 1;
@@ -145,7 +159,17 @@ LOOP_INIT_SEQNO:
                         m_waitCyclesConfig = l_xnikPkt.getWaitCycles();
                     }
                 }
-                if (m_waitAck) {
+                if (m_waitAck || m_isDone) {
+                    if (m_isDone) {
+TX_LOOP_SETWAITARR:
+                        for (unsigned int i=0; i<t_MaxConnections; ++i) {
+#pragma HLS PIPELINE II=1
+                            if (m_sentArr[i] && !m_waitArr[i]) {
+                                m_waitArr[i] = 1; 
+                            }
+                        }
+                    }
+                    m_waitAck = m_waitArr.or_reduce();
                     m_waitCycles = m_waitCyclesConfig;
                     m_state = TX_STATE::tx_waitAck;
                 }
@@ -162,8 +186,17 @@ LOOP_INIT_SEQNO:
                     m_state = TX_STATE::tx_ack;
                 }
                 else if (m_waitCycles == 0) {
+                    ap_uint<t_DestBits> l_dest;
+TX_LOOP_FINDWAITDST:
+                    for (unsigned int i=0; i<t_MaxConnections; ++i) {
+#pragma HLS PIPELINE II=1
+                        if (m_waitArr[i]) {
+                            l_dest = i;
+                            break;
+                        }
+                    }
                     PktXNIK<t_NetDataBits, t_DestBits> l_xnikPkt;
-                    ap_uint<t_SeqBits> l_seqNo = m_sendSeqNoArr[m_waitDest];
+                    ap_uint<t_SeqBits> l_seqNo = m_sendSeqNoArr[l_dest];
                     PktType<t_TypeBits, t_SeqBits> l_pktType(XNIK_PKT_TYPE::QUERY, l_seqNo);
                     ap_uint<t_NetDataBits> l_dat;
                     l_dat.range(t_TypeSeqBits-1,0) = l_pktType.getTypeSeq();
@@ -172,7 +205,7 @@ LOOP_INIT_SEQNO:
                     l_pkt.data = l_dat;
                     l_pkt.keep = -1;
                     l_pkt.last = 1;
-                    l_pkt.dest = m_waitDest;
+                    l_pkt.dest = l_dest;
                     p_outPktStr.write(l_pkt);
                     m_waitCycles = m_waitCyclesConfig;
                 }
@@ -187,7 +220,9 @@ LOOP_INIT_SEQNO:
 private:
         ap_uint<t_SeqBits> m_sendSeqNoArr[t_MaxConnections];
         bool m_waitAck;
-        ap_uint<t_DestBits> m_waitDest;
+        bool m_isDone;
+        ap_uint<t_MaxConnections> m_sentArr;
+        ap_uint<t_MaxConnections> m_waitArr;
         ap_uint<t_NetDataBits> m_pktDatBuf[t_MaxConnections][t_BufSize];
         ap_uint<1> m_pktLastBuf[t_MaxConnections][t_BufSize];
         AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> m_ackPkt;
@@ -247,7 +282,8 @@ LOOP_DECODER:
 
             bool l_isExpected = (l_recSeqNo == l_expSeqNo);
             bool l_isMissingPkts = (l_recSeqNo > l_expSeqNo);
-            bool l_shouldAck = ((l_recSeqNo >= t_MaxSeqNo) && l_xnikPkt.isLast()) || (!l_xnikPkt.isWorkload());
+            bool l_shouldAck = ((l_recSeqNo >= t_MaxSeqNo) && l_xnikPkt.isLast()) || 
+                                (!l_xnikPkt.isWorkload()); 
 
             if (l_xnikPkt.isData()) {
                 if (l_isExpected) {
@@ -277,7 +313,12 @@ LOOP_DECODER:
                     l_reSendAckPkt.write(p_outAckStr);
                 }
                 else {
-                    l_sendAckPkt.write(p_outAckStr);
+                    if (l_isExpected) {
+                        m_ackArr[l_dest] = true;
+                        m_ackSeqNoArr[l_dest] = l_recSeqNo;
+                        m_recSeqNoArr[l_dest] = 0;
+                        l_sendAckPkt.write(p_outAckStr);
+                    }
                 }
             }
         }
