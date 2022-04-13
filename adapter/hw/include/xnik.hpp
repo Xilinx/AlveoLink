@@ -110,7 +110,7 @@ LOOP_INIT_SEQNO:
                     }
                 }
                 else if (l_retran) {
-                    for (unsigned int i=l_ackSeqNo; i<= l_sendSeqNo; ++i) {
+                    for (unsigned int i=l_ackSeqNo; i< l_sendSeqNo; ++i) {
 #pragma HLS PIPELINE II=1
                         ap_uint<t_SeqBits> l_seqNo = i;
                         ap_uint<t_NetDataBits> l_dat = m_pktDatBuf[m_ackDest][i];
@@ -119,6 +119,10 @@ LOOP_INIT_SEQNO:
                         l_xnikPkt.sendData(m_ackDest, l_dat, l_last, l_seqNo, p_outPktStr);
                     }
                     if (m_waitAck) {
+                        ap_uint<t_NetDataBits> l_dat = m_pktDatBuf[m_ackDest][l_sendSeqNo];
+                        ap_uint<1> l_last = m_pktLastBuf[m_ackDest][l_sendSeqNo];
+                        PktXNIK<t_NetDataBits, t_DestBits> l_xnikPkt;
+                        l_xnikPkt.sendData(m_ackDest, l_dat, l_last, l_sendSeqNo, p_outPktStr);
                         m_waitCycles = m_waitCyclesConfig;
                         m_state = TX_STATE::tx_waitAck;
                     } else {

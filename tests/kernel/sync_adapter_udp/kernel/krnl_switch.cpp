@@ -31,6 +31,7 @@ extern "C" void krnl_switch(hls::stream<UdpPktType>& p_inStr,
 #pragma HLS PIPELINE II=1
         UdpPktType l_val = p_inStr.read();
         if (l_val.dest == 1) {
+            l_val.dest = 0;
             p_out2ManagerStr.write(l_val);
         }
         else {

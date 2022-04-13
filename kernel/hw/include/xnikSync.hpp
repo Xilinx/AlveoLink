@@ -32,9 +32,13 @@ namespace kernel {
 
     typedef enum {
         manager_idle = 0,
+        idle_2_active,
         manager_active,
+        active_2_query,
         query,
-        termination
+        query_2_termination,
+        termination,
+        termination_2_idle
     } MANAGER_STATE;
 
     template <unsigned int t_NetDataBits,
@@ -315,63 +319,68 @@ LOOP_MANAGER_SENDALL:
                     m_numDevs = p_config[0];
                     m_waitCycles = p_config[1];
                     m_flushCounter = p_config[2];
-                    uint16_t l_flushCounter = m_flushCounter;
+                    uint16_t l_flushCounter;
                     bool l_allIdle =true;
-                    bool l_exit = false;
+                    bool l_procExit = false;
+                    uint16_t l_cycleCounter;
 LOOP_MANAGER:
-                    while (!l_exit) {
+                    while (!l_procExit) {
                         switch (m_state) {
                             case MANAGER_STATE::manager_idle:
                                 recAllPkts(PKT_TYPE::start, p_inStr);
-                                if (m_recStatus.and_reduce()) {
-                                    sendAllPkts(PKT_TYPE::start, p_outStr);
-                                    m_state = MANAGER_STATE::manager_active;
-                                }
-                            break;
+                                m_state = MANAGER_STATE::idle_2_active;
+                                break;
+                            case MANAGER_STATE::idle_2_active:
+                                sendAllPkts(PKT_TYPE::start, p_outStr);
+                                m_state = MANAGER_STATE::manager_active;
+                                break;
                             case MANAGER_STATE::manager_active:
                                 recAllDonePkts(p_inStr, l_allIdle);
-                                if (m_recStatus.and_reduce()) {
-                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
-                                    m_state = MANAGER_STATE::query;
-                                }
-                            break;
+                                m_state = MANAGER_STATE::active_2_query;
+                                break;
+                            case MANAGER_STATE::active_2_query:
+                                sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                m_state = MANAGER_STATE::query;
+                                break;
                             case MANAGER_STATE::query:
                                 recAllDonePkts(p_inStr, l_allIdle);
-                                if (m_recStatus.and_reduce()) {
-                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
-                                    if (l_allIdle) {
-                                        m_state = MANAGER_STATE::termination;
-                                    }
+                                m_state = MANAGER_STATE::query_2_termination;
+                                break;
+                            case MANAGER_STATE::query_2_termination:
+                                sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                if (l_allIdle) {
+                                    l_cycleCounter = m_waitCycles;
+                                    l_flushCounter = m_flushCounter;
+                                    m_state = MANAGER_STATE::termination;
                                 }
-                            break;
+                                else {
+                                    m_state = MANAGER_STATE::query;
+                                }
+                                break;
                             case MANAGER_STATE::termination:
                                 recAllDonePkts(p_inStr, l_allIdle);
-                                if (l_allIdle) {
-                                    if (l_flushCounter == 0) {
-                                        sendAllPkts(PKT_TYPE::terminate, p_outStr);
-                                        l_exit = true;
-                                        m_state = MANAGER_STATE::manager_idle;
-                                    }
-                                    else {
-                                        //sleep
-                                        uint16_t l_cycleCounter = m_waitCycles;
-LOOP_MANAGER_SLEEPCYCLE:
-                                        while (l_cycleCounter != 0) {
-#pragma HLS PIPELINE II=1
-                                            l_cycleCounter--;
-                                        }
-                                        if (l_cycleCounter == 0) {
-                                            sendAllPkts(PKT_TYPE::query_status, p_outStr);
-                                            l_flushCounter--;
-                                        }
-                                    }
+                                m_state = MANAGER_STATE::termination_2_idle;
+                                break;
+                            case MANAGER_STATE::termination_2_idle:
+                                if (l_allIdle && (l_flushCounter == 0)) {
+                                    sendAllPkts(PKT_TYPE::terminate, p_outStr);
+                                    l_procExit = true;
+                                    m_state = MANAGER_STATE::manager_idle;
+                                }
+                                else if (l_allIdle && (l_cycleCounter == 0)) {
+                                    sendAllPkts(PKT_TYPE::query_status, p_outStr);
+                                    l_flushCounter--;
+                                    m_state = MANAGER_STATE::termination;
+                                }
+                                else if (l_allIdle && (l_cycleCounter != 0)) {
+                                    l_cycleCounter--;
+                                    m_state = MANAGER_STATE::termination_2_idle;
                                 }
                                 else {
                                     sendAllPkts(PKT_TYPE::query_status, p_outStr);
-                                    l_flushCounter = m_flushCounter;
                                     m_state = MANAGER_STATE::query;
                                 }
-                            break;
+                                break;
                         }
                     }
             }
@@ -383,37 +392,6 @@ LOOP_MANAGER_SLEEPCYCLE:
             ap_uint<t_MaxConnections> m_recStatus; 
     };
     
-    template <unsigned int t_NetDataBits,
-              unsigned int t_DestBits>
-    class xnikSync_dummyManager {//simple manager only for hw_emu
-        public:
-            typedef typename HopCtrlPkt<t_NetDataBits, t_DestBits>::TypeAXIS UdpPktType;
-        public:
-            xnikSync_dummyManager() {
-            }
-            void process(hls::stream<UdpPktType>& p_inStr,
-                         hls::stream<UdpPktType>& p_outStr) {
-                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
-LOOP_MANAGER:
-                    while (!p_inStr.empty()) {
-#pragma HLS PIPELINE II=1
-                        UdpPktType l_val = p_inStr.read();
-                        l_ctrlPkt.setCtrlPkt(l_val.data);
-                        ap_uint<t_DestBits> l_pktDest = l_val.dest;
-
-                        ap_uint<t_DestBits> l_typeSeq = l_ctrlPkt.getDest();
-                        if (l_ctrlPkt.isDoneWork() && (l_typeSeq(7,0) == 0)) {
-                            l_ctrlPkt.setType(PKT_TYPE::query_status);
-                        }
-                        else if (l_ctrlPkt.isDoneNothing() && (l_typeSeq(7,0) == 0)) {
-                            l_ctrlPkt.setType(PKT_TYPE::terminate);
-                        }
-                        l_val.data = l_ctrlPkt.getCtrlPkt();
-                        p_outStr.write(l_val); 
-                    }
-            }
-    };
-
 }
 }
 #endif
