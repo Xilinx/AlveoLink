@@ -25,18 +25,17 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "basicHost.hpp"
-#include "graphPktDefs.hpp"
+#include "hwManagerHost.hpp"
 
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 constexpr unsigned int t_DestBytes = AL_destBits / 8;
 
 
 int main(int argc, char** argv) {
-    if (argc < 7  || (std::string(argv[1]) == "-help")) {
+    if (argc <5  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <socket_file> <ip_file> <numPkts> <batchPkts> <timeOutCycles> <waitCycles> [num_of_runs]" << std::endl;
-        std::cout << "host.exe -help";
+        std::cout << argv[0] << " <socket_file> <ip_file> <waitCycles> <flushCounter>" << std::endl;
+        std::cout << "manager.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
     }
@@ -44,15 +43,9 @@ int main(int argc, char** argv) {
     int l_idx = 1;
     std::string l_sockFileName = argv[l_idx++];
     std::string l_ipFileName = argv[l_idx++];
-    unsigned int l_numPkts = atoi(argv[l_idx++]);
-    unsigned int l_batchPkts = atoi(argv[l_idx++]) - 1;
-    unsigned int l_timeOutCycles = atoi(argv[l_idx++]) - 1;
     unsigned int l_waitCycles = atoi(argv[l_idx++]);
-    unsigned int l_numRuns = 1;
-    if (argc > 7) {
-        l_numRuns = atoi(argv[l_idx++]);
-    }
-    
+    unsigned int l_flushCounter = atoi(argv[l_idx++]);
+   
     std::string l_hostName;
     std::string l_xclbinName;
     int l_devId = 0;
@@ -92,61 +85,26 @@ int main(int argc, char** argv) {
         }
         l_ipFile.close();
     }
-    
+   
+    std::cout << "INFO: manager ID is " << l_myID << std::endl; 
     int l_numDevs = l_ipTable.size()-1;
 
     int l_infID = 0;
 
     AlveoLink::common::FPGA l_card;
-    basicHost<AL_netDataBits> l_basicHost;
+    AlveoLink::kernel::hwManagerHost<AL_maxConnections> l_manager;
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
-    l_basicHost.init(&l_card);
-    
-    
-    unsigned int l_transBytes = t_NetDataBytes * l_numPkts;
-    unsigned int l_recBytes = l_transBytes;
-    l_basicHost.createCU(0);
-    uint8_t* l_transBuf = (uint8_t*)l_basicHost.createTransBuf(l_transBytes);
-    if (l_recBytes > 0) {
-        l_basicHost.createRecBufs(l_recBytes);
-    }
 
-    for (unsigned int i=0; i<l_numPkts; ++i) {
-        std::vector<uint8_t> l_pkt(t_NetDataBytes);
-        l_pkt[1] = 0;
-        l_pkt[0] = (l_myID + 1) % l_numDevs;
-        l_pkt[2] = AlveoLink::kernel::PKT_TYPE::workload;
-        l_pkt[2] = l_pkt[2] << 4;
-        std::memcpy(l_pkt.data()+3, (uint8_t*)(&i), 4);
-        for (unsigned int j=7; j<t_NetDataBytes; ++j) {
-            l_pkt[j] = 0;
-        }
-        std::memcpy(l_transBuf + i*t_NetDataBytes, l_pkt.data(), t_NetDataBytes); 
-    }
-    l_basicHost.sendBO();
-    uint8_t* l_resBuf;
-    for (unsigned int i=0; i<l_numRuns; ++i) {
-        l_basicHost.runCU(l_myID, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_waitCycles);
-        l_resBuf = (uint8_t*)(l_basicHost.getRes());
-    }
+    l_manager.init(&l_card);
+    l_manager.createCU(0);
+    l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter);
+    l_manager.sendBO();
 
-    int l_dataErr = 0;
-    for (unsigned int i=0; i<l_numPkts; ++i) {
-        unsigned int l_res = (l_resBuf[i*t_NetDataBytes+6]<<24);
-        l_res += l_resBuf[i*t_NetDataBytes+5]<<16;
-        l_res += l_resBuf[i*t_NetDataBytes+4]<<8;
-        l_res += l_resBuf[i*t_NetDataBytes+3];
-        if (l_res != i) {
-            std::cout << "ERROR: Pkt " << i << " received " << l_res << std::endl;
-            l_dataErr++;
-        }
-    }
-    if (l_dataErr != 0) {
-        std::cout << "ERROR: data error!" << std::endl;
-        return EXIT_FAILURE;
-    }
-    std::cout <<"Test Pass!" << std::endl;
+    l_manager.runCU();
+    l_manager.finish();
+    std::cout << "INFO: system done!" << std::endl;
+
     return EXIT_SUCCESS;
 }

@@ -48,7 +48,7 @@ help::
 ############################## Setting up Project Variables ##############################
 
 MK_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/tests/*}')
+XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/kernel/*}')
 CUR_DIR := $(patsubst %/,%,$(dir $(MK_PATH)))
 XFLIB_DIR = $(XF_PROJ_ROOT)
 
@@ -116,15 +116,15 @@ endif
 
 #Inclue Required Host Source Files
 ifeq ($(TARGET),hw)
-HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
+HOST_SRCS += $(XFLIB_DIR)/kernel/builds/udp/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 endif
 CXXFLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16 
-CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/host -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
+CXXFLAGS +=  -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
-EXE_NAME := host.exe
+EXE_NAME := manager.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 
@@ -136,38 +136,28 @@ VPP_LDFLAGS += --config $(CUR_DIR)/conn_if0.tmp.cfg --user_ip_repo_paths $(HLS_I
 
 
 ######################### binary container global settings ##########################
-VPP_FLAGS_krnl_testApp +=  -D KERNEL_NAME=krnl_testApp
-VPP_FLAGS_krnl_testApp += --hls.clock 300000000:krnl_testApp
-VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
-VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
+VPP_FLAGS_krnl_xnikSyncManager +=  -D KERNEL_NAME=krnl_xnikSyncManager
+VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_xnik_tx += --hls.clock 300000000:krnl_xnik_tx
 VPP_FLAGS_krnl_xnik_rx += --hls.clock 300000000:krnl_xnik_rx
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000
+VPP_LDFLAGS_krnl_xnikSyncManager += --clock.defaultFreqHz 200000000
 else
-VPP_LDFLAGS_krnl_testApp += --kernel_frequency 200
+VPP_LDFLAGS_krnl_xnikSyncManager += --kernel_frequency 200
 endif
 
 ifeq ($(HOST_ARCH), x86)
-BINARY_CONTAINERS += $(BUILD_DIR)/krnl_xnikSyncAdapter.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/krnl_xnikSyncManager.xclbin
 else
-BINARY_CONTAINERS += $(BUILD_DIR)/krnl_xnikSyncAdapter_pkg.xclbin
-BINARY_CONTAINERS_PKG += $(BUILD_DIR)/krnl_xnikSyncAdapter.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/krnl_xnikSyncManager_pkg.xclbin
+BINARY_CONTAINERS_PKG += $(BUILD_DIR)/krnl_xnikSyncManager.xclbin
 endif
 
 # ################ Setting Rules for Binary Containers (Building Kernels) ################
-$(TEMP_DIR)/krnl_testApp.xo: $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel/krnl_testApp.cpp 
-	$(ECHO) "Compiling Kernel: krnl_testApp"
+$(TEMP_DIR)/krnl_xnikSyncManager.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncManager.cpp 
+	$(ECHO) "Compiling Kernel: krnl_xnikSyncManager"
 	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_testApp) $(VPP_FLAGS) -k krnl_testApp -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_xnikSyncTX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncTX.cpp 
-	$(ECHO) "Compiling Kernel: krnl_xnikSyncTX"
-	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncTX) $(VPP_FLAGS) -k krnl_xnikSyncTX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX.cpp 
-	$(ECHO) "Compiling Kernel: krnl_xnikSyncRX"
-	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncRX) $(VPP_FLAGS) -k krnl_xnikSyncRX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncManager) $(VPP_FLAGS) -k krnl_xnikSyncManager -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 $(TEMP_DIR)/krnl_xnik_tx.xo: $(XFLIB_DIR)/adapter/udp/hw/src/krnl_xnik_tx.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnik_tx"
 	mkdir -p $(TEMP_DIR)
@@ -178,12 +168,8 @@ $(TEMP_DIR)/krnl_xnik_rx.xo: $(XFLIB_DIR)/adapter/udp/hw/src/krnl_xnik_rx.cpp
 	$(VPP) -c $(VPP_FLAGS_krnl_xnik_rx) $(VPP_FLAGS) -k krnl_xnik_rx -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
 
-BINARY_CONTAINER_krnl_testApp_OBJS += $(TEMP_DIR)/krnl_testApp.xo
-BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_testApp_OBJS)
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncTX.xo
-BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncRX.xo
-BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
+BINARY_CONTAINER_krnl_xnikSyncManager_OBJS += $(TEMP_DIR)/krnl_xnikSyncManager.xo
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_xnikSyncManager_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_tx.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_rx.xo
@@ -192,13 +178,14 @@ BINARY_CONTAINERS_DEPS += $(LIST_XO)
 
 $(BINARY_CONTAINERS): $(BINARY_CONTAINERS_DEPS)
 	mkdir -p $(BUILD_DIR)
-	$(VPP) -l $(VPP_FLAGS) --temp_dir $(TEMP_DIR) --report_dir $(BUILD_REPORT_DIR)/krnl_testApp $(VPP_LDFLAGS)  $(VPP_LDFLAGS_krnl_testApp) $(AIE_LDFLAGS)   -o $@ $^
+	$(VPP) -l $(VPP_FLAGS) --temp_dir $(TEMP_DIR) --report_dir $(BUILD_REPORT_DIR)/krnl_xnikSyncManager $(VPP_LDFLAGS)  $(VPP_LDFLAGS_krnl_xnikSyncManager) $(AIE_LDFLAGS)   -o $@ $^
 
 ############################## Setting Rules for Host (Building Host Executable) ##############################
 ifeq ($(HOST_ARCH), x86)
 $(EXE_FILE): $(EXE_FILE_DEPS) |  check_xrt
 	mkdir -p $(BUILD_DIR)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
 else
 $(EXE_FILE): $(EXE_FILE_DEPS) |  check_sysroot
 	mkdir -p $(BUILD_DIR)
@@ -268,7 +255,7 @@ else
 all:  check_vpp check_platform check_sysroot $(EXE_FILE) $(BINARY_CONTAINERS) emconfig sd_card
 endif
 
-.PHONY: host
+.PHONY: host 
 ifeq ($(HOST_ARCH), x86)
 host:  check_xrt $(EXE_FILE)
 else

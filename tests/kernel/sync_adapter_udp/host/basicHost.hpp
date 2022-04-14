@@ -49,13 +49,15 @@ class basicHost {
                const unsigned int p_numDevs,
                const unsigned int p_numPkts,
                const unsigned int p_batchPkts,
-               const unsigned int p_timeOutCycles) {
+               const unsigned int p_timeOutCycles,
+               const unsigned int p_waitCycles) {
         unsigned int l_argId = 4;
         m_krnlTestApp.setScalarArg(l_argId++, p_myId);
         m_krnlTestApp.setScalarArg(l_argId++, p_numDevs);
         m_krnlTestApp.setScalarArg(l_argId++, p_numPkts);
         m_krnlTestApp.setScalarArg(l_argId++, p_batchPkts);
         m_krnlTestApp.setScalarArg(l_argId++, p_timeOutCycles);
+        m_krnlTestApp.setScalarArg(l_argId++, p_waitCycles);
         m_krnlTestApp.run();
     }
 
