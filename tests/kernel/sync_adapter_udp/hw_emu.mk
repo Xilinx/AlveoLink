@@ -128,7 +128,7 @@ EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=0 -D AL_destBits=16
-VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/hw/include -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel
+VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/udp/hw/include -I $(XFLIB_DIR)/tests/kernel/sync_adapter_udp/kernel
 VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_hw_emu.cfg
 
 
@@ -170,11 +170,11 @@ $(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX.cpp
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncRX"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncRX) $(VPP_FLAGS) -k krnl_xnikSyncRX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_xnik_tx.xo: $(XFLIB_DIR)/adapter/hw/src/krnl_xnik_tx.cpp 
+$(TEMP_DIR)/krnl_xnik_tx.xo: $(XFLIB_DIR)/adapter/udp/hw/src/krnl_xnik_tx.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnik_tx"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnik_tx) $(VPP_FLAGS) -k krnl_xnik_tx -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_xnik_rx.xo: $(XFLIB_DIR)/adapter/hw/src/krnl_xnik_rx.cpp 
+$(TEMP_DIR)/krnl_xnik_rx.xo: $(XFLIB_DIR)/adapter/udp/hw/src/krnl_xnik_rx.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnik_rx"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnik_rx) $(VPP_FLAGS) -k krnl_xnik_rx -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
