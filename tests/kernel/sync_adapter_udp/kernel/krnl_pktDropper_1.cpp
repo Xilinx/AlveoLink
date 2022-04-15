@@ -20,13 +20,13 @@
 typedef AlveoLink::adapter::PktUDP<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
 static bool l_drop = true;
-extern "C" void krnl_pktDropper(hls::stream<UdpPktType>& p_inStr,
+extern "C" void krnl_pktDropper_1(hls::stream<UdpPktType>& p_inStr,
                                 hls::stream<UdpPktType>& p_outStr) {
     AXIS(p_inStr)
     AXIS(p_outStr)
     AP_CTRL_NONE(return)
-    uint16_t t_startSeq = 16;
-    uint16_t t_dropPkts = 3;
+    uint16_t t_startSeq = 22;
+    uint16_t t_dropPkts = 1;
 
     while (!p_inStr.empty()) {
 #pragma HLS PIPELINE II=1
