@@ -17,6 +17,10 @@
 #include "interface.hpp"
 #include "xnikDefs.hpp"
 
+#define DropCtrl 1
+#define DropData 0
+#define DropAck 0
+
 typedef AlveoLink::adapter::PktUDP<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
 static bool l_drop = true;
@@ -33,19 +37,33 @@ extern "C" void krnl_pktDropper_1(hls::stream<UdpPktType>& p_inStr,
         AlveoLink::adapter::PktXNIK<AL_netDataBits, AL_destBits> l_xnikPkt;
         l_xnikPkt.read(p_inStr);
         ap_uint<8> l_seqNo = l_xnikPkt.getSeqNo();
-        if (l_xnikPkt.isData() && l_xnikPkt.isWorkload()) {
-            if ((l_seqNo < t_startSeq) || (l_seqNo >= (t_startSeq+t_dropPkts))) {
-                  l_xnikPkt.write(p_outStr);
-            }
-            else if (!l_drop) {
-                l_xnikPkt.write(p_outStr);
-            }
-        }
-        else {
-            if (l_xnikPkt.isQuery() || l_xnikPkt.isAck()) {
-                l_drop = false;
-            } 
+
+#if DropData
+        if (!l_drop || !l_xnikPkt.isData() || !l_xnikPkt.isWorkload() || (l_seqNo < t_startSeq) || (l_seqNo >= (t_startSeq+t_dropPkts))) {
             l_xnikPkt.write(p_outStr);
         }
+        else if (l_drop && l_xnikPkt.isData() && l_xnikPkt.isWorkload() && (l_seqNo == (t_startSeq+t_dropPkts-1))) {
+            //drop last data pkts and switch off l_drop
+            l_drop = false;
+        }
+#endif
+#if DropCtrl
+        if (!l_xnikPkt.isData() || l_xnikPkt.isWorkload() || !l_drop) {
+             l_xnikPkt.write(p_outStr);
+        }
+        else if (l_drop && l_xnikPkt.isData() && !l_xnikPkt.isWorkload()) {
+            //drop pkts and switch off l_drop
+            l_drop = false;
+        }
+#endif
+#if DropAck
+        if (!l_xnikPkt.isAck() || !l_drop) {
+             l_xnikPkt.write(p_outStr);
+        }
+        else if (l_drop && l_xnikPkt.isAck()) {
+            //drop pkts and switch off l_drop
+            l_drop = false;
+        }
+#endif
     }
 }
