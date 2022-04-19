@@ -7,6 +7,9 @@ rm -f $ip_file
 
 CUR_DIR=$(pwd)
 AlveoLinkPath=$(awk 'sub(/AlveoLink.*/, "")' <<< "$CUR_DIR")AlveoLink
+if [ "$AlveoLinkPath" == "AlveoLink" ]; then
+    AlveoLinkPath=$AL_PATH
+fi
 
 while IFS=' ' read -r hostname ipAddr xclbin devId
 do

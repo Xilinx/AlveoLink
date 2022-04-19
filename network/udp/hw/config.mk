@@ -17,8 +17,8 @@
 
 INTERFACE ?= 0
 
-NETLAYERDIR = $(XFLIB_DIR)/network/udp/hw/vnx/NetLayers
-CMACDIR     = $(XFLIB_DIR)/network/udp/hw/vnx/Ethernet
+NETLAYERDIR = $(AL_PATH)/network/udp/hw/vnx/NetLayers
+CMACDIR     = $(AL_PATH)/network/udp/hw/vnx/Ethernet
 XSA := $(PLATFORM_NAME)
 TEMP_DIR := _x.$(XSA)
 
@@ -26,7 +26,7 @@ LIST_XO :=
 
 NETLAYERHLS = 100G-fpga-network-stack-core
 
-POSTSYSLINKTCL ?= $(shell readlink -f $(XFLIB_DIR)/network/udp/hw/vnx/Ethernet/post_sys_link.tcl)
+POSTSYSLINKTCL ?= $(shell readlink -f $(AL_PATH)/network/udp/hw/vnx/Ethernet/post_sys_link.tcl)
 
 LIST_XO += $(NETLAYERDIR)/$(TEMP_DIR)/networklayer.xo
 

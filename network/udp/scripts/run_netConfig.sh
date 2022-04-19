@@ -3,6 +3,9 @@
 #usage ./run_netConfig.sh ./config_2_3.txt ./ip.txt
 CUR_DIR=$(pwd)
 AlveoLinkPath=$(awk 'sub(/AlveoLink.*/, "")' <<< "$CUR_DIR")AlveoLink
+if [ "$AlveoLinkPath" == "AlveoLink" ]; then
+    AlveoLinkPath=$AL_PATH
+fi
 
 socket_files=()
 
