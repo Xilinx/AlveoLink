@@ -17,13 +17,14 @@
 #include "interface.hpp"
 #include "xnikDefs.hpp"
 
-#define DropCtrl 0
+#define DropCtrl 1 
 #define DropData 0
-#define DropAck 1 
+#define DropAck 0 
 
 typedef AlveoLink::adapter::PktUDP<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
 static bool l_drop = true;
+static unsigned int l_dropTimes = 0;
 extern "C" void krnl_pktDropper_0(hls::stream<UdpPktType>& p_inStr,
                                 hls::stream<UdpPktType>& p_outStr) {
     AXIS(p_inStr)
@@ -47,12 +48,17 @@ extern "C" void krnl_pktDropper_0(hls::stream<UdpPktType>& p_inStr,
         }
 #endif
 #if DropCtrl
-        if (!l_xnikPkt.isData() || l_xnikPkt.isWorkload() || !l_drop) {
+        if (!l_xnikPkt.isData() || l_xnikPkt.isWorkload() || !l_drop || (l_xnikPkt.getSeqNo() != 8)) {
              l_xnikPkt.write(p_outStr);
         }
-        else if (l_drop && l_xnikPkt.isData() && !l_xnikPkt.isWorkload()) {
+        else if (l_drop && l_xnikPkt.isData() && !l_xnikPkt.isWorkload() && (l_xnikPkt.getSeqNo() == 8)) {
             //drop pkts and switch off l_drop
-            l_drop = false;
+            if (l_dropTimes == 0) {
+                l_drop = false;
+            }
+            else {
+                l_dropTimes--;
+            }
         }
 #endif
 #if DropAck

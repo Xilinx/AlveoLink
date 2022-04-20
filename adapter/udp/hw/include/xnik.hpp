@@ -304,7 +304,7 @@ LOOP_DECODER:
                         AckPkt<t_NetDataBits, t_DestBits, t_TypeBits, t_SeqBits> l_sendNormAckPkt(XNIK_PKT_TYPE::SEND_ACK, l_nextExpSeqNo, l_dest);
                         l_sendNormAckPkt.write(p_outAckStr);
                         m_ackArr[l_dest] = true;
-                        m_ackSeqNoArr[l_dest] = l_recSeqNo;
+                        m_ackSeqNoArr[l_dest] = l_recSeqNo+1;
                     }
                     else {
                         m_ackArr[l_dest] = false;

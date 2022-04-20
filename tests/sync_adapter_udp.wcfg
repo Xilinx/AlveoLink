@@ -22,13 +22,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="104,705.201 ns"></ZoomStartTime>
-      <ZoomEndTime time="105,290.202 ns"></ZoomEndTime>
-      <Cursor1Time time="104,946.701 ns"></Cursor1Time>
+      <ZoomStartTime time="21,270.767 ns"></ZoomStartTime>
+      <ZoomEndTime time="21,326.968 ns"></ZoomEndTime>
+      <Cursor1Time time="21,342.601 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="192"></NameColumnWidth>
-      <ValueColumnWidth column_width="92"></ValueColumnWidth>
+      <ValueColumnWidth column_width="88"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="60" />
    <wvobject fp_name="divider579" type="divider">
@@ -180,6 +180,138 @@
       <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[0]">
          <obj_property name="ElementShortName">[0]</obj_property>
          <obj_property name="ObjectShortName">[0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="vbus" fp_name="vbus943">
+      <obj_property name="label">p_inKrnlData[151:120]</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[151]">
+         <obj_property name="ElementShortName">[151]</obj_property>
+         <obj_property name="ObjectShortName">[151]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[150]">
+         <obj_property name="ElementShortName">[150]</obj_property>
+         <obj_property name="ObjectShortName">[150]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[149]">
+         <obj_property name="ElementShortName">[149]</obj_property>
+         <obj_property name="ObjectShortName">[149]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[148]">
+         <obj_property name="ElementShortName">[148]</obj_property>
+         <obj_property name="ObjectShortName">[148]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[147]">
+         <obj_property name="ElementShortName">[147]</obj_property>
+         <obj_property name="ObjectShortName">[147]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[146]">
+         <obj_property name="ElementShortName">[146]</obj_property>
+         <obj_property name="ObjectShortName">[146]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[145]">
+         <obj_property name="ElementShortName">[145]</obj_property>
+         <obj_property name="ObjectShortName">[145]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[144]">
+         <obj_property name="ElementShortName">[144]</obj_property>
+         <obj_property name="ObjectShortName">[144]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[143]">
+         <obj_property name="ElementShortName">[143]</obj_property>
+         <obj_property name="ObjectShortName">[143]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[142]">
+         <obj_property name="ElementShortName">[142]</obj_property>
+         <obj_property name="ObjectShortName">[142]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[141]">
+         <obj_property name="ElementShortName">[141]</obj_property>
+         <obj_property name="ObjectShortName">[141]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[140]">
+         <obj_property name="ElementShortName">[140]</obj_property>
+         <obj_property name="ObjectShortName">[140]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[139]">
+         <obj_property name="ElementShortName">[139]</obj_property>
+         <obj_property name="ObjectShortName">[139]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[138]">
+         <obj_property name="ElementShortName">[138]</obj_property>
+         <obj_property name="ObjectShortName">[138]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[137]">
+         <obj_property name="ElementShortName">[137]</obj_property>
+         <obj_property name="ObjectShortName">[137]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[136]">
+         <obj_property name="ElementShortName">[136]</obj_property>
+         <obj_property name="ObjectShortName">[136]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[135]">
+         <obj_property name="ElementShortName">[135]</obj_property>
+         <obj_property name="ObjectShortName">[135]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[134]">
+         <obj_property name="ElementShortName">[134]</obj_property>
+         <obj_property name="ObjectShortName">[134]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[133]">
+         <obj_property name="ElementShortName">[133]</obj_property>
+         <obj_property name="ObjectShortName">[133]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[132]">
+         <obj_property name="ElementShortName">[132]</obj_property>
+         <obj_property name="ObjectShortName">[132]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[131]">
+         <obj_property name="ElementShortName">[131]</obj_property>
+         <obj_property name="ObjectShortName">[131]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[130]">
+         <obj_property name="ElementShortName">[130]</obj_property>
+         <obj_property name="ObjectShortName">[130]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[129]">
+         <obj_property name="ElementShortName">[129]</obj_property>
+         <obj_property name="ObjectShortName">[129]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[128]">
+         <obj_property name="ElementShortName">[128]</obj_property>
+         <obj_property name="ObjectShortName">[128]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[127]">
+         <obj_property name="ElementShortName">[127]</obj_property>
+         <obj_property name="ObjectShortName">[127]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[126]">
+         <obj_property name="ElementShortName">[126]</obj_property>
+         <obj_property name="ObjectShortName">[126]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[125]">
+         <obj_property name="ElementShortName">[125]</obj_property>
+         <obj_property name="ObjectShortName">[125]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[124]">
+         <obj_property name="ElementShortName">[124]</obj_property>
+         <obj_property name="ObjectShortName">[124]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[123]">
+         <obj_property name="ElementShortName">[123]</obj_property>
+         <obj_property name="ObjectShortName">[123]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[122]">
+         <obj_property name="ElementShortName">[122]</obj_property>
+         <obj_property name="ObjectShortName">[122]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[121]">
+         <obj_property name="ElementShortName">[121]</obj_property>
+         <obj_property name="ObjectShortName">[121]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[120]">
+         <obj_property name="ElementShortName">[120]</obj_property>
+         <obj_property name="ObjectShortName">[120]</obj_property>
       </wvobject>
    </wvobject>
    <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inAckStr_TVALID">
@@ -338,138 +470,6 @@
       <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_outPktStr_TDATA[0]">
          <obj_property name="ElementShortName">[0]</obj_property>
          <obj_property name="ObjectShortName">[0]</obj_property>
-      </wvobject>
-   </wvobject>
-   <wvobject type="vbus" fp_name="vbus943">
-      <obj_property name="label">p_inKrnlData[151:120]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[151]">
-         <obj_property name="ElementShortName">[151]</obj_property>
-         <obj_property name="ObjectShortName">[151]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[150]">
-         <obj_property name="ElementShortName">[150]</obj_property>
-         <obj_property name="ObjectShortName">[150]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[149]">
-         <obj_property name="ElementShortName">[149]</obj_property>
-         <obj_property name="ObjectShortName">[149]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[148]">
-         <obj_property name="ElementShortName">[148]</obj_property>
-         <obj_property name="ObjectShortName">[148]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[147]">
-         <obj_property name="ElementShortName">[147]</obj_property>
-         <obj_property name="ObjectShortName">[147]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[146]">
-         <obj_property name="ElementShortName">[146]</obj_property>
-         <obj_property name="ObjectShortName">[146]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[145]">
-         <obj_property name="ElementShortName">[145]</obj_property>
-         <obj_property name="ObjectShortName">[145]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[144]">
-         <obj_property name="ElementShortName">[144]</obj_property>
-         <obj_property name="ObjectShortName">[144]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[143]">
-         <obj_property name="ElementShortName">[143]</obj_property>
-         <obj_property name="ObjectShortName">[143]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[142]">
-         <obj_property name="ElementShortName">[142]</obj_property>
-         <obj_property name="ObjectShortName">[142]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[141]">
-         <obj_property name="ElementShortName">[141]</obj_property>
-         <obj_property name="ObjectShortName">[141]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[140]">
-         <obj_property name="ElementShortName">[140]</obj_property>
-         <obj_property name="ObjectShortName">[140]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[139]">
-         <obj_property name="ElementShortName">[139]</obj_property>
-         <obj_property name="ObjectShortName">[139]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[138]">
-         <obj_property name="ElementShortName">[138]</obj_property>
-         <obj_property name="ObjectShortName">[138]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[137]">
-         <obj_property name="ElementShortName">[137]</obj_property>
-         <obj_property name="ObjectShortName">[137]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[136]">
-         <obj_property name="ElementShortName">[136]</obj_property>
-         <obj_property name="ObjectShortName">[136]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[135]">
-         <obj_property name="ElementShortName">[135]</obj_property>
-         <obj_property name="ObjectShortName">[135]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[134]">
-         <obj_property name="ElementShortName">[134]</obj_property>
-         <obj_property name="ObjectShortName">[134]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[133]">
-         <obj_property name="ElementShortName">[133]</obj_property>
-         <obj_property name="ObjectShortName">[133]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[132]">
-         <obj_property name="ElementShortName">[132]</obj_property>
-         <obj_property name="ObjectShortName">[132]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[131]">
-         <obj_property name="ElementShortName">[131]</obj_property>
-         <obj_property name="ObjectShortName">[131]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[130]">
-         <obj_property name="ElementShortName">[130]</obj_property>
-         <obj_property name="ObjectShortName">[130]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[129]">
-         <obj_property name="ElementShortName">[129]</obj_property>
-         <obj_property name="ObjectShortName">[129]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[128]">
-         <obj_property name="ElementShortName">[128]</obj_property>
-         <obj_property name="ObjectShortName">[128]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[127]">
-         <obj_property name="ElementShortName">[127]</obj_property>
-         <obj_property name="ObjectShortName">[127]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[126]">
-         <obj_property name="ElementShortName">[126]</obj_property>
-         <obj_property name="ObjectShortName">[126]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[125]">
-         <obj_property name="ElementShortName">[125]</obj_property>
-         <obj_property name="ObjectShortName">[125]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[124]">
-         <obj_property name="ElementShortName">[124]</obj_property>
-         <obj_property name="ObjectShortName">[124]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[123]">
-         <obj_property name="ElementShortName">[123]</obj_property>
-         <obj_property name="ObjectShortName">[123]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[122]">
-         <obj_property name="ElementShortName">[122]</obj_property>
-         <obj_property name="ObjectShortName">[122]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[121]">
-         <obj_property name="ElementShortName">[121]</obj_property>
-         <obj_property name="ObjectShortName">[121]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/p_inKrnlStr_TDATA[120]">
-         <obj_property name="ElementShortName">[120]</obj_property>
-         <obj_property name="ObjectShortName">[120]</obj_property>
       </wvobject>
    </wvobject>
    <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnik_tx_0/inst/grp_pktGen_fu_110/l_xnikTX_m_sentArr_V">

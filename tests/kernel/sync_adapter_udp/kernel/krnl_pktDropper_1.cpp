@@ -17,9 +17,9 @@
 #include "interface.hpp"
 #include "xnikDefs.hpp"
 
-#define DropCtrl 1
+#define DropCtrl 0 
 #define DropData 0
-#define DropAck 0
+#define DropAck 1
 
 typedef AlveoLink::adapter::PktUDP<AL_netDataBits, AL_destBits>::TypeAXIS UdpPktType;
 
@@ -57,10 +57,10 @@ extern "C" void krnl_pktDropper_1(hls::stream<UdpPktType>& p_inStr,
         }
 #endif
 #if DropAck
-        if (!l_xnikPkt.isAck() || !l_drop) {
+        if (!l_xnikPkt.isAck() || !l_drop || (l_xnikPkt.getSeqNo() != 13)) {
              l_xnikPkt.write(p_outStr);
         }
-        else if (l_drop && l_xnikPkt.isAck()) {
+        else if (l_drop && l_xnikPkt.isAck() && (l_xnikPkt.getSeqNo() == 13)) {
             //drop pkts and switch off l_drop
             l_drop = false;
         }

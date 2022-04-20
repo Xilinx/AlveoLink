@@ -238,6 +238,10 @@ class PktXNIK : public PktUDP<t_NetDataBits,
 #pragma HLS INLINE
             return (m_graphPktType == AlveoLink::kernel::PKT_TYPE::done);
         }
+        bool isIdleAfterDone() {
+#pragma HLS INLINE
+            return (m_graphPktType == AlveoLink::kernel::PKT_TYPE::idle_after_done);
+        }
         bool isLast() {
 #pragma HLS INLINE
             return (this->m_pkt.last == 1);
