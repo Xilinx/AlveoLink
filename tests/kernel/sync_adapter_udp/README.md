@@ -1,5 +1,12 @@
-# Test xnik kernel + adapter with two cards sending and receiving data to and from each other using hardware manager
-## 1. set up Vitis 2021.2_released environemnts
+# Test xnik kernel + adapter with two cards sending and receiving data to and from each other SW manager
+## 1. set up Vitis 2021.2_released environemnts and AL_PATH on db4
+
+```sh
+source /proj/xbuilds/2021.2_released/installs/lin64/Vitis/2021.2/settings64.sh
+source /opt/xilinx/xrt/setup.sh
+
+export AL_PATH=/proj/rdi-xsj/staff/lingl/nobkup/FaaSApps/AlveoLink (note: please change this to your local AlveoLink repo path)
+```
 
 ## 2. build hw
 
@@ -12,26 +19,26 @@ make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx
 ## 3. compile and run netConfig 
 
 ```sh
-on db3(for running hw manager), navigate to tests/kernel/sync_adapter_udp
+on db4(for running sw manager), navigate to tests/kernel/sync_adapter_udp
 
-../../../network/udp/scripts/run_compileUsingHwManager.sh ./config_4_3.txt
+$AL_PATH/network/udp/scripts/run_compile.sh ./config_4_0_1.txt
 
-../../../network/udp/scripts/run_netConfig.sh ./config_4_3.txt ./ip.txt
+$AL_PATH/network/udp/scripts/run_netConfig.sh ./config_4_0_1.txt ./ip.txt
 ```
 
-## 4. compile test host code and host code for hardware manager
+## 4. compile test host code and sw manager
 
 ```sh
-on db3, navigate to tests/kernel/sync_adapter_udp
+on db4, navigate to tests/kernel/sync_adapter_udp
 
-./run_compile.sh ./config_4_3.txt
+./run_compileUsingSWmanager.sh ./config_4_0_1.txt
 ```
 
 ## 5. run tests
 
 ```sh
-on db3,  navigate to tests/kernel/sync_adapter_udp and run hardware manager
-../../../kernel/builds/udp/build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/manager.exe ./xsj-dxgradb03_0_sockets.txt ./ip.txt 400 1
+on db4,  navigate to tests/kernel/sync_adapter_udp and run sw manager
+$AL_PATH/kernel/builds/udp/build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb04/manager.exe ./ip.txt 1 100 200
 
 run following commands repeatively:
 
