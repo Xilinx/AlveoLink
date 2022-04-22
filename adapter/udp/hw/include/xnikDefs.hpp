@@ -22,6 +22,7 @@
 #include "ap_int.h"
 #include "hls_stream.h"
 #include "graphPktDefs.hpp"
+#include "pktType.hpp"
 
 namespace AlveoLink {
 namespace adapter {

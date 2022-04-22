@@ -31,9 +31,9 @@
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 
 int main(int argc, char** argv) {
-    if (argc !=4  || (std::string(argv[1]) == "-help")) {
+    if (argc <5  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <ip_file> <flushCounter> <microSeconds>" << std::endl;
+        std::cout << argv[0] << " <ip_file> <flushCounter> <microSeconds4query> <microSeconds4retran>" << std::endl;
         std::cout << "manager.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
@@ -41,10 +41,14 @@ int main(int argc, char** argv) {
     int l_idx = 1;
     std::string l_ipFileName = argv[l_idx++];
     int l_flushCounter = atoi(argv[l_idx++]);
-    int l_microSeconds = atoi(argv[l_idx++]);
-    std::cout << "manager is starting..."<< std::endl;
-    AlveoLink::kernel::Manager<t_NetDataBytes> l_manager(l_ipFileName);
-    double l_timeSec = l_manager.process(l_flushCounter, l_microSeconds);
-    std::cout << "INFO: run time = " << l_timeSec << " seconds" << std::endl;
+    int l_microSeconds4Query = atoi(argv[l_idx++]);
+    int l_microSec4retran = atoi(argv[l_idx++]);
+    AlveoLink::kernel::Manager<AL_maxConnections, AL_mtuBytes, t_NetDataBytes> l_manager(l_ipFileName, l_microSec4retran);
+    std::cout << "Please enter ctrl+c to stop the manager." << std::endl;
+    do {
+        std::cout << "system started..."<< std::endl;
+        double l_timeSec = l_manager.process(l_flushCounter, l_microSeconds4Query);
+        std::cout << "INFO: system run time = " << l_timeSec << " seconds" << std::endl;
+    } while (1);
     return EXIT_SUCCESS;
 }
