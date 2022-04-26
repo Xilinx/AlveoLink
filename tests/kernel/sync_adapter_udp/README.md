@@ -38,7 +38,7 @@ on db4, navigate to tests/kernel/sync_adapter_udp
 
 ```sh
 on db4,  navigate to tests/kernel/sync_adapter_udp and run sw manager
-$AL_PATH/kernel/builds/udp/build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb04/manager.exe ./ip.txt 1 100 200
+$AL_PATH/kernel/sw/build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/manager.exe ./ip.txt 1 100 200
 
 run following commands repeatively:
 
