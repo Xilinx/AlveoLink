@@ -131,7 +131,12 @@ EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16
 VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/tests/network/dv/kernel
+
+ifeq ($(INTERFACE), 0)
 VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if0.tmp.cfg
+else ifeq ($(INTERFACE), 2)
+VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if2.tmp.cfg
+endif
 
 
 

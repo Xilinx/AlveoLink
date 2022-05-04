@@ -80,7 +80,8 @@ class dvAdapter : public AlveoLink::common::IP {
         }
         bool isInfUp() {
             int l_status = readReg(CardMap);
-            if (l_status == 1) {
+            std::cout << "INFO: reg address " << std::hex << CardMap << " has value: " << l_status << std::endl;
+            if (l_status != 0) {
                 return true;
             }
             else {
@@ -90,7 +91,8 @@ class dvAdapter : public AlveoLink::common::IP {
         std::bitset<4> getLaneStatus() {
             std::bitset<4> l_status;
             l_status.reset();
-            uint8_t l_laneStatus = readReg(LanesUp);
+            int l_laneStatus = readReg(LanesUp);
+            std::cout << "INFO: reg address " << std::hex << LanesUp << " has value: " << l_laneStatus << std::endl;
             l_status[0] = ((l_laneStatus & 0x01) == 1);
             l_status[1] = (((l_laneStatus >> 1) & 0x01) == 1);
             l_status[2] = (((l_laneStatus >> 2) & 0x01) == 1);
@@ -105,16 +107,26 @@ class dvAdapter : public AlveoLink::common::IP {
             return l_res;
         }
         
-        uint64_t getLaneRxCounter(const unsigned int p_laneId) {
-            uint32_t l_highWord = readReg(RxCntH0+8*p_laneId);
-            uint32_t l_lowWord = readReg(RxCntL0+8*p_laneId);
-            uint64_t l_res = (l_highWord << 32) + l_lowWord;
+        std::vector<uint64_t> getLaneRxCounter() {
+            std::vector<uint64_t> l_res(4);
+            for (auto i=0; i<4; ++i) {
+                uint32_t l_highWord = readReg(RxCntH0+8*i);
+                uint32_t l_lowWord = readReg(RxCntL0+8*i);
+                l_res[i] = l_highWord;
+                l_res[i] = l_res[i] << 32;
+                l_res[i] += l_lowWord;
+            }
             return l_res;
         }
-        uint64_t getLaneTxCounter(const unsigned int p_laneId) {
-            uint32_t l_highWord = readReg(TxCntH0+8*p_laneId);
-            uint32_t l_lowWord = readReg(TxCntL0+8*p_laneId);
-            uint64_t l_res = (l_highWord << 32) + l_lowWord;
+        std::vector<uint64_t> getLaneTxCounter() {
+            std::vector<uint64_t> l_res(4);
+            for (auto i=0; i<4; ++i) {
+                uint32_t l_highWord = readReg(TxCntH0+8*i);
+                uint32_t l_lowWord = readReg(TxCntL0+8*i);
+                l_res[i] = l_highWord;
+                l_res[i] = l_res[i] << 32;
+                l_res[i] += l_lowWord;
+            }
             return l_res;
         }
         std::vector<uint32_t> getLastRxPkt(const unsigned int p_laneId) {

@@ -87,22 +87,21 @@ int main(int argc, char** argv) {
             }
         }
         if (l_option == 5) {
-            std::cout << "Please enter lane id: ";
-            unsigned int l_laneId;
-            std::cin >> l_laneId;
-            unsigned int l_pkts = l_dvAdapter.getLaneRxCounter(l_laneId);
-            std::cout << std::endl;
-            std::cout << "INFO: lane " << l_laneId << " has sent " << l_pkts << " packets." << std::endl;
+            std::vector<uint64_t> l_pktCnts = l_dvAdapter.getLaneRxCounter();
+            for (auto i=0; i<4; ++i) {
+                std::cout << "INFO: lane " << i << " has sent " << l_pktCnts[i] << " packets." << std::endl;
+            }
         }
         if (l_option == 6) {
-            std::cout << "Please enter lane id: ";
-            unsigned int l_laneId;
-            std::cin >> l_laneId;
-            unsigned int l_pkts = l_dvAdapter.getLaneTxCounter(l_laneId);
-            std::cout << std::endl;
-            std::cout << "INFO: lane " << l_laneId << " has received " << l_pkts << " packets." << std::endl;
+            std::vector<uint64_t> l_pktCnts= l_dvAdapter.getLaneTxCounter();
+            for (auto i=0; i<4; ++i) {
+                std::cout << "INFO: lane " << i << " has received " << l_pktCnts[i] << " packets." << std::endl;
+            }
         }
         std::cout << std::endl;
+        std::cout << "INFO: Please enter \'c\' to continue..." << std::endl;
+        char l_unused;
+        std::cin >> l_unused;
         std::cout << "Please choose one of the following options: " << std::endl;
         std::cout << "0: quit" << std::endl;
         std::cout << "1: check network interface status" << std::endl;
