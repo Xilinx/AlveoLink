@@ -41,30 +41,33 @@ int main(int argc, char** argv) {
     unsigned int l_devId = atoi(argv[l_idx++]);
 
     AlveoLink::common::FPGA l_card;
-    AlveoLink::network_dv::dvAdapter<AL_maxConnections> l_dvAdapter;
+    AlveoLink::network_dv::dvAdapter<AL_maxConnections, AL_destBits> l_dvAdapter;
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
 
     l_dvAdapter.fpga(&l_card);
-    l_dvAdapter.initCU(0);
+    l_dvAdapter.createCU(0);
+    l_dvAdapter.init();
     std::cout << "Please choose one of the following options: " << std::endl;
     std::cout << "0: quit" << std::endl;
-    std::cout << "1: check network interface status" << std::endl;
+    std::cout << "1: get valid dests" << std::endl;
     std::cout << "2: clearCounters" << std::endl;
     std::cout << "3: getClrCnts" << std::endl;
-    std::cout << "4: getLaneStatus" << std::endl;
+    std::cout << "4: getIdStatus" << std::endl;
     std::cout << "5: getLaneRxCounter" << std::endl;
     std::cout << "6: getLaneTxCounter" << std::endl;
     int l_option;
     std::cin >> l_option;
     while (l_option != 0) {
         if (l_option == 1) {
-            if (l_dvAdapter.isInfUp()) {
-                std::cout << "INFO: Network Interface 0 is ready!" << std::endl;
-            }
-            else {
-                std::cout << "WARNING: Network Interface 0 is not ready!" << std::endl;
+            uint16_t l_numDests = l_dvAdapter.getNumDests();
+            std::bitset<AL_maxConnections> l_dests = l_dvAdapter.getDestMap();
+            std::cout << "INFO: Network Interface 0 has " << l_numDests << " dests." << std::endl;
+            for (auto i=0; i<l_numDests; ++i) {
+                if (l_dests[i]) {
+                     std::cout << "INFO: dest " << i << " is valid." << std::endl;
+                }
             }
         }
         if (l_option == 2) {
@@ -76,13 +79,21 @@ int main(int argc, char** argv) {
             std::cout << "INFO: read out ClrCnts value is: 0x" << std::hex << l_clrCnts << std::endl;
         }
         if (l_option == 4) {
-            std::bitset<4> l_laneUp = l_dvAdapter.getLaneStatus();
-            for (auto i=0; i<4; ++i) {
-                if (l_laneUp[i]) {
-                    std::cout << "INFO: lane " << i << " is up." << std::endl;
-                }
-                else {
-                    std::cout << "INFO: lane " << i << " is down." << std::endl;
+            uint16_t l_id = l_dvAdapter.getMyId();
+            bool l_linkUp = l_dvAdapter.isLinkUp();
+            std::cout << "INFO: Network Interface 0 has id " << l_id  << std::endl;
+            if (l_linkUp) {
+                std::cout << "INFO: Network Interface 0 link is up." << std::endl;
+            }
+            else {
+                std::bitset<4> l_laneStatus = l_dvAdapter.getLaneStatus();
+                for (auto i=0; i<4; ++i) {
+                    if (l_laneStatus[i]) {
+                        std::cout << "INFO: lane " << i << " is up." << std::endl;
+                    }
+                    else {
+                        std::cout << "INFO: lane " << i << " is down." << std::endl;
+                    }
                 }
             }
         }

@@ -26,7 +26,7 @@ namespace AlveoLink {
 namespace network_dv {
 
 constexpr size_t ClrCnts = 0x00;  // Write Clears All Counters -- Reads as DEADBEEF
-constexpr size_t LanesUp = 0x04;  // Lanes Up -- Bits[3:0] signify which lanes are up
+constexpr size_t IdStatus = 0x04;  // bit[15:0]: port ID, bit[19:16]: lane status, 1-up, 0-down, bit[20]: port valid, 1-when all lanes are up
 constexpr size_t CardMap = 0x08;  // Card Address Map -- 1 signifies that card is present & ready
 constexpr size_t RSVD0 = 0x0C;    // Reserved0
 constexpr size_t RxCntL0 = 0x10;  // Rx Count0 Low Word
@@ -67,38 +67,62 @@ constexpr size_t LSTPKTL3W2 = 0x98;   // Last Rx Pkt L3 Wrd2
 constexpr size_t LSTPKTL3W3 = 0x9C;   // Last Rx Pkt L3 Wrd3
 
 
-template <unsigned int t_MaxConnections>
+template <unsigned int t_MaxConnections, unsigned int t_DestBits>
 class dvAdapter : public AlveoLink::common::IP {
     public:
         dvAdapter() {
             m_dests.reset();
+            m_laneStatus.reset();
+            m_linkUp = false;
             m_myId = 0;
+            m_numDests = 0;
         }
-        void initCU(const unsigned int p_id) {
+        void createCU(const unsigned int p_id) {
             std::string l_cuName = "dv_adapter0:{dv_adapter" + std::to_string(p_id) + "}";
             getIP(l_cuName);
         }
-        bool isInfUp() {
-            int l_status = readReg(CardMap);
-            std::cout << "INFO: reg address " << std::hex << CardMap << " has value: " << l_status << std::endl;
-            if (l_status != 0) {
-                return true;
+        void init() {//get dests map, my_id, and laneStatus
+            int l_portMap = readReg(CardMap);
+            for (auto i=0; i<t_MaxConnections; ++i) {
+                int l_valid = (l_portMap >> i) & 0x01;
+                if (l_valid == 1) {
+                    m_numDests++;
+                    m_dests[i] = true;
+                }
+                else {
+                    m_dests[i] = false;
+                }
             }
-            else {
-                return false;
+            int l_idStatus = readReg(IdStatus);
+            m_myId = l_idStatus & 0x0ffff;
+            int l_laneStatus = l_idStatus >> t_DestBits;
+            for (auto i=0; i<4; ++i) {
+                if (((l_laneStatus >> i) & 0x01) == 1) {
+                    m_laneStatus[i] = true;
+                }
+                else {
+                    m_laneStatus[i] = false;
+                }
             }
+            m_linkUp = m_laneStatus.all(); 
+        }
+        
+        std::bitset<t_MaxConnections> getDestMap() {
+            return m_dests;
         }
         std::bitset<4> getLaneStatus() {
-            std::bitset<4> l_status;
-            l_status.reset();
-            int l_laneStatus = readReg(LanesUp);
-            std::cout << "INFO: reg address " << std::hex << LanesUp << " has value: " << l_laneStatus << std::endl;
-            l_status[0] = ((l_laneStatus & 0x01) == 1);
-            l_status[1] = (((l_laneStatus >> 1) & 0x01) == 1);
-            l_status[2] = (((l_laneStatus >> 2) & 0x01) == 1);
-            l_status[3] = (((l_laneStatus >> 3) & 0x01) == 1);
-            return l_status;
+            return m_laneStatus;
         }
+        bool isLinkUp() {
+            return m_linkUp;
+        }
+        uint16_t getMyId() {
+            return m_myId;
+        }
+        uint16_t getNumDests() {
+            return m_numDests;
+        }
+
         void clearCounters() {
             writeReg(ClrCnts, 1);
         }
@@ -140,8 +164,11 @@ class dvAdapter : public AlveoLink::common::IP {
 
 
     private:
+        std::bitset<4> m_laneStatus;
         std::bitset<t_MaxConnections> m_dests;
-        unsigned int m_myId;
+        bool m_linkUp;
+        uint16_t m_numDests;
+        uint16_t m_myId;
 };
 }
 }
