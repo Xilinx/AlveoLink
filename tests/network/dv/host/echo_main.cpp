@@ -22,7 +22,7 @@
 #include <cassert>
 #include <ctime>
 
-#include "dvAdapter.hpp"
+#include "dvNetLayer.hpp"
 
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 
@@ -41,14 +41,12 @@ int main(int argc, char** argv) {
     unsigned int l_devId = atoi(argv[l_idx++]);
 
     AlveoLink::common::FPGA l_card;
-    AlveoLink::network_dv::dvAdapter<AL_maxConnections, AL_destBits> l_dvAdapter;
+    AlveoLink::network_dv::dvNetLayer<AL_numInfs, AL_maxConnections, AL_destBits> l_dvNetLayer;
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
 
-    l_dvAdapter.fpga(&l_card);
-    l_dvAdapter.createCU(0);
-    l_dvAdapter.init();
+    l_dvNetLayer.init(&l_card);
     std::cout << "Please choose one of the following options: " << std::endl;
     std::cout << "0: quit" << std::endl;
     std::cout << "1: get valid dests" << std::endl;
@@ -61,52 +59,48 @@ int main(int argc, char** argv) {
     std::cin >> l_option;
     while (l_option != 0) {
         if (l_option == 1) {
-            uint16_t l_numDests = l_dvAdapter.getNumDests();
-            std::bitset<AL_maxConnections> l_dests = l_dvAdapter.getDestMap();
-            std::cout << "INFO: Network Interface 0 has " << l_numDests << " dests." << std::endl;
-            for (auto i=0; i<l_numDests; ++i) {
-                if (l_dests[i]) {
-                     std::cout << "INFO: dest " << i << " is valid." << std::endl;
-                }
-            }
+            uint16_t l_numDests = l_dvNetLayer.getNumDests();
+            std::cout << "INFO: card  " << l_devId << " has "<< l_numDests << " dests." << std::endl;
         }
         if (l_option == 2) {
-            l_dvAdapter.clearCounters();
+            l_dvNetLayer.clearCounters();
             std::cout << "INFO: reset counters completed." << std::endl;
         }
         if (l_option == 3) {
-            unsigned int l_clrCnts = l_dvAdapter.getClrCnts();
-            std::cout << "INFO: read out ClrCnts value is: 0x" << std::hex << l_clrCnts << std::endl;
+            std::vector<unsigned int> l_clrCnts = l_dvNetLayer.getClrCnts();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << " ClrCnts value is: 0x" << std::hex << l_clrCnts[i] << std::endl;
+            }
         }
         if (l_option == 4) {
-            uint16_t l_id = l_dvAdapter.getMyId();
-            bool l_linkUp = l_dvAdapter.isLinkUp();
-            std::cout << "INFO: Network Interface 0 has id " << l_id  << std::endl;
-            if (l_linkUp) {
-                std::cout << "INFO: Network Interface 0 link is up." << std::endl;
-            }
-            else {
-                std::bitset<4> l_laneStatus = l_dvAdapter.getLaneStatus();
-                for (auto i=0; i<4; ++i) {
-                    if (l_laneStatus[i]) {
-                        std::cout << "INFO: lane " << i << " is up." << std::endl;
-                    }
-                    else {
-                        std::cout << "INFO: lane " << i << " is down." << std::endl;
-                    }
+            uint16_t* l_ids = l_dvNetLayer.getIds();
+            std::bitset<AL_numInfs> l_linkUp = l_dvNetLayer.getLinkStatus();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << " has id " << std::dec << l_ids[i]  << std::endl;
+                if (l_linkUp[i]) {
+                    std::cout << "INFO: port " << i << " link up." << std::endl;
+                }
+                else {
+                    std::cout << "INFO: port " << i << " link down." << std::endl;
                 }
             }
         }
         if (l_option == 5) {
-            std::vector<uint64_t> l_pktCnts = l_dvAdapter.getLaneRxCounter();
-            for (auto i=0; i<4; ++i) {
-                std::cout << "INFO: lane " << i << " has sent " << l_pktCnts[i] << " packets." << std::endl;
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneSentPktsCnt();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << std::endl;
+                for (auto j=0; j<4; ++j) {
+                    std::cout << "    lane " << j << " has sent " << l_pktCnts[i*4+j] << " packets." << std::endl;
+                }
             }
         }
         if (l_option == 6) {
-            std::vector<uint64_t> l_pktCnts= l_dvAdapter.getLaneTxCounter();
-            for (auto i=0; i<4; ++i) {
-                std::cout << "INFO: lane " << i << " has received " << l_pktCnts[i] << " packets." << std::endl;
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneRecPktsCnt();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << std::endl;
+                for (auto j=0; j<4; ++j) {
+                    std::cout << "    lane " << j << " has received " << l_pktCnts[i*4+j] << " packets." << std::endl;
+                }
             }
         }
         std::cout << std::endl;

@@ -77,11 +77,11 @@ class dvAdapter : public AlveoLink::common::IP {
             m_myId = 0;
             m_numDests = 0;
         }
-        void createCU(const unsigned int p_id) {
-            std::string l_cuName = "dv_adapter0:{dv_adapter" + std::to_string(p_id) + "}";
+        void initCU(const unsigned int p_id) {
+            std::string l_cuName = "dv_adapter"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
             getIP(l_cuName);
         }
-        void init() {//get dests map, my_id, and laneStatus
+        void updateStatus() {//get dests map, my_id, and laneStatus
             int l_portMap = readReg(CardMap);
             for (auto i=0; i<t_MaxConnections; ++i) {
                 int l_valid = (l_portMap >> i) & 0x01;
