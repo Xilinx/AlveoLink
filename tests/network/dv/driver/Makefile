@@ -118,13 +118,13 @@ endif
 ifeq ($(TARGET),hw)
 HOST_SRCS += $(XFLIB_DIR)/tests/network/dv/host/driver_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 endif
-CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16
+CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2
 CXXFLAGS +=  -I $(XFLIB_DIR)/tests/network/dv/host -I $(XFLIB_DIR)/network/dv/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
-EXE_NAME := host.exe
+EXE_NAME := driver.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 

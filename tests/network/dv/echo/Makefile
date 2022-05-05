@@ -124,7 +124,7 @@ CXXFLAGS +=  -I $(XFLIB_DIR)/tests/network/dv/host -I $(XFLIB_DIR)/network/dv/sw
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
-EXE_NAME := host.exe
+EXE_NAME := echo.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 

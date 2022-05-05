@@ -109,10 +109,10 @@ int main(int argc, char** argv) {
         std::cin >> l_unused;
         std::cout << "Please choose one of the following options: " << std::endl;
         std::cout << "0: quit" << std::endl;
-        std::cout << "1: check network interface status" << std::endl;
+        std::cout << "1: get valid dests" << std::endl;
         std::cout << "2: clearCounters" << std::endl;
         std::cout << "3: getClrCnts" << std::endl;
-        std::cout << "4: getLaneStatus" << std::endl;
+        std::cout << "4: getIdStatus" << std::endl;
         std::cout << "5: getLaneRxCounter" << std::endl;
         std::cout << "6: getLaneTxCounter" << std::endl;
         std::cin >> l_option;

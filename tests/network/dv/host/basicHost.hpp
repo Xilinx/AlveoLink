@@ -46,16 +46,15 @@ class basicHost {
         m_krnlDriverBufs.insert({2, l_buf});
     }
     void createRxBufs(const size_t p_numWords) {
-        assert((p_numWords % 2) == 0);
         size_t l_bufBytes = p_numWords * t_NetDataBytes;
-        void* l_buf = m_krnlDriver.createBO(5, l_dataBytes);
+        void* l_buf = m_krnlDriver.createBO(5, l_bufBytes);
         m_krnlDriver.setMemArg(5);
         m_krnlDriverBufs.insert({5, l_buf});
         l_bufBytes = p_numWords * t_NetDataBytes/8;
         l_buf = m_krnlDriver.createBO(6, l_bufBytes);
         m_krnlDriver.setMemArg(6);
         m_krnlDriverBufs.insert({6, l_buf});
-        l_bufBytes = p_numWords * 4 / 8;
+        l_bufBytes = p_numWords;
         l_buf = m_krnlDriver.createBO(7, l_bufBytes);
         m_krnlDriver.setMemArg(7);
         m_krnlDriverBufs.insert({7, l_buf});
@@ -67,7 +66,7 @@ class basicHost {
 
     void runCU(const unsigned int p_numWords){
         unsigned int l_argId = 0;
-        m_krnlDriver.setScalarArg(l_argId++, p_numWords);
+        m_krnlDriver.setScalarArg(l_argId, p_numWords);
         m_krnlDriver.run();
     }
     
