@@ -135,14 +135,14 @@ int main(int argc, char** argv) {
             std::cout << "INFO: last uint64_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
         }
         if (l_keepErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << l_keepErrs[i] << " keep errors!" << std::endl;
+            std::cout << "ERROR: port " << i << " has " << std::dec <<l_keepErrs[i] << " keep errors!" << std::endl;
         }
         if (l_validErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << l_validErrs[i] << " valid errors!" << std::endl;
+            std::cout << "ERROR: port " << i << " has " << std::dec <<l_validErrs[i] << " valid errors!" << std::endl;
         }
     }
     if (l_errs != 0) {
-        std::cout << "ERROR: total " << l_errs << " mismatches!" << std::endl;
+        std::cout << "ERROR: total " << std::dec <<l_errs << " mismatches!" << std::endl;
         return EXIT_FAILURE;
     }
     std::cout << "INFO: Test Pass!" << std::endl;
