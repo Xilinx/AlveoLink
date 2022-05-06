@@ -50,21 +50,26 @@ int main(int argc, char** argv) {
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
 
     l_dvNetLayer.init(&l_card);
-    uint16_t l_numDests = l_dvNetLayer.getNumDests();
-    uint16_t* l_ids = l_dvNetLayer.getIds();
     std::bitset<AL_numInfs> l_linkUp = l_dvNetLayer.getLinkStatus();
     if (!l_linkUp.all()) {
         std::cout << "ERROR: QSFP link is not ready!" << std::endl;
         return EXIT_FAILURE;
     }
+    std::cout << "INFO: all links are up." << std::endl;
+    uint16_t l_numDests = l_dvNetLayer.getNumDests();
+    uint16_t* l_ids = l_dvNetLayer.getIds();
+    for (auto i=0; i<AL_numInfs; ++i) {
+        std::cout << "INFO: port " << i << " has id " << l_ids[i] << std::endl;
+    }
+
     l_dvNetLayer.clearCounters(); // clear all counters
 
-    uint64_t* l_dataSendBuf[AL_numInfs];
-    uint64_t* l_dataRecBuf[AL_numInfs];
+    uint32_t* l_dataSendBuf[AL_numInfs];
+    uint32_t* l_dataRecBuf[AL_numInfs];
     uint16_t* l_keepSendBuf[AL_numInfs];//keep is used for dest
     uint16_t* l_keepRecBuf[AL_numInfs];
     uint8_t* l_validRecBuf[AL_numInfs];
-    unsigned int l_numData = l_numWidePkts * 8;
+    unsigned int l_numData = l_numWidePkts * 16;
     unsigned int l_numKeep = l_numWidePkts * 4;
     unsigned int l_numValidBytes = l_numWidePkts; 
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -72,7 +77,7 @@ int main(int argc, char** argv) {
         l_basicHost[i].createCU(i);
         l_basicHost[i].createTxBufs(l_numWidePkts);
         l_basicHost[i].createRxBufs(l_numWidePkts);
-        l_dataSendBuf[i] = (uint64_t*)(l_basicHost[i].getTxDataPtr());
+        l_dataSendBuf[i] = (uint32_t*)(l_basicHost[i].getTxDataPtr());
         l_keepSendBuf[i] = (uint16_t*)(l_basicHost[i].getTxKeepPtr());
         for (auto j=0; j<l_numData; ++j) {
             l_dataSendBuf[i][j] = j;
@@ -86,20 +91,26 @@ int main(int argc, char** argv) {
         l_basicHost[i].runCU(l_numWidePkts);
     }
     for (auto i=0; i<AL_numInfs; ++i) {
-        l_dataRecBuf[i] = (uint64_t*)l_basicHost[i].getRecData();
+        l_dataRecBuf[i] = (uint32_t*)l_basicHost[i].getRecData();
         l_keepRecBuf[i] = (uint16_t*)l_basicHost[i].getRecKeep();
         l_validRecBuf[i] = (uint8_t*)l_basicHost[i].getRecDest();
     }
+    std::vector<uint64_t> l_pktRxCnts = l_dvNetLayer.getLaneRxPktsCnt();
+    std::vector<uint64_t> l_pktTxCnts = l_dvNetLayer.getLaneTxPktsCnt();
     //check results
     int l_dataErrs[AL_numInfs];
     int l_keepErrs[AL_numInfs];
     int l_validErrs[AL_numInfs];
     int l_errs = 0;
+    std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
         l_dataErrs[i] = 0;
         l_keepErrs[i] = 0;
         l_validErrs[i] = 0;
+        std::cout << "INFO: port " << i << " has sent " << l_pktTxCnts[i] << " pkts." << std::endl;
+        std::cout << "INFO: port " << i << " has received " << l_pktRxCnts[i] << " pkts." << std::endl;
     }
+    std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
         for (auto j=0; j<l_numData; ++j) {
             if (l_dataSendBuf[i][j] != l_dataRecBuf[i][j]) {
@@ -124,15 +135,15 @@ int main(int argc, char** argv) {
         if (l_dataErrs[i] != 0) {
             std::cout << "ERROR: port " << i << " has " << l_dataErrs[i] << " data errors!" << std::endl;
             for (auto j=0; j<4; ++j) {
-                std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastSentPkt(i, j);
-                std::cout << "INFO: last rx pkt for port " << i << " lane " << j << " is: " << std::endl;
+                std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastRxPkt(i, j);
+                std::cout << "    INFO: last rx pkt for port " << i << " lane " << j << " is: " << std::endl;
                 for (auto k=0; k<4; ++k) {
                     std::cout << "    w" << k << " = 0x" << std::hex << l_lastRxPkt[k];
                 }
                 std::cout << std::endl;
             }
-            std::cout << "INFO: last uint64_t in dataSendBuf[" << i << "] = " << l_dataSendBuf[i][l_numData-1]  << std::endl;
-            std::cout << "INFO: last uint64_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
+            std::cout << "    INFO: last uint32_t in dataSendBuf[" << i << "] = " << l_dataSendBuf[i][l_numData-1]  << std::endl;
+            std::cout << "    INFO: last uint32_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
         }
         if (l_keepErrs[i] != 0) {
             std::cout << "ERROR: port " << i << " has " << std::dec <<l_keepErrs[i] << " keep errors!" << std::endl;
@@ -140,6 +151,7 @@ int main(int argc, char** argv) {
         if (l_validErrs[i] != 0) {
             std::cout << "ERROR: port " << i << " has " << std::dec <<l_validErrs[i] << " valid errors!" << std::endl;
         }
+        std::cout << std::endl;
     }
     if (l_errs != 0) {
         std::cout << "ERROR: total " << std::dec <<l_errs << " mismatches!" << std::endl;

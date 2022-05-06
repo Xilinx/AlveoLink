@@ -86,20 +86,20 @@ int main(int argc, char** argv) {
             }
         }
         if (l_option == 5) {
-            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneSentPktsCnt();
-            for (auto i=0; i<AL_numInfs; ++i) {
-                std::cout << "INFO: port " << i << std::endl;
-                for (auto j=0; j<4; ++j) {
-                    std::cout << "    lane " << j << " has sent " << l_pktCnts[i*4+j] << " packets." << std::endl;
-                }
-            }
-        }
-        if (l_option == 6) {
-            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneRecPktsCnt();
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneRxPktsCnt();
             for (auto i=0; i<AL_numInfs; ++i) {
                 std::cout << "INFO: port " << i << std::endl;
                 for (auto j=0; j<4; ++j) {
                     std::cout << "    lane " << j << " has received " << l_pktCnts[i*4+j] << " packets." << std::endl;
+                }
+            }
+        }
+        if (l_option == 6) {
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneTxPktsCnt();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << std::endl;
+                for (auto j=0; j<4; ++j) {
+                    std::cout << "    lane " << j << " has transmitted " << l_pktCnts[i*4+j] << " packets." << std::endl;
                 }
             }
         }
