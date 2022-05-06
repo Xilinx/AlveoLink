@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
     }    
     for (auto i=0; i<AL_numInfs; ++i) {
         if (l_dataErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << l_dataErrs[i] << " data errors!" << std::endl;
+            std::cout << "ERROR: port " << i << " has " << std::dec << l_dataErrs[i] << " data errors!" << std::endl;
             for (auto j=0; j<4; ++j) {
                 std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastRxPkt(i, j);
                 std::cout << "    INFO: last rx pkt for port " << i << " lane " << j << " is: " << std::endl;

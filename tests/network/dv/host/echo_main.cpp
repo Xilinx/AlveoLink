@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
     std::cout << "4: getIdStatus" << std::endl;
     std::cout << "5: getLaneRxCounter" << std::endl;
     std::cout << "6: getLaneTxCounter" << std::endl;
+    std::cout << "7: getLastRxPkt" << std::endl;
     int l_option;
     std::cin >> l_option;
     while (l_option != 0) {
@@ -103,6 +104,19 @@ int main(int argc, char** argv) {
                 }
             }
         }
+        if (l_option == 7) {
+            for (auto i=0; i<AL_numInfs; ++i) {
+                for (auto j=0; j<4; ++j) {
+                    std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastRxPkt(i, j);
+                    std::cout << "INFO: last rx pkt for port " << i << " lane " << j << " is: " << std::endl;
+                    for (auto k=0; k<4; ++k) {
+                        std::cout << "    w" << k << " = 0x" << std::hex << l_lastRxPkt[k];
+                    }
+                    std::cout << std::endl;
+                }
+                std::cout << std::endl;
+            }
+        }
         std::cout << std::endl;
         std::cout << "INFO: Please enter \'c\' to continue..." << std::endl;
         char l_unused;
@@ -115,6 +129,7 @@ int main(int argc, char** argv) {
         std::cout << "4: getIdStatus" << std::endl;
         std::cout << "5: getLaneRxCounter" << std::endl;
         std::cout << "6: getLaneTxCounter" << std::endl;
+        std::cout << "7: getLastRxPkt" << std::endl;
         std::cin >> l_option;
     }
     return EXIT_SUCCESS;
