@@ -20,15 +20,15 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
-extern "C" void krnl_echo(hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_inStr,
-                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_outStr) { 
+extern "C" void krnl_echo(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
+                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr) { 
     // Connects the Rx and Tx AXI Streams
     AXIS(p_inStr)
     AXIS(p_outStr)
 
     AP_CTRL_NONE(return)
 
-    ap_axiu<AL_netDataBits, 0, 0, 4> l_val = p_inStr.read(); 
+    ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val = p_inStr.read(); 
 
     p_outStr.write(l_val);
 

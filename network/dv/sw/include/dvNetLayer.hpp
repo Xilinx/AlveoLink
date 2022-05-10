@@ -91,6 +91,9 @@ class dvNetLayer {
         std::vector<uint32_t> getLastRxPkt(const unsigned int p_portIndex, const unsigned int p_laneIndex) {
            return m_adapters[p_portIndex].getLastRxPkt(p_laneIndex); 
         }
+        std::vector<uint32_t> getLastTxPkt(const unsigned int p_portIndex, const unsigned int p_laneIndex) {
+           return m_adapters[p_portIndex].getLastTxPkt(p_laneIndex); 
+        }
         uint16_t getNumDests() {
             return m_numDests;
         }

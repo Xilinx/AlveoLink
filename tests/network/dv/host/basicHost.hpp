@@ -20,11 +20,11 @@
 #include "xNativeFPGA.hpp"
 #include "basicException.hpp"
 
-template <unsigned int t_NetDataBits, unsigned int t_MaxConnections>
+template <unsigned int t_NetDataBits, unsigned int t_DestBits, unsigned int t_MaxConnections>
 class basicHost {
    public:
     static const unsigned int t_NetDataBytes = t_NetDataBits / 8;
-
+    static const unsigned int t_DestBytes = t_DestBits / 8;
    public:
     basicHost() {}
     void init(AlveoLink::common::FPGA* p_fpga) {
@@ -40,7 +40,7 @@ class basicHost {
         void* l_buf = m_krnlDriver.createBO(1, l_bufBytes);
         m_krnlDriver.setMemArg(1);
         m_krnlDriverBufs.insert({1, l_buf});
-        l_bufBytes = p_numWords * t_NetDataBytes / 8;
+        l_bufBytes = p_numWords * t_DestBytes;
         l_buf = m_krnlDriver.createBO(2, l_bufBytes);
         m_krnlDriver.setMemArg(2);
         m_krnlDriverBufs.insert({2, l_buf});
@@ -50,14 +50,10 @@ class basicHost {
         void* l_buf = m_krnlDriver.createBO(5, l_bufBytes);
         m_krnlDriver.setMemArg(5);
         m_krnlDriverBufs.insert({5, l_buf});
-        l_bufBytes = p_numWords * t_NetDataBytes/8;
+        l_bufBytes = p_numWords * t_DestBytes;
         l_buf = m_krnlDriver.createBO(6, l_bufBytes);
         m_krnlDriver.setMemArg(6);
         m_krnlDriverBufs.insert({6, l_buf});
-        l_bufBytes = p_numWords;
-        l_buf = m_krnlDriver.createBO(7, l_bufBytes);
-        m_krnlDriver.setMemArg(7);
-        m_krnlDriverBufs.insert({7, l_buf});
     }
     void sendBO() { 
         m_krnlDriver.sendBO(1); 
@@ -75,7 +71,7 @@ class basicHost {
         return l_outBuf;
     }
 
-    void* getTxKeepPtr() {
+    void* getTxDestPtr() {
         void* l_outBuf = m_krnlDriverBufs.find(2)->second;
         return l_outBuf;
     }
@@ -85,18 +81,11 @@ class basicHost {
         void* l_outBuf = m_krnlDriverBufs.find(5)->second;
         return l_outBuf;
     }
-    void* getRecKeep() {
+    void* getRecDest() {
         m_krnlDriver.getBO(6);
         void* l_outBuf = m_krnlDriverBufs.find(6)->second;
         return l_outBuf;
     }
-    void* getRecDest() {
-        m_krnlDriver.getBO(7);
-        void* l_outBuf = m_krnlDriverBufs.find(7)->second;
-        return l_outBuf;
-    }
-
-
 
    private:
     AlveoLink::common::FPGA* m_card;

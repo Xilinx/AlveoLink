@@ -92,15 +92,15 @@ ifeq ($(HOST_ARCH), x86)
 CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
 VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps 
-#VPP_LDFLAGS += --optimize 2 -R 2
-VPP_LDFLAGS += --debug 
+VPP_LDFLAGS += --optimize 2 -R 2
+#VPP_LDFLAGS += --debug.chipscope dv_adapter0:tx_axis --debug.chipscope dv_adapter0:rx_axis 
 else ifeq ($(HOST_ARCH), aarch64)
 CXXFLAGS +=  -fmessage-length=0 --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(SYSROOT)/usr/lib -L$(XILINX_VITIS_AIETOOLS)/lib/aarch64.o -Wl,--as-needed -lxilinxopencl -lxrt_coreutil 
 VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps
  
-#VPP_LDFLAGS += --optimize 2 -R 2 
-VPP_LDFLAGS += --debug
+VPP_LDFLAGS += --optimize 2 -R 2 
+#VPP_LDFLAGS += --debug.chipscope dv_adapter0:tx_axis --debug.chipscope dv_adapter0:rx_axis
 endif
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)
@@ -130,7 +130,7 @@ EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_userBits=1 -D AL_destBits=16
-VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/tests/network/dv/kernel
+VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/dv/hw/include -I $(XFLIB_DIR)/tests/network/dv/kernel
 
 ifeq ($(INTERFACE), 0)
 VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if0.tmp.cfg
@@ -143,10 +143,12 @@ endif
 ######################### binary container global settings ##########################
 VPP_FLAGS_krnl_echo +=  -D KERNEL_NAME=krnl_echo
 VPP_FLAGS_krnl_echo += --hls.clock 300000000:krnl_echo
+VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
+
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_krnl_echo += --clock.defaultFreqHz 200000000
+VPP_LDFLAGS_krnl_echo += --clock.defaultFreqHz 200000000 
 else
-VPP_LDFLAGS_krnl_echo += --kernel_frequency 200
+VPP_LDFLAGS_krnl_echo += --kernel_frequency 200 
 endif
 
 ifeq ($(HOST_ARCH), x86)
@@ -161,9 +163,15 @@ $(TEMP_DIR)/krnl_echo.xo: $(XFLIB_DIR)/tests/network/dv/kernel/krnl_echo.cpp
 	$(ECHO) "Compiling Kernel: krnl_echo"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_echo) $(VPP_FLAGS) -k krnl_echo -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+$(TEMP_DIR)/krnl_xnik_wide.xo: $(XFLIB_DIR)/adapter/dv/hw/src/krnl_xnik_wide.cpp
+	$(ECHO) "Compiling Kernel: krnl_xnik_wide"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_xnik_wide) $(VPP_FLAGS) -k krnl_xnik_wide -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
 BINARY_CONTAINER_krnl_echo_OBJS += $(TEMP_DIR)/krnl_echo.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_wide.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_echo_OBJS)
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)
 
 $(BINARY_CONTAINERS): $(BINARY_CONTAINERS_DEPS)

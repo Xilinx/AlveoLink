@@ -21,31 +21,28 @@
 
 void transData(unsigned int p_numWords,
                ap_uint<AL_netDataBits>* p_dataPtr,
-               ap_uint<AL_netDataBits/8>* p_keepPtr,
-               hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_outStr) {
+               ap_uint<AL_destBits>* p_destPtr,
+               hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr) {
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_data = p_dataPtr[i];
-        ap_uint<AL_netDataBits/8> l_keep = p_keepPtr[i];
-        ap_axiu<AL_netDataBits, 0, 0, 4> l_val;
+        ap_uint<AL_destBits> l_dest = p_destPtr[i];
+        ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val.data = l_data;
-        l_val.keep = l_keep;
-        l_val.dest = -1;
+        l_val.dest = l_dest;
         p_outStr.write(l_val);
     }
 }
 
 void recData(unsigned int p_numWords,
-             hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_inStr,
+             hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
              ap_uint<AL_netDataBits>* p_recDataPtr,
-             ap_uint<AL_netDataBits/8>* p_recKeepPtr,
-             ap_uint<4>* p_recDestPtr) {
+             ap_uint<AL_destBits>* p_recDestPtr) {
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
-        ap_axiu<AL_netDataBits, 0, 0, 4> l_val;
+        ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val = p_inStr.read();
         p_recDataPtr[i] = l_val.data;
-        p_recKeepPtr[i] = l_val.keep;
         p_recDestPtr[i] = l_val.dest;
     }
 }
@@ -53,16 +50,14 @@ void recData(unsigned int p_numWords,
 
 extern "C" void krnl_driver(unsigned int p_numWords,
                           ap_uint<AL_netDataBits>* p_dataPtr,
-                          ap_uint<AL_netDataBits/8>* p_keepPtr,
-                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_outStr,
-                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, 4> >& p_inStr,
+                          ap_uint<AL_destBits>* p_destPtr,
+                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
+                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
                           ap_uint<AL_netDataBits>* p_recDataPtr,
-                          ap_uint<AL_netDataBits/8>* p_recKeepPtr,
-                          ap_uint<4>* p_recDestPtr) { 
+                          ap_uint<AL_destBits>* p_recDestPtr) { 
     POINTER(p_dataPtr, p_dataPtr)
-    POINTER(p_keepPtr, p_keepPtr)
+    POINTER(p_destPtr, p_destPtr)
     POINTER(p_recDataPtr, p_recDataPtr)
-    POINTER(p_recKeepPtr, p_recKeepPtr)
     POINTER(p_recDestPtr, p_recDestPtr)
     AXIS(p_outStr)
     AXIS(p_inStr)
@@ -70,6 +65,6 @@ extern "C" void krnl_driver(unsigned int p_numWords,
     SCALAR(return)
 
 #pragma HLS DATAFLOW
-    transData(p_numWords, p_dataPtr, p_keepPtr, p_outStr);
-    recData(p_numWords, p_inStr, p_recDataPtr, p_recKeepPtr, p_recDestPtr);
+    transData(p_numWords, p_dataPtr, p_destPtr, p_outStr);
+    recData(p_numWords, p_inStr, p_recDataPtr, p_recDestPtr);
 }

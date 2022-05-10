@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
     AlveoLink::common::FPGA l_card;
     AlveoLink::network_dv::dvNetLayer<AL_numInfs, AL_maxConnections, AL_destBits> l_dvNetLayer;
-    basicHost<AL_netDataBits, AL_maxConnections> l_basicHost[AL_numInfs];
+    basicHost<AL_netDataBits, AL_destBits, AL_maxConnections> l_basicHost[AL_numInfs];
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
@@ -66,24 +66,22 @@ int main(int argc, char** argv) {
 
     uint32_t* l_dataSendBuf[AL_numInfs];
     uint32_t* l_dataRecBuf[AL_numInfs];
-    uint16_t* l_keepSendBuf[AL_numInfs];//keep is used for dest
-    uint16_t* l_keepRecBuf[AL_numInfs];
-    uint8_t* l_validRecBuf[AL_numInfs];
+    uint16_t* l_destSendBuf[AL_numInfs];//keep is used for dest
+    uint16_t* l_destRecBuf[AL_numInfs];
     unsigned int l_numData = l_numWidePkts * 16;
-    unsigned int l_numKeep = l_numWidePkts * 4;
-    unsigned int l_numValidBytes = l_numWidePkts; 
+    unsigned int l_numDest = l_numWidePkts;
     for (auto i=0; i<AL_numInfs; ++i) {
         l_basicHost[i].init(&l_card);
         l_basicHost[i].createCU(i);
         l_basicHost[i].createTxBufs(l_numWidePkts);
         l_basicHost[i].createRxBufs(l_numWidePkts);
         l_dataSendBuf[i] = (uint32_t*)(l_basicHost[i].getTxDataPtr());
-        l_keepSendBuf[i] = (uint16_t*)(l_basicHost[i].getTxKeepPtr());
+        l_destSendBuf[i] = (uint16_t*)(l_basicHost[i].getTxDestPtr());
         for (auto j=0; j<l_numData; ++j) {
             l_dataSendBuf[i][j] = j;
         } 
-        for (auto j=0; j<l_numKeep; ++j) {
-            l_keepSendBuf[i][j] = (l_ids[i] + AL_numInfs) % l_numDests;
+        for (auto j=0; j<l_numDest; ++j) {
+            l_destSendBuf[i][j] = (l_ids[i] + AL_numInfs) % l_numDests;
         }
     }
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -92,21 +90,18 @@ int main(int argc, char** argv) {
     }
     for (auto i=0; i<AL_numInfs; ++i) {
         l_dataRecBuf[i] = (uint32_t*)l_basicHost[i].getRecData();
-        l_keepRecBuf[i] = (uint16_t*)l_basicHost[i].getRecKeep();
-        l_validRecBuf[i] = (uint8_t*)l_basicHost[i].getRecDest();
+        l_destRecBuf[i] = (uint16_t*)l_basicHost[i].getRecDest();
     }
     std::vector<uint64_t> l_pktRxCnts = l_dvNetLayer.getLaneRxPktsCnt();
     std::vector<uint64_t> l_pktTxCnts = l_dvNetLayer.getLaneTxPktsCnt();
     //check results
     int l_dataErrs[AL_numInfs];
-    int l_keepErrs[AL_numInfs];
-    int l_validErrs[AL_numInfs];
+    int l_destErrs[AL_numInfs];
     int l_errs = 0;
     std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
         l_dataErrs[i] = 0;
-        l_keepErrs[i] = 0;
-        l_validErrs[i] = 0;
+        l_destErrs[i] = 0;
         std::cout << "INFO: port " << i << " has sent " << l_pktTxCnts[i] << " pkts." << std::endl;
         std::cout << "INFO: port " << i << " has received " << l_pktRxCnts[i] << " pkts." << std::endl;
     }
@@ -118,15 +113,9 @@ int main(int argc, char** argv) {
                 l_errs++;
             }
         }
-        for (auto j=0; j<l_numKeep; ++j) {
-            if (l_keepSendBuf[i][j] != l_keepRecBuf[i][j]) {
-                l_keepErrs[i]++;
-                l_errs++;
-            }
-        }
-        for (auto j=0; j<l_numValidBytes; ++j) {
-            if (l_validRecBuf[i][j] != 0x0f) {
-                l_validErrs[i]++;
+        for (auto j=0; j<l_numDest; ++j) {
+            if (l_destSendBuf[i][j] != l_destRecBuf[i][j]) {
+                l_destErrs[i]++;
                 l_errs++;
             }
         }
@@ -142,14 +131,19 @@ int main(int argc, char** argv) {
                 }
                 std::cout << std::endl;
             }
+            for (auto j=0; j<4; ++j) {
+                std::vector<uint32_t> l_lastTxPkt = l_dvNetLayer.getLastTxPkt(i, j);
+                std::cout << "    INFO: last tx pkt for port " << i << " lane " << j << " is: " << std::endl;
+                for (auto k=0; k<4; ++k) {
+                    std::cout << "    w" << k << " = 0x" << std::hex << l_lastTxPkt[k];
+                }
+                std::cout << std::endl;
+            }
             std::cout << "    INFO: last uint32_t in dataSendBuf[" << i << "] = " << l_dataSendBuf[i][l_numData-1]  << std::endl;
             std::cout << "    INFO: last uint32_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
         }
-        if (l_keepErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << std::dec <<l_keepErrs[i] << " keep errors!" << std::endl;
-        }
-        if (l_validErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << std::dec <<l_validErrs[i] << " valid errors!" << std::endl;
+        if (l_destErrs[i] != 0) {
+            std::cout << "ERROR: port " << i << " has " << std::dec <<l_destErrs[i] << " keep errors!" << std::endl;
         }
         std::cout << std::endl;
     }

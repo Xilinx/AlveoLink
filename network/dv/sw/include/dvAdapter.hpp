@@ -65,6 +65,23 @@ constexpr size_t LSTPKTL3W0 = 0x90;   // Last Rx Pkt L3 Wrd0
 constexpr size_t LSTPKTL3W1 = 0x94;   // Last Rx Pkt L3 Wrd1
 constexpr size_t LSTPKTL3W2 = 0x98;   // Last Rx Pkt L3 Wrd2
 constexpr size_t LSTPKTL3W3 = 0x9C;   // Last Rx Pkt L3 Wrd3
+constexpr size_t LSTTXPKTL0W0 = 0xA0; //Last Tx Pkt L0 Wrd0
+constexpr size_t LSTTXPKTL0W1 = 0xA4; //Last Tx Pkt L0 Wrd1
+constexpr size_t LSTTXPKTL0W2 = 0xA8; //Last Tx Pkt L0 Wrd2
+constexpr size_t LSTTXPKTL0W3 = 0xAC; //Last Tx Pkt L0 Wrd3
+constexpr size_t LSTTXPKTL1W0 = 0xB0; //Last Tx Pkt L1 Wrd0
+constexpr size_t LSTTXPKTL1W1 = 0xB4; //Last Tx Pkt L1 Wrd1
+constexpr size_t LSTTXPKTL1W2 = 0xB8; //Last Tx Pkt L1 Wrd2
+constexpr size_t LSTTXPKTL1W3 = 0xBC; //Last Tx Pkt L1 Wrd3
+constexpr size_t LSTTXPKTL2W0 = 0xC0; //Last Tx Pkt L2 Wrd0
+constexpr size_t LSTTXPKTL2W1 = 0xC4; //Last Tx Pkt L2 Wrd1
+constexpr size_t LSTTXPKTL2W2 = 0xC8; //Last Tx Pkt L2 Wrd2
+constexpr size_t LSTTXPKTL2W3 = 0xCC; //Last Tx Pkt L2 Wrd3
+constexpr size_t LSTTXPKTL3W0 = 0xD0; //Last Tx Pkt L3 Wrd0
+constexpr size_t LSTTXPKTL3W1 = 0xD4; //Last Tx Pkt L3 Wrd1
+constexpr size_t LSTTXPKTL3W2 = 0xD8; //Last Tx Pkt L3 Wrd2
+constexpr size_t LSTTXPKTL3W3 = 0xDC; //Last Tx Pkt L3 Wrd3
+
 
 
 template <unsigned int t_MaxConnections, unsigned int t_DestBits>
@@ -159,6 +176,14 @@ class dvAdapter : public AlveoLink::common::IP {
             l_pkts[1] = readReg(LSTPKTL0W1+p_laneId*16);
             l_pkts[2] = readReg(LSTPKTL0W2+p_laneId*16);
             l_pkts[3] = readReg(LSTPKTL0W3+p_laneId*16);
+            return l_pkts;           
+        }
+        std::vector<uint32_t> getLastTxPkt(const unsigned int p_laneId) {
+            std::vector<uint32_t> l_pkts(4);
+            l_pkts[0] = readReg(LSTTXPKTL0W0+p_laneId*16);
+            l_pkts[1] = readReg(LSTTXPKTL0W1+p_laneId*16);
+            l_pkts[2] = readReg(LSTTXPKTL0W2+p_laneId*16);
+            l_pkts[3] = readReg(LSTTXPKTL0W3+p_laneId*16);
             return l_pkts;           
         }
 
