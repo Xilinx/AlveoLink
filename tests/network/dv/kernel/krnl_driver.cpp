@@ -19,6 +19,7 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
+constexpr unsigned int t_PLRAM_Size = 128 * 1024;
 void transData(unsigned int p_numWords,
                ap_uint<AL_netDataBits>* p_dataPtr,
                ap_uint<AL_destBits>* p_destPtr,
@@ -28,7 +29,7 @@ void transData(unsigned int p_numWords,
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_data = p_dataPtr[i];
-        ap_uint<AL_destBits> l_dest = p_destPtr[i];
+        ap_uint<AL_destBits> l_dest = p_destPtr[i % t_PLRAM_Size];
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val.data = l_data;
         l_val.dest = l_dest;
