@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+#include <sys/stat.h>
+#include <unistd.h>
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -26,7 +28,7 @@
 #include "basicHost.hpp"
 
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
-
+constexpr unsigned int t_ClockPeriod = 5; //clock period in ns
 
 int main(int argc, char** argv) {
     if (argc != 4  || (std::string(argv[1]) == "-help")) {
@@ -102,8 +104,6 @@ int main(int argc, char** argv) {
         l_dataErrs[i] = 0;
         std::cout << "INFO: port " << i << " has sent " << l_pktTxCnts[i] << " pkts." << std::endl;
         std::cout << "INFO: port " << i << " has received " << l_pktRxCnts[i] << " pkts." << std::endl;
-        std::cout << "INFO: port " << i << " has latency " << l_statsBuf[i][0] << " cycles." << std::endl;
-        std::cout << "INFO: port " << i << " total transfer time is " << l_statsBuf[i][1] << " cycles." << std::endl; 
     }
     std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -142,5 +142,30 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     std::cout << "INFO: Test Pass!" << std::endl;
+
+    //dump performance data
+    //check if performance file exists
+    std::string l_perfFileName = "./perf.txt";
+    struct stat l_buffer;
+    std::ofstream l_outFile;
+    if (stat (l_perfFileName.c_str(), &l_buffer) == 0) {//file exists
+        l_outFile.open(l_perfFileName, std::ios_base::app); 
+    }
+    else { //file doesn't exit
+        l_outFile.open(l_perfFileName);
+        l_outFile << "port_no, " <<  "num_bytes, ";
+        l_outFile << "lat_cycles, " << "total_cycles, " << "lat_time(ns), " << "total_time(ns), ";
+        l_outFile << "bandwidth(GB/Sec)" << std::endl;
+    }
+    for (auto i=0; i<AL_numInfs; ++i) {
+        unsigned int l_latTime = l_statsBuf[i][0] * t_ClockPeriod;
+        unsigned int l_totalTime =  l_statsBuf[i][1] * t_ClockPeriod;
+        double l_bandwidth = (l_numWidePkts * 64.0) / l_totalTime;
+        l_outFile << i << ", " << std::dec << l_numWidePkts * 64 << ", ";
+        l_outFile << l_statsBuf[i][0] << ", " << l_statsBuf[i][1] << ", "; 
+        l_outFile << l_latTime << ", " << l_totalTime << ", ";
+        l_outFile << std::fixed << l_bandwidth << std::endl;
+    }
+    l_outFile.close();
     return EXIT_SUCCESS;
 }
