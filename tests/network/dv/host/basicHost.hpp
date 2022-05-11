@@ -50,7 +50,7 @@ class basicHost {
         void* l_buf = m_krnlDriver.createBO(5, l_bufBytes);
         m_krnlDriver.setMemArg(5);
         m_krnlDriverBufs.insert({5, l_buf});
-        l_bufBytes = p_numWords * t_DestBytes;
+        l_bufBytes = sizeof(uint32_t) * 2;
         l_buf = m_krnlDriver.createBO(6, l_bufBytes);
         m_krnlDriver.setMemArg(6);
         m_krnlDriverBufs.insert({6, l_buf});
@@ -81,7 +81,7 @@ class basicHost {
         void* l_outBuf = m_krnlDriverBufs.find(5)->second;
         return l_outBuf;
     }
-    void* getRecDest() {
+    void* getRecStats() {
         m_krnlDriver.getBO(6);
         void* l_outBuf = m_krnlDriverBufs.find(6)->second;
         return l_outBuf;

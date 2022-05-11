@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     uint32_t* l_dataSendBuf[AL_numInfs];
     uint32_t* l_dataRecBuf[AL_numInfs];
     uint16_t* l_destSendBuf[AL_numInfs];//keep is used for dest
-    uint16_t* l_destRecBuf[AL_numInfs];
+    uint32_t* l_statsBuf[AL_numInfs];
     unsigned int l_numData = l_numWidePkts * 16;
     unsigned int l_numDest = l_numWidePkts;
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -90,32 +90,26 @@ int main(int argc, char** argv) {
     }
     for (auto i=0; i<AL_numInfs; ++i) {
         l_dataRecBuf[i] = (uint32_t*)l_basicHost[i].getRecData();
-        l_destRecBuf[i] = (uint16_t*)l_basicHost[i].getRecDest();
+        l_statsBuf[i] = (uint32_t*)l_basicHost[i].getRecStats();
     }
     std::vector<uint64_t> l_pktRxCnts = l_dvNetLayer.getLaneRxPktsCnt();
     std::vector<uint64_t> l_pktTxCnts = l_dvNetLayer.getLaneTxPktsCnt();
     //check results
     int l_dataErrs[AL_numInfs];
-    int l_destErrs[AL_numInfs];
     int l_errs = 0;
     std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
         l_dataErrs[i] = 0;
-        l_destErrs[i] = 0;
         std::cout << "INFO: port " << i << " has sent " << l_pktTxCnts[i] << " pkts." << std::endl;
         std::cout << "INFO: port " << i << " has received " << l_pktRxCnts[i] << " pkts." << std::endl;
+        std::cout << "INFO: port " << i << " has latency " << l_statsBuf[i][0] << " cycles." << std::endl;
+        std::cout << "INFO: port " << i << " total transfer time is " << l_statsBuf[i][1] << " cycles." << std::endl; 
     }
     std::cout << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
         for (auto j=0; j<l_numData; ++j) {
             if (l_dataSendBuf[i][j] != l_dataRecBuf[i][j]) {
                 l_dataErrs[i]++;
-                l_errs++;
-            }
-        }
-        for (auto j=0; j<l_numDest; ++j) {
-            if (l_destSendBuf[i][j] != l_destRecBuf[i][j]) {
-                l_destErrs[i]++;
                 l_errs++;
             }
         }
@@ -142,10 +136,6 @@ int main(int argc, char** argv) {
             std::cout << "    INFO: last uint32_t in dataSendBuf[" << i << "] = " << l_dataSendBuf[i][l_numData-1]  << std::endl;
             std::cout << "    INFO: last uint32_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
         }
-        if (l_destErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << std::dec <<l_destErrs[i] << " keep errors!" << std::endl;
-        }
-        std::cout << std::endl;
     }
     if (l_errs != 0) {
         std::cout << "ERROR: total " << std::dec <<l_errs << " mismatches!" << std::endl;
