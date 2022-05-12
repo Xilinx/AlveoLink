@@ -29,6 +29,7 @@
 
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 constexpr unsigned int t_ClockPeriod = 5; //clock period in ns
+constexpr unsigned int t_VitisOverhead = 8; //clock cycles caused by xnik_dv converter
 
 int main(int argc, char** argv) {
     if (argc != 4  || (std::string(argv[1]) == "-help")) {
@@ -43,6 +44,10 @@ int main(int argc, char** argv) {
     std::string l_xclbinName = argv[l_idx++];
     unsigned int l_devId = atoi(argv[l_idx++]);
     unsigned int l_numWidePkts = atoi(argv[l_idx++]);
+    if (l_numWidePkts <= 1) {
+        std::cout << "ERROR: number of pkts must be > 1!" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     AlveoLink::common::FPGA l_card;
     AlveoLink::network_dv::dvNetLayer<AL_numInfs, AL_maxConnections, AL_destBits> l_dvNetLayer;
@@ -153,15 +158,17 @@ int main(int argc, char** argv) {
     }
     else { //file doesn't exit
         l_outFile.open(l_perfFileName);
-        l_outFile << "port_no, " <<  "num_bytes, ";
+        l_outFile << "port_no, " << "num_64B_pkts, " << "num_bytes, ";
         l_outFile << "lat_cycles, " << "total_cycles, " << "lat_time(ns), " << "total_time(ns), ";
         l_outFile << "bandwidth(GB/Sec)" << std::endl;
     }
     for (auto i=0; i<AL_numInfs; ++i) {
+        l_statsBuf[i][0] = l_statsBuf[i][0] - 2; //latency counter added 2 extra cycles;
+        l_statsBuf[i][1] = l_statsBuf[i][1] + 2; //total cycle counter is 2 cycles less than the real value
         unsigned int l_latTime = l_statsBuf[i][0] * t_ClockPeriod;
         unsigned int l_totalTime =  l_statsBuf[i][1] * t_ClockPeriod;
         double l_bandwidth = (l_numWidePkts * 64.0) / l_totalTime;
-        l_outFile << i << ", " << std::dec << l_numWidePkts * 64 << ", ";
+        l_outFile << i << ", " << std::dec << l_numWidePkts <<", " << l_numWidePkts * 64 << ", ";
         l_outFile << l_statsBuf[i][0] << ", " << l_statsBuf[i][1] << ", "; 
         l_outFile << l_latTime << ", " << l_totalTime << ", ";
         l_outFile << std::fixed << l_bandwidth << std::endl;

@@ -28,8 +28,10 @@ extern "C" void krnl_echo(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits>
 
     AP_CTRL_NONE(return)
 
-    ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val = p_inStr.read(); 
-
-    p_outStr.write(l_val);
+    while (true) {
+#pragma HLS PIPELINE II = 1
+        ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val = p_inStr.read(); 
+        p_outStr.write(l_val);
+    }
 
 }

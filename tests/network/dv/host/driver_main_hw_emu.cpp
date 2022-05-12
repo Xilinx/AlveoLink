@@ -141,6 +141,8 @@ int main(int argc, char** argv) {
         l_outFile << "bandwidth(GB/Sec)" << std::endl;
     }
     for (auto i=0; i<AL_numInfs; ++i) {
+        l_statsBuf[i][0] = l_statsBuf[i][0] - 2; //latency counter added 2 extra cycles;
+        l_statsBuf[i][1] = l_statsBuf[i][1] + 2; //total cycle counter is 2 cycles less than the real value
         unsigned int l_latTime = l_statsBuf[i][0] * t_ClockPeriod;
         unsigned int l_totalTime =  l_statsBuf[i][1] * t_ClockPeriod;
         double l_bandwidth = (l_numWidePkts * 64.0) / l_totalTime;

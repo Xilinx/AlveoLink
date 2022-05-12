@@ -62,32 +62,21 @@ class XNIK_DV{
                          hls::stream<DV_PktType>& p_inStr2,
                          hls::stream<DV_PktType>& p_inStr3,
                          hls::stream<XNIK_WidePktType>& p_outStr) {
-            ap_uint<4> l_allRec = 0;
             while (true) {
 #pragma HLS PIPELINE II=1
                 XNIK_WidePktType l_xnikPkt;
                 DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
-                if (p_inStr0.read_nb(l_dvPkt0)) {
-                    l_allRec[0] = 1;
-                }
-                if (p_inStr1.read_nb(l_dvPkt1)) {
-                    l_allRec[1] = 1;
-                }
-                if (p_inStr2.read_nb(l_dvPkt2)) {
-                    l_allRec[2] = 1;
-                }
-                if (p_inStr3.read_nb(l_dvPkt3)) {
-                    l_allRec[3] = 1;
-                }
+                l_dvPkt0 = p_inStr0.read();
+                l_dvPkt1 = p_inStr1.read();
+                l_dvPkt2 = p_inStr2.read();
+                l_dvPkt3 = p_inStr3.read();
+
                 l_xnikPkt.data(t_DVdataBits-1, 0) = l_dvPkt0.data;
                 l_xnikPkt.data(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
                 l_xnikPkt.data(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
                 l_xnikPkt.data(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
                 l_xnikPkt.dest = l_dvPkt0.dest;
-                if (l_allRec.and_reduce()) {
-                    p_outStr.write(l_xnikPkt);
-                    l_allRec = 0;
-                }
+                p_outStr.write(l_xnikPkt);
             }
         }
 

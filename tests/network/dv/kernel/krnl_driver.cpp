@@ -25,7 +25,6 @@ void transData(unsigned int p_numWords,
                ap_uint<AL_destBits>* p_destPtr,
                hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
                hls::stream<ap_uint<1> >& p_ctrlStr) {
-    p_ctrlStr.write(1);
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_data = p_dataPtr[i];
@@ -33,6 +32,9 @@ void transData(unsigned int p_numWords,
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val.data = l_data;
         l_val.dest = l_dest;
+        if (i==0) {
+            p_ctrlStr.write(1);
+        }
         p_outStr.write(l_val);
     }
 }
@@ -45,12 +47,11 @@ void recData(unsigned int p_numWords,
 #pragma HLS PIPELINE II=1
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val = p_inStr.read();
-        if (i==0) {
+        if ((i==0) || (i == (p_numWords-1))) {
             p_ctrlStr.write(1);
         }
         p_recDataPtr[i] = l_val.data;
     }
-     p_ctrlStr.write(1);
 }
 
 void calcStats(hls::stream<ap_uint<1> >& p_sendCtrlStr,
@@ -64,17 +65,16 @@ void calcStats(hls::stream<ap_uint<1> >& p_sendCtrlStr,
     while (l_recCtrl == 0) {
 #pragma HLS PIPELINE II=1
         l_latCycles++;
-        l_totalCycles++;
         bool l_unused = p_recCtrlStr.read_nb(l_recCtrl);
     }
-    l_recCtrl = 0;
-    while (l_recCtrl == 0) {
+    ap_uint<1> l_pktCtrl = 0;
+    while (l_pktCtrl == 0) {
 #pragma HLS PIPELINE II=1
         l_totalCycles++;
-        bool l_unused = p_recCtrlStr.read_nb(l_recCtrl);
+        bool l_unused = p_recCtrlStr.read_nb(l_pktCtrl);
     }
     p_stats[0] = l_latCycles;
-    p_stats[1] = l_totalCycles; 
+    p_stats[1] = l_totalCycles + l_latCycles; 
 }                      
 
 extern "C" void krnl_driver(unsigned int p_numWords,
