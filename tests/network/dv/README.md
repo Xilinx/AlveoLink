@@ -42,7 +42,7 @@ qsfp_status
 1. on db1, start one terminal and navigate to tests/network/dv/echo, and run
 make clean TARGET=hw
 make host TARGET=hw
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/echo.exe /proj/rdi-xsj/staff/lingl/nobkup/echo_2_inf/dvTestEcho.xclbin 0
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/echo.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/dv_test/echo_2_inf/dvTestEcho.xclbin 0
 
 2. on db1, start another terminal and navigate to tests/network/dv/driver, and run
 make clean TARGET=hw
