@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
 
+    l_dvNetLayer.init(&l_card);
     uint16_t* l_ids = l_dvNetLayer.getIds();
     std::bitset<AL_numInfs> l_linkUp = l_dvNetLayer.getLinkStatus();
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -77,8 +78,108 @@ int main(int argc, char** argv) {
     l_manager.sendBO();
 
     l_manager.runCU();
-    l_manager.finish();
-    std::cout << "INFO: system done!" << std::endl;
+
+    std::cout << "Please choose one of the following options: " << std::endl;
+    std::cout << "0: quit" << std::endl;
+    std::cout << "1: wait until kernel finishes" << std::endl;
+    std::cout << "2: clearCounters" << std::endl;
+    std::cout << "3: getClrCnts" << std::endl;
+    std::cout << "4: getIdStatus" << std::endl;
+    std::cout << "5: getLaneRxCounter" << std::endl;
+    std::cout << "6: getLaneTxCounter" << std::endl;
+    std::cout << "7: getLastRxPkt" << std::endl;
+    std::cout << "8: getLastTxPkt" << std::endl;
+    int l_option;
+    std::cin >> l_option;
+    while (l_option != 0) {
+        if (l_option == 1) {
+            l_manager.finish();
+            std::cout << "INFO: system done!" << std::endl;
+            return EXIT_SUCCESS;
+        }
+        if (l_option == 2) {
+            l_dvNetLayer.clearCounters();
+            std::cout << "INFO: reset counters completed." << std::endl;
+        }
+        if (l_option == 3) {
+            std::vector<unsigned int> l_clrCnts = l_dvNetLayer.getClrCnts();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << " ClrCnts value is: 0x" << std::hex << l_clrCnts[i] << std::endl;
+            }
+        }
+        if (l_option == 4) {
+            uint16_t* l_ids = l_dvNetLayer.getIds();
+            std::bitset<AL_numInfs> l_linkUp = l_dvNetLayer.getLinkStatus();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << " has id " << std::dec << l_ids[i]  << std::endl;
+                if (l_linkUp[i]) {
+                    std::cout << "INFO: port " << i << " link up." << std::endl;
+                }
+                else {
+                    std::cout << "INFO: port " << i << " link down." << std::endl;
+                }
+            }
+        }
+        if (l_option == 5) {
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneRxPktsCnt();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << std::endl;
+                for (auto j=0; j<4; ++j) {
+                    std::cout << "    lane " << j << " has received " << l_pktCnts[i*4+j] << " packets." << std::endl;
+                }
+            }
+        }
+        if (l_option == 6) {
+            std::vector<uint64_t> l_pktCnts = l_dvNetLayer.getLaneTxPktsCnt();
+            for (auto i=0; i<AL_numInfs; ++i) {
+                std::cout << "INFO: port " << i << std::endl;
+                for (auto j=0; j<4; ++j) {
+                    std::cout << "    lane " << j << " has transmitted " << l_pktCnts[i*4+j] << " packets." << std::endl;
+                }
+            }
+        }
+        if (l_option == 7) {
+            for (auto i=0; i<AL_numInfs; ++i) {
+                for (auto j=0; j<4; ++j) {
+                    std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastRxPkt(i, j);
+                    std::cout << "INFO: last rx pkt for port " << i << " lane " << j << " is: " << std::endl;
+                    for (auto k=0; k<4; ++k) {
+                        std::cout << "    w" << k << " = 0x" << std::hex << l_lastRxPkt[k];
+                    }
+                    std::cout << std::endl;
+                }
+                std::cout << std::endl;
+            }
+        }
+        if (l_option == 8) {
+            for (auto i=0; i<AL_numInfs; ++i) {
+                for (auto j=0; j<4; ++j) {
+                    std::vector<uint32_t> l_lastRxPkt = l_dvNetLayer.getLastTxPkt(i, j);
+                    std::cout << "INFO: last tx pkt for port " << i << " lane " << j << " is: " << std::endl;
+                    for (auto k=0; k<4; ++k) {
+                        std::cout << "    w" << k << " = 0x" << std::hex << l_lastRxPkt[k];
+                    }
+                    std::cout << std::endl;
+                }
+                std::cout << std::endl;
+            }
+        }
+        std::cout << std::endl;
+        std::cout << "INFO: Please enter \'c\' to continue..." << std::endl;
+        char l_unused;
+        std::cin >> l_unused;
+        std::cout << "Please choose one of the following options: " << std::endl;
+        std::cout << "0: quit" << std::endl;
+        std::cout << "1: wait until kernel finishes" << std::endl;
+        std::cout << "2: clearCounters" << std::endl;
+        std::cout << "3: getClrCnts" << std::endl;
+        std::cout << "4: getIdStatus" << std::endl;
+        std::cout << "5: getLaneRxCounter" << std::endl;
+        std::cout << "6: getLaneTxCounter" << std::endl;
+        std::cout << "7: getLastRxPkt" << std::endl;
+        std::cout << "8: getLastTxPkt" << std::endl;
+        std::cin >> l_option;
+    }
 
     return EXIT_SUCCESS;
 }

@@ -116,15 +116,15 @@ endif
 
 #Inclue Required Host Source Files
 ifeq ($(TARGET),hw)
-HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_dv/host/driver_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
+HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_dv/host/testApp_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 endif
 CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2
-CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_dv/host -I $(XFLIB_DIR)/kernel/sync_dv/sw/include -I $(XFLIB_DIR)/common/sw/include
+CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_dv/host -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/network/dv/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
-EXE_NAME := driver.exe
+EXE_NAME := test.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 
@@ -148,16 +148,16 @@ VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000 
+VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 100000000 
 else
-VPP_LDFLAGS_krnl_testApp += --kernel_frequency 200
+VPP_LDFLAGS_krnl_testApp += --kernel_frequency 100
 endif
 
 ifeq ($(HOST_ARCH), x86)
-BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_compute.xclbin
 else
-BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_pkg.xclbin
-BINARY_CONTAINERS_PKG += $(BUILD_DIR)/xnikSyncDV.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_compute_pkg.xclbin
+BINARY_CONTAINERS_PKG += $(BUILD_DIR)/xnikSyncDV_compute.xclbin
 endif
 
 # ################ Setting Rules for Binary Containers (Building Kernels) ################
