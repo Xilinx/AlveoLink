@@ -40,7 +40,7 @@ port_status
 qsfp_status
 ```
 
-4. Run test 
+## 4. Run test 
 
 ```sh
 1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
@@ -51,7 +51,7 @@ qsfp_status
 
 ```
 
-5. Run test in debug mode to read the stats registers during the run
+## 5. Run test in debug mode to read the stats registers during the run
 
 ```sh
 

@@ -36,7 +36,7 @@ port_status
 qsfp_status
 ```
 
-4. Run DV test 
+## 4. Run DV test 
 
 ```sh
 1. on db1, start one terminal and navigate to tests/network/dv/echo, and run
@@ -54,7 +54,7 @@ or
 source ./run_benchmark.sh
 ```
 
-5. run HW Emulation
+## 5. run HW Emulation
 
 ```sh
 on db1, start one terminal and navigate to tests/network/dv/driver
