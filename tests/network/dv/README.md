@@ -4,7 +4,7 @@
 ```sh
 source /proj/xbuilds/2021.2_released/installs/lin64/Vitis/2021.2/settings64.sh
 source /opt/xilinx/xrt/setup.sh
-export DVDIR=/proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_09
+export DVDIR=/proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_14
 ```
 
 ## 2. build hw .xclbin with dv adapter for u55c on db1
@@ -25,11 +25,11 @@ make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx
 ```sh
 download the following bitstream via vivado hw_manager
 
-/proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_09/denny_switch4_top_v2.0.2-17-g018db82.bit
+/proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_14/denny_switch4_top_v2.0.2-17-g018db82.bit
 
 from vivado tcl console, enter following commands
 
-source /proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_09/jtag_cmds.tcl
+source /proj/rdi-xsj/staff/lingl/DataVortex/Xilinx_2022_05_14/jtag_cmds.tcl
 
 port_status
 
