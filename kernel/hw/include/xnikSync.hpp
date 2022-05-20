@@ -384,6 +384,210 @@ LOOP_MANAGER:
                         }
                     }
             }
+
+            void recAllPkts(const PKT_TYPE p_pktType, hls::stream<UdpPktType>& p_inStr,
+                            ap_uint<t_NetDataBits>* p_datPtr, ap_uint<t_DestBits>* p_destPtr) {
+                uint8_t l_idx=1;
+                m_recStatus(m_numDevs-1, 0) = 0;
+                bool l_exit = m_recStatus.and_reduce();
+LOOP_MANAGER_RECALL:
+                while (!l_exit) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt = p_inStr.read();
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setCtrlPkt(l_udpPkt.data);
+                    if (l_ctrlPkt.getType() == p_pktType) {
+                        m_recStatus[l_udpPkt.dest] = 1;
+                    }
+                    p_datPtr[l_idx] = l_udpPkt.data;
+                    p_destPtr[l_idx] = l_udpPkt.dest;
+                    l_idx++;
+                    l_exit =  m_recStatus.and_reduce();
+                }
+                ap_uint<t_DestBits> l_pkts = 0;
+                l_pkts = l_idx-1;
+                p_destPtr[0] = l_pkts;
+            }
+            void recAllDonePkts(hls::stream<UdpPktType>& p_inStr, bool& p_allIdle,
+                                ap_uint<t_NetDataBits>* p_datPtr, ap_uint<t_DestBits>* p_destPtr) {
+                uint8_t l_idx=1;
+                m_recStatus(m_numDevs-1, 0) = 0;
+                p_allIdle = true;
+                bool l_exit = m_recStatus.and_reduce();
+LOOP_MANAGER_RECALLDONE:
+                while (!l_exit) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt = p_inStr.read();
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setCtrlPkt(l_udpPkt.data);
+                    if ((l_ctrlPkt.getType() == PKT_TYPE::done) || (l_ctrlPkt.getType() == PKT_TYPE::idle_after_done)) {
+                        m_recStatus[l_udpPkt.dest] = 1;
+                        if (l_ctrlPkt.getType() == PKT_TYPE::done) {
+                            p_allIdle = false;
+                        }
+                    }
+                    p_datPtr[l_idx] = l_udpPkt.data;
+                    p_destPtr[l_idx] = l_udpPkt.dest;
+                    l_idx++;
+                    l_exit =  m_recStatus.and_reduce();
+                }
+                ap_uint<t_DestBits> l_pkts = 0;
+                l_pkts = l_idx-1;
+                p_destPtr[0] = l_pkts;
+            }
+            void sendAllPkts(const PKT_TYPE p_pktType, hls::stream<UdpPktType>& p_outStr,
+                             ap_uint<t_NetDataBits>* p_datPtr, ap_uint<t_DestBits>* p_destPtr) {
+                uint8_t l_idx=1;
+LOOP_MANAGER_SENDALL:
+                for (unsigned int i=0; i<m_numDevs; ++i) {
+#pragma HLS PIPELINE II=1
+                    UdpPktType l_udpPkt;
+                    l_udpPkt.dest = i;
+                    l_udpPkt.last = 1;
+                    l_udpPkt.keep = -1;
+                    HopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
+                    l_ctrlPkt.setType(p_pktType);
+                    if (p_pktType == PKT_TYPE::start) {
+                        l_ctrlPkt.setWaitCycles((uint32_t)m_waitCycles);
+                    }
+                    l_udpPkt.data = l_ctrlPkt.getCtrlPkt();
+                    p_datPtr[l_idx] = l_udpPkt.data;
+                    p_destPtr[l_idx] = l_udpPkt.dest;
+                    l_idx++;
+                    p_outStr.write(l_udpPkt);
+                }
+                ap_uint<t_DestBits> l_pkts = 0;
+                l_pkts = l_idx-1;
+                p_destPtr[0] = l_pkts;
+            }
+            void step_process(uint16_t* p_config,
+                         hls::stream<UdpPktType>& p_inStr,
+                         hls::stream<UdpPktType>& p_outStr,
+                         ap_uint<t_NetDataBits>* p_datPtr, 
+                         ap_uint<t_DestBits>* p_destPtr) {
+
+                    m_numDevs = p_config[0];
+                    m_waitCycles = p_config[1];
+                    m_flushCounter = p_config[2];
+                    uint16_t l_flushCounter = p_config[3];
+                    uint16_t l_idleFlag = p_config[4];
+                    bool l_allIdle = (l_idleFlag == 1);
+                    uint16_t l_cycleCounter = p_config[5];
+                    ap_uint<t_DestBits> l_state;
+                    ap_uint<t_DestBits> l_pkts;
+                    ap_uint<t_DestBits> l_idleStatus; 
+                    switch (m_state) {
+                        case MANAGER_STATE::manager_idle:
+                            l_state = m_state;
+
+                            recAllPkts(PKT_TYPE::start, p_inStr, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::idle_2_active;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            break;
+                        case MANAGER_STATE::idle_2_active:
+                            l_state = m_state;
+
+                            sendAllPkts(PKT_TYPE::start, p_outStr, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::manager_active;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            break;
+                        case MANAGER_STATE::manager_active:
+                            l_state = m_state;
+
+                            recAllDonePkts(p_inStr, l_allIdle, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::active_2_query;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            l_idleStatus=0;
+                            l_idleStatus[0] = l_allIdle;
+                            p_destPtr[l_pkts+2] = l_idleStatus; 
+                            break;
+                        case MANAGER_STATE::active_2_query:
+                            l_state = m_state;
+
+                            sendAllPkts(PKT_TYPE::query_status, p_outStr, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::query;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            break;
+                        case MANAGER_STATE::query:
+                            l_state = m_state;
+
+                            recAllDonePkts(p_inStr, l_allIdle, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::query_2_termination;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state;
+                            l_idleStatus=0;
+                            l_idleStatus[0] = l_allIdle;
+                            p_destPtr[l_pkts+2] = l_idleStatus; 
+                            break;
+                        case MANAGER_STATE::query_2_termination:
+                            l_state = m_state;
+
+                            sendAllPkts(PKT_TYPE::query_status, p_outStr, p_datPtr, p_destPtr);
+                            if (l_allIdle) {
+                                l_cycleCounter = m_waitCycles;
+                                l_flushCounter = m_flushCounter;
+                                m_state = MANAGER_STATE::termination;
+                            }
+                            else {
+                                m_state = MANAGER_STATE::query;
+                            }
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            break;
+                        case MANAGER_STATE::termination:
+                            l_state = m_state;
+                            recAllDonePkts(p_inStr, l_allIdle, p_datPtr, p_destPtr);
+                            m_state = MANAGER_STATE::termination_2_idle;
+
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            l_idleStatus=0;
+                            l_idleStatus[0] = l_allIdle;
+                            p_destPtr[l_pkts+2] = l_idleStatus; 
+                            break;
+                        case MANAGER_STATE::termination_2_idle:
+                            l_state = m_state;
+                            if (l_allIdle && (l_flushCounter == 0)) {
+                                sendAllPkts(PKT_TYPE::terminate, p_outStr, p_datPtr, p_destPtr);
+                                //l_procExit = true;
+                                m_state = MANAGER_STATE::manager_idle;
+                            }
+                            else if (l_allIdle && (l_cycleCounter == 0)) {
+                                sendAllPkts(PKT_TYPE::query_status, p_outStr, p_datPtr, p_destPtr);
+                                l_flushCounter--;
+                                m_state = MANAGER_STATE::termination;
+                            }
+                            else if (l_allIdle && (l_cycleCounter != 0)) {
+                                l_cycleCounter--;
+                                m_state = MANAGER_STATE::termination_2_idle;
+                            }
+                            else {
+                                sendAllPkts(PKT_TYPE::query_status, p_outStr, p_datPtr, p_destPtr);
+                                m_state = MANAGER_STATE::query;
+                            }
+                            l_pkts = p_destPtr[0];
+                            p_destPtr[l_pkts] = l_state;
+                            p_destPtr[l_pkts+1] = m_state; 
+                            break;
+                    }
+            }
+        
         private:
             MANAGER_STATE m_state;
             uint16_t m_numDevs;

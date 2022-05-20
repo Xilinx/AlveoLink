@@ -48,12 +48,19 @@ int main(int argc, char** argv) {
     int l_devId = atoi(argv[l_idx++]);
     unsigned int l_numPkts = atoi(argv[l_idx++]);
     std::string l_debug = "";
-    if (argc == 5) {
+    if (argc >4 ) {
         l_debug = argv[l_idx++];
     }
     unsigned int l_batchPkts = 128; //atoi(argv[l_idx++]) - 1;
     unsigned int l_timeOutCycles = 0; //atoi(argv[l_idx++]) - 1;
     unsigned int l_waitCycles = 200; //atoi(argv[l_idx++]);
+
+    if (argc > 5) {
+        l_batchPkts = atoi(argv[l_idx++]);
+    }
+    if (argc > 6) {
+        l_timeOutCycles = atoi(argv[l_idx++]);
+    }
     
 
     uint32_t l_myID[AL_numInfs];
