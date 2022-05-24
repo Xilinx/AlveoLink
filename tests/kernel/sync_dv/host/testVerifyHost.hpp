@@ -21,19 +21,22 @@
 #include "basicException.hpp"
 
 template <unsigned int t_NetDataBits>
-class testAppHost {
+class testVerifyHost {
    public:
     static const unsigned int t_NetDataBytes = t_NetDataBits / 8;
 
    public:
-    testAppHost() {}
+    testVerifyHost() {}
     void init(AlveoLink::common::FPGA* p_fpga) {
         m_card = p_fpga;
         m_krnlTestApp.fpga(m_card);
+        m_krnlVerify.fpga(m_card);
     }
     void createCU(const unsigned int p_id = 0) {
         std::string l_cuName = "krnl_testApp:{krnl_testApp_" + std::to_string(p_id) + "}";
         m_krnlTestApp.createKernel(l_cuName);
+        l_cuName = "krnl_verify:{krnl_verify_" + std::to_string(p_id) + "}";
+        m_krnlVerify.createKernel(l_cuName);
     }
     void createRecBufs(const size_t p_dataBytes) {
         if (p_dataBytes % t_NetDataBytes != 0) {
@@ -43,6 +46,13 @@ class testAppHost {
         void* l_outDataBuf = m_krnlTestApp.createBO(1, p_dataBytes);
         m_krnlTestApp.setMemArg(1);
         m_krnlTestAppBufs.insert({1, l_outDataBuf});
+
+        void* l_verifySentDestBuf = m_krnlVerify.createBO(0, p_dataBytes);
+        void* l_verifyRecDestBuf = m_krnlVerify.createBO(1, p_dataBytes);
+        m_krnlVerify.setMemArg(0);
+        m_krnlVerify.setMemArg(1);
+        m_krnlVerifyBufs.insert({0, l_verifySentDestBuf});
+        m_krnlVerifyBufs.insert({1, l_verifyRecDestBuf});
     }
 
     void runCU(const unsigned int p_myId,
@@ -59,12 +69,26 @@ class testAppHost {
         m_krnlTestApp.setScalarArg(l_argId++, p_timeOutCycles);
         m_krnlTestApp.setScalarArg(l_argId++, p_waitCycles);
         m_krnlTestApp.run();
+
+        m_krnlVerify.setScalarArg(2, p_waitCycles);
+        m_krnlVerify.run();
     }
 
     void* getRes() {
         m_krnlTestApp.getBO(1);
         void* l_outBuf = m_krnlTestAppBufs.find(1)->second;
         return l_outBuf;
+    }
+
+    void* getVerifySentDestBuf() {
+        m_krnlVerify.getBO(0);
+        void* l_buf = m_krnlVerifyBufs.find(0)->second;
+        return l_buf;
+    }
+    void* getVerifyRecDestBuf() {
+        m_krnlVerify.getBO(1);
+        void* l_buf = m_krnlVerifyBufs.find(1)->second;
+        return l_buf;
     }
 
     void* getTransBuf() {
@@ -89,7 +113,9 @@ class testAppHost {
    private:
     AlveoLink::common::FPGA* m_card;
     AlveoLink::common::KERNEL m_krnlTestApp;
+    AlveoLink::common::KERNEL m_krnlVerify;
     std::map<const int, void*> m_krnlTestAppBufs;
+    std::map<const int, void*> m_krnlVerifyBufs;
 };
 
 #endif

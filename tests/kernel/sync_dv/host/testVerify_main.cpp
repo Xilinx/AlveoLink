@@ -27,7 +27,7 @@
 #include <arpa/inet.h>
 
 #include "dvNetLayer.hpp"
-#include "testAppHost.hpp"
+#include "testVerifyHost.hpp"
 #include "graphPktDefs.hpp"
 
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     int l_numDevs = AL_numInfs; 
     AlveoLink::common::FPGA l_card;
     AlveoLink::network_dv::dvNetLayer<AL_numInfs, AL_maxConnections, AL_destBits> l_dvNetLayer;
-    testAppHost<AL_netDataBits> l_testAppHost[AL_numInfs];
+    testVerifyHost<AL_netDataBits> l_testVerifyHost[AL_numInfs];
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
@@ -88,18 +88,20 @@ int main(int argc, char** argv) {
     }
 
     for (auto i=0; i<AL_numInfs; ++i) {
-        l_testAppHost[i].init(&l_card);
-        l_testAppHost[i].createCU(i);
+        l_testVerifyHost[i].init(&l_card);
+        l_testVerifyHost[i].createCU(i);
     }
     unsigned int l_transBytes = t_NetDataBytes * (l_numPkts+1);
     unsigned int l_recBytes = l_transBytes;
     assert(l_recBytes > 0);
     uint8_t* l_transBuf[AL_numInfs];
     uint8_t* l_resBuf[AL_numInfs];
+    uint8_t* l_verifySentDestBuf[AL_numInfs];
+    uint8_t* l_verifyRecDestBuf[AL_numInfs];
 
     for (auto i=0; i<AL_numInfs; ++i) {
-        l_transBuf[i] = (uint8_t*)l_testAppHost[i].createTransBuf(l_transBytes);
-        l_testAppHost[i].createRecBufs(l_recBytes);
+        l_transBuf[i] = (uint8_t*)l_testVerifyHost[i].createTransBuf(l_transBytes);
+        l_testVerifyHost[i].createRecBufs(l_recBytes);
     }
 
     for (auto k=0; k<AL_numInfs; ++k) {
@@ -115,16 +117,18 @@ int main(int argc, char** argv) {
             }
             std::memcpy(l_transBuf[k] + i*t_NetDataBytes, l_pkt.data(), t_NetDataBytes); 
         }
-        l_testAppHost[k].sendBO();
+        l_testVerifyHost[k].sendBO();
     }
    
     for (auto i=0; i<AL_numInfs; ++i) { 
-        l_testAppHost[i].runCU(l_myID[i], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_waitCycles);
+        l_testVerifyHost[i].runCU(l_myID[i], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_waitCycles);
     }
 
     for (auto i=0; i<AL_numInfs; ++i) {
-        l_resBuf[i] = (uint8_t*)(l_testAppHost[i].getRes());
-        l_transBuf[i] = (uint8_t*)(l_testAppHost[i].getTransBuf());
+        l_resBuf[i] = (uint8_t*)(l_testVerifyHost[i].getRes());
+        l_transBuf[i] = (uint8_t*)(l_testVerifyHost[i].getTransBuf());
+        l_verifySentDestBuf[i] = (uint8_t*)(l_testVerifyHost[i].getVerifySentDestBuf());
+        l_verifyRecDestBuf[i] = (uint8_t*)(l_testVerifyHost[i].getVerifyRecDestBuf());
     }
 
     if (l_debug == "debug") {
@@ -168,6 +172,8 @@ int main(int argc, char** argv) {
     std::cout << std::dec;
     unsigned int l_numTxPkts[AL_numInfs];
     unsigned int l_numRxPkts[AL_numInfs];
+    unsigned int l_numVerifyTxPkts[AL_numInfs];
+    unsigned int l_numVerifyRxPkts[AL_numInfs];
     for (auto k=0; k<AL_numInfs; ++k) {
         l_numTxPkts[k] = (l_transBuf[k][3]<<24);
         l_numTxPkts[k]  += (l_transBuf[k][2]<<16);
@@ -178,8 +184,21 @@ int main(int argc, char** argv) {
         l_numRxPkts[k]  += (l_resBuf[k][2]<<16);
         l_numRxPkts[k]  += (l_resBuf[k][1]<<8);
         l_numRxPkts[k]  += l_resBuf[k][0];
+        
+        l_numVerifyTxPkts[k] = (l_verifySentDestBuf[k][3]<<24);
+        l_numVerifyTxPkts[k]  += (l_verifySentDestBuf[k][2]<<16);
+        l_numVerifyTxPkts[k]  += (l_verifySentDestBuf[k][1]<<8);
+        l_numVerifyTxPkts[k]  += l_verifySentDestBuf[k][0];
+
+        l_numVerifyRxPkts[k] = (l_verifyRecDestBuf[k][3]<<24);
+        l_numVerifyRxPkts[k]  += (l_verifyRecDestBuf[k][2]<<16);
+        l_numVerifyRxPkts[k]  += (l_verifyRecDestBuf[k][1]<<8);
+        l_numVerifyRxPkts[k]  += l_verifyRecDestBuf[k][0];
+
         std::cout << "INFO: kernel " << k << " num of transmitted pkts is: " << l_numTxPkts[k] << std::endl;
         std::cout << "INFO: kernel " << k << " num of received pkts is: " << l_numRxPkts[k] << std::endl;
+        std::cout << "INFO: verify kernel " << k << " registered num of transmitted pkts is: " << l_numVerifyTxPkts[k] << std::endl;
+        std::cout << "INFO: verify kernel " << k << " registered num of received pkts is: " << l_numVerifyRxPkts[k] << std::endl;
     }
     for (auto k=0; k<AL_numInfs; ++k) {
         if ((l_numTxPkts[k] != l_numPkts) || (l_numRxPkts[k] != l_numPkts)) {

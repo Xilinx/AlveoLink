@@ -116,7 +116,7 @@ endif
 
 #Inclue Required Host Source Files
 ifeq ($(TARGET),hw)
-HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_dv/host/testApp_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
+HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_dv/host/testVerify_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 endif
 CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2
 CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_dv/host -I $(XFLIB_DIR)/kernel/sw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/network/dv/sw/include -I $(XFLIB_DIR)/common/sw/include
@@ -147,6 +147,7 @@ VPP_FLAGS_krnl_testApp += --hls.clock 300000000:krnl_testApp
 VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
+VPP_FLAGS_krnl_verify += --hls.clock 300000000:krnl_verify
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000 
 else
@@ -154,10 +155,10 @@ VPP_LDFLAGS_krnl_testApp += --kernel_frequency 200
 endif
 
 ifeq ($(HOST_ARCH), x86)
-BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_compute.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_computeVerify.xclbin
 else
-BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_compute_pkg.xclbin
-BINARY_CONTAINERS_PKG += $(BUILD_DIR)/xnikSyncDV_compute.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/xnikSyncDV_computeVerify_pkg.xclbin
+BINARY_CONTAINERS_PKG += $(BUILD_DIR)/xnikSyncDV_computeVerify.xclbin
 endif
 
 # ################ Setting Rules for Binary Containers (Building Kernels) ################
@@ -165,6 +166,11 @@ $(TEMP_DIR)/krnl_testApp.xo: $(XFLIB_DIR)/tests/kernel/sync_dv/kernel/krnl_testA
 	$(ECHO) "Compiling Kernel: krnl_testApp"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_testApp) $(VPP_FLAGS) -k krnl_testApp -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+
+$(TEMP_DIR)/krnl_verify.xo: $(XFLIB_DIR)/tests/kernel/sync_dv/kernel/krnl_verify.cpp 
+	$(ECHO) "Compiling Kernel: krnl_verify"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_verify) $(VPP_FLAGS) -k krnl_verify -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
 $(TEMP_DIR)/krnl_xnikSyncTX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncTX.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncTX"
@@ -185,6 +191,7 @@ BINARY_CONTAINER_krnl_testApp_OBJS += $(TEMP_DIR)/krnl_testApp.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncTX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncRX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_wide.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_verify.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_testApp_OBJS)
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)

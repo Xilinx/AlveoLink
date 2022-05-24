@@ -22,12 +22,14 @@ constexpr unsigned int t_NumInt16s = AL_netDataBits / AL_destBits;
 void recData(ap_uint<AL_netDataBits>* p_nHopDataRecPtr,
              hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
              hls::stream<ap_uint<AL_netDataBits> >& p_ctrlStr,
-             unsigned int p_numRecPkts) {
+             unsigned int p_numRecPkts,
+             unsigned int p_waitCycles) {
     bool l_exit = false;
-    unsigned int l_pktNum = 0;
+    unsigned int l_pktNum = 1;
+    unsigned int l_waitCycles = p_waitCycles;
     AlveoLink::kernel::HopCtrlPkt<AL_netDataBits, AL_destBits> l_ctrlPkt;
 LOOP_TEST_RECDATA:
-    while (!l_exit) {
+    while ((!l_exit) && (l_waitCycles != 0)) {
 #pragma HLS PIPELINE II=1
         if (l_ctrlPkt.readNB(p_inStr)) {
             if (l_ctrlPkt.isDoneWork()) {
@@ -37,14 +39,18 @@ LOOP_TEST_RECDATA:
             }
             else if (l_ctrlPkt.isWorkload()) {
                 p_nHopDataRecPtr[l_pktNum] = l_ctrlPkt.getCtrlPkt();
-                l_pktNum++;
                 if (l_pktNum == p_numRecPkts) {
                     l_ctrlPkt.setType(AlveoLink::kernel::PKT_TYPE::done);
                     l_ctrlPkt.write(p_ctrlStr);
                 }
+                l_pktNum++;
             }
         }
+        l_waitCycles--;
     }
+    ap_uint<AL_netDataBits> l_cnts = 0;
+    l_cnts.range(31,0) = l_pktNum - 1;
+    p_nHopDataRecPtr[0] = l_cnts;
 }
 
 void transData(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
@@ -67,9 +73,10 @@ void transData(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
     l_ctrlPkt.write(p_outStr);
 
     bool l_exit = false;
-    unsigned int l_numPkts = 0;
+    unsigned int l_numPkts = 1;
+    unsigned int l_waitCycles = p_waitCycles;
 LOOP_TEST_TRANSDATA:
-    while (!l_exit) {
+    while ((!l_exit) && (l_waitCycles != 0)) {
 #pragma HLS PIPELINE II=1
         if (l_ctrlPkt.readNB(p_ctrlStr)) {
             if (l_ctrlPkt.isDoneWork()) {
@@ -80,12 +87,16 @@ LOOP_TEST_TRANSDATA:
                 l_exit = true;
             }
         }
-        else if (l_numPkts < p_numPkts) {
+        else if (l_numPkts <= p_numPkts) {
             AlveoLink::common::WideType<uint16_t, t_NumInt16s> l_val = p_nHopDataSendPtr[l_numPkts];
             p_outStr.write(l_val);
             l_numPkts++;
         }
+        l_waitCycles--;
     }
+    ap_uint<AL_netDataBits> l_cnts = 0;
+    l_cnts.range(31,0) = l_numPkts-1;
+    p_nHopDataSendPtr[0] = l_cnts;
 }
 
 extern "C" void krnl_testApp(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
@@ -113,6 +124,6 @@ extern "C" void krnl_testApp(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
 #pragma HLS DATAFLOW
     hls::stream<ap_uint<AL_netDataBits> > l_ctrlStr;
 #pragma HLS STREAM variable=l_ctrlStr depth=16
-    recData(p_nHopDataRecPtr, p_inStr, l_ctrlStr, p_numPkts);
+    recData(p_nHopDataRecPtr, p_inStr, l_ctrlStr, p_numPkts, p_waitCycles);
     transData(p_nHopDataSendPtr, l_ctrlStr, p_outStr, p_myId, p_numDevs, p_numPkts, p_batchPkts, p_timeOutCycles, p_waitCycles);
 }
