@@ -40,24 +40,19 @@ class basicHost {
         void* l_buf = m_krnlDriver.createBO(1, l_bufBytes);
         m_krnlDriver.setMemArg(1);
         m_krnlDriverBufs.insert({1, l_buf});
-        l_bufBytes = p_numWords * t_DestBytes;
-        l_buf = m_krnlDriver.createBO(2, l_bufBytes);
-        m_krnlDriver.setMemArg(2);
-        m_krnlDriverBufs.insert({2, l_buf});
     }
     void createRxBufs(const size_t p_numWords) {
         size_t l_bufBytes = p_numWords * t_NetDataBytes;
-        void* l_buf = m_krnlDriver.createBO(5, l_bufBytes);
+        void* l_buf = m_krnlDriver.createBO(4, l_bufBytes);
+        m_krnlDriver.setMemArg(4);
+        m_krnlDriverBufs.insert({4, l_buf});
+        l_bufBytes = sizeof(uint32_t) * 2;
+        l_buf = m_krnlDriver.createBO(5, l_bufBytes);
         m_krnlDriver.setMemArg(5);
         m_krnlDriverBufs.insert({5, l_buf});
-        l_bufBytes = sizeof(uint32_t) * 2;
-        l_buf = m_krnlDriver.createBO(6, l_bufBytes);
-        m_krnlDriver.setMemArg(6);
-        m_krnlDriverBufs.insert({6, l_buf});
     }
     void sendBO() { 
         m_krnlDriver.sendBO(1); 
-        m_krnlDriver.sendBO(2); 
     }
 
     void runCU(const unsigned int p_numWords){
@@ -71,19 +66,14 @@ class basicHost {
         return l_outBuf;
     }
 
-    void* getTxDestPtr() {
-        void* l_outBuf = m_krnlDriverBufs.find(2)->second;
-        return l_outBuf;
-    }
-
     void* getRecData() {
-        m_krnlDriver.getBO(5);
-        void* l_outBuf = m_krnlDriverBufs.find(5)->second;
+        m_krnlDriver.getBO(4);
+        void* l_outBuf = m_krnlDriverBufs.find(4)->second;
         return l_outBuf;
     }
     void* getRecStats() {
-        m_krnlDriver.getBO(6);
-        void* l_outBuf = m_krnlDriverBufs.find(6)->second;
+        m_krnlDriver.getBO(5);
+        void* l_outBuf = m_krnlDriverBufs.find(5)->second;
         return l_outBuf;
     }
 

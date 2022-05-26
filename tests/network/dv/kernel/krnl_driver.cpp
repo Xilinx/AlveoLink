@@ -19,16 +19,14 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
-constexpr unsigned int t_PLRAM_Size = 128 * 1024;
 void transData(unsigned int p_numWords,
                ap_uint<AL_netDataBits>* p_dataPtr,
-               ap_uint<AL_destBits>* p_destPtr,
                hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
                hls::stream<ap_uint<1> >& p_ctrlStr) {
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_data = p_dataPtr[i];
-        ap_uint<AL_destBits> l_dest = p_destPtr[i % t_PLRAM_Size];
+        ap_uint<AL_destBits> l_dest = l_data(AL_destBits-1, 0);
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
         l_val.data = l_data;
         l_val.dest = l_dest;
@@ -79,13 +77,11 @@ void calcStats(hls::stream<ap_uint<1> >& p_sendCtrlStr,
 
 extern "C" void krnl_driver(unsigned int p_numWords,
                           ap_uint<AL_netDataBits>* p_dataPtr,
-                          ap_uint<AL_destBits>* p_destPtr,
                           hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
                           hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
                           ap_uint<AL_netDataBits>* p_recDataPtr,
                           ap_uint<32>* p_statsPtr) { 
     POINTER(p_dataPtr, p_dataPtr)
-    POINTER(p_destPtr, p_destPtr)
     POINTER(p_recDataPtr, p_recDataPtr)
     POINTER(p_statsPtr, p_statsPtr)
     AXIS(p_outStr)
@@ -99,7 +95,7 @@ extern "C" void krnl_driver(unsigned int p_numWords,
 
 #pragma HLS DATAFLOW
 
-    transData(p_numWords, p_dataPtr, p_destPtr, p_outStr, l_sendCtrlStr);
+    transData(p_numWords, p_dataPtr, p_outStr, l_sendCtrlStr);
     recData(p_numWords, p_inStr, p_recDataPtr, l_recCtrlStr);
     calcStats(l_sendCtrlStr, l_recCtrlStr, p_statsPtr);
 }

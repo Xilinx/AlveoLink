@@ -71,23 +71,23 @@ int main(int argc, char** argv) {
 
     uint32_t* l_dataSendBuf[AL_numInfs];
     uint32_t* l_dataRecBuf[AL_numInfs];
-    uint16_t* l_destSendBuf[AL_numInfs];//keep is used for dest
     uint32_t* l_statsBuf[AL_numInfs];
     unsigned int l_numData = l_numWidePkts * 16;
-    unsigned int l_numDest = l_numWidePkts;
     for (auto i=0; i<AL_numInfs; ++i) {
         l_basicHost[i].init(&l_card);
         l_basicHost[i].createCU(i);
         l_basicHost[i].createTxBufs(l_numWidePkts);
         l_basicHost[i].createRxBufs(l_numWidePkts);
         l_dataSendBuf[i] = (uint32_t*)(l_basicHost[i].getTxDataPtr());
-        l_destSendBuf[i] = (uint16_t*)(l_basicHost[i].getTxDestPtr());
         for (auto j=0; j<l_numData; ++j) {
+            if (j % 16 == 0) {
+                l_dataSendBuf[i][j] = (l_ids[i] + AL_numInfs) % l_numDests;
+            }
+            else {
+                l_dataSendBuf[i][j] = j;
+            }
             l_dataSendBuf[i][j] = j;
         } 
-        for (auto j=0; j<l_numDest; ++j) {
-            l_destSendBuf[i][j] = (l_ids[i] + AL_numInfs) % l_numDests;
-        }
     }
     for (auto i=0; i<AL_numInfs; ++i) {
         l_basicHost[i].sendBO();
