@@ -85,7 +85,7 @@ class XNIK_DV{
                          hls::stream<DV_PktType>& p_outStr3) {
 
             hls::stream<ap_uint<t_WideDataBits> > l_str[4];
-#pragma HLS STREAM variable=l_str depth=8
+#pragma HLS STREAM variable=l_str depth=4
 #pragma HLS DATAFLOW
             readAXIS(p_inStr, l_str[0], l_str[1], l_str[2], l_str[3]);
             writeAXIS(l_str[0], p_outStr0);
