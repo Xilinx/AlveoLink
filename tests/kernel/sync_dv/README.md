@@ -40,7 +40,7 @@ port_status
 qsfp_status
 ```
 
-## 4. Run test for xnikSyncDV_manager.xclbinn @200MHz, xnikSyncDV_compute.xclbin @100MHz 
+## 4. Run test 
 
 ```sh
 1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
@@ -51,26 +51,14 @@ qsfp_status
 
 ```
 
-## 5. Run test in debug mode to read the stats registers during the run (xnikSyncDV_manager.xclbinn @200MHz, xnikSyncDV_compute.xclbin @100MHz)
+## 5. Run test in debug mode to read the stats registers during the run
 
 ```sh
 
-1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager.xclbin 0 200 1 debug
-
-2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 16537454 debug
-
-```
-
-## 6. Run test for xnikSyncDV_manager.xclbinn @200MHz, xnikSyncDV_compute.xclbin @200MHz
-
-```sh
 1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager.xclbin 0 200 1
 
 2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb03/xnikSyncDV_compute.xclbin 1 16537454 128 64
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 16537454 debug
 
-Here, assume the build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgr    adb03/xnikSyncDV_compute.xclbin is running @200MHz. 128, 64 means after sending each load of 128 pkts, the XNIK will stop for 64 cyckes
 ```
