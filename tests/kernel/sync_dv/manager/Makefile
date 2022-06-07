@@ -146,9 +146,9 @@ VPP_FLAGS_krnl_echo += --hls.clock 300000000:krnl_echo
 VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_manager += --clock.defaultFreqHz 200000000 
+VPP_LDFLAGS_manager += --clock.defaultFreqHz 150000000 
 else
-VPP_LDFLAGS_manager += --kernel_frequency 200
+VPP_LDFLAGS_manager += --kernel_frequency 150
 endif
 
 ifeq ($(HOST_ARCH), x86)

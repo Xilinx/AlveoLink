@@ -111,7 +111,14 @@ namespace kernel {
 
             typedef ap_axiu<t_NetDataBits, t_UserBits, 1, t_DestBits> TypeAXIS;
         public:
-            HopCtrlPkt() {}
+            HopCtrlPkt() {
+                m_srcId = 0;
+                m_numDevs = 0;
+                m_rest = 0;
+                m_batchPkts = 0;
+                m_timeOutCycles = 0;
+                m_waitCycles = 0;
+            }
             ap_uint<t_NetDataBits> getCtrlPkt() {
 #pragma HLS INLINE
                 ap_uint<t_NetDataBits> l_val;

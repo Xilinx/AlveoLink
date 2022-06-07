@@ -45,5 +45,6 @@ extern "C" void krnl_xnik_wide(hls::stream<XNIK_WidePktType>& p_XNIKinStr,
     AlveoLink::adapter::XNIK_DV<AL_netDataBits, AL_destBits> l_xnikDV;
 #pragma HLS DATAFLOW
     l_xnikDV.xnikWide2DV(p_XNIKinStr, p_DVoutStr0, p_DVoutStr1, p_DVoutStr2, p_DVoutStr3);
-    l_xnikDV.DV2XnikWide(p_DVinStr0, p_DVinStr1, p_DVinStr2, p_DVinStr3, p_XNIKoutStr);
+    //l_xnikDV.DV2XnikWide(p_DVinStr0, p_DVinStr1, p_DVinStr2, p_DVinStr3, p_XNIKoutStr);
+    l_xnikDV.DV2Xnik4nHop(p_DVinStr0, p_DVinStr1, p_DVinStr2, p_DVinStr3, p_XNIKoutStr);
 }

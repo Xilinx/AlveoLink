@@ -86,7 +86,6 @@ int main(int argc, char** argv) {
             else {
                 l_dataSendBuf[i][j] = j;
             }
-            l_dataSendBuf[i][j] = j;
         } 
     }
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -110,6 +109,9 @@ int main(int argc, char** argv) {
             if (l_dataSendBuf[i][j] != l_dataRecBuf[i][j]) {
                 l_dataErrs[i]++;
                 l_errs++;
+                std::cout << "ERROR: port " << std::dec << i << " element "  << j;
+                std::cout << " send " << std::hex << l_dataSendBuf[i][j];
+                std::cout<< " != rec " << l_dataRecBuf[i][j]<< std::endl;
             }
         }
     }    
