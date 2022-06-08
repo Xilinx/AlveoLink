@@ -91,13 +91,13 @@ ifeq ($(HOST_ARCH), x86)
 
 CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
-VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps 
+VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl -t $(TARGET) --platform $(XPLATFORM) --save-temps 
 #VPP_LDFLAGS += --optimize 2 -R 2
 VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_XNIKinStr --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
 else ifeq ($(HOST_ARCH), aarch64)
 CXXFLAGS +=  -fmessage-length=0 --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(SYSROOT)/usr/lib -L$(XILINX_VITIS_AIETOOLS)/lib/aarch64.o -Wl,--as-needed -lxilinxopencl -lxrt_coreutil 
-VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps
+VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl  -t $(TARGET) --platform $(XPLATFORM) --save-temps
  
 #VPP_LDFLAGS += --optimize 2 -R 2 
 VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_XNIKinStr --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
@@ -146,9 +146,9 @@ VPP_FLAGS_krnl_echo += --hls.clock 300000000:krnl_echo
 VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_manager += --clock.defaultFreqHz 150000000 
+VPP_LDFLAGS_manager += --clock.defaultFreqHz 200000000 
 else
-VPP_LDFLAGS_manager += --kernel_frequency 150
+VPP_LDFLAGS_manager += --kernel_frequency 200
 endif
 
 ifeq ($(HOST_ARCH), x86)

@@ -229,11 +229,11 @@ class XNIK_DV{
             hls::stream<ap_uint<t_WideNetDataBits> > l_mgrStr;
             hls::stream<ap_uint<t_WideNetDataBits> > l_workStr;
 
-#pragma HLS STREAM variable=l_datStr depth=4
-#pragma HLS STREAM variable=l_destStr depth=4
-#pragma HLS STREAM variable=l_ctrlStr depth=4
-#pragma HLS STREAM variable=l_mgrStr depth=4
-#pragma HLS STREAM variable=l_workStr depth=4
+//#pragma HLS STREAM variable=l_datStr depth=4
+//#pragma HLS STREAM variable=l_destStr depth=4
+//#pragma HLS STREAM variable=l_ctrlStr depth=4
+//#pragma HLS STREAM variable=l_mgrStr depth=4
+//#pragma HLS STREAM variable=l_workStr depth=4
 
             readDV(p_inStr0, p_inStr1, p_inStr2, p_inStr3, l_datStr, l_destStr, l_ctrlStr);
             splitPkt(l_datStr, l_destStr, l_ctrlStr, l_mgrStr, l_workStr);
