@@ -16,7 +16,7 @@ make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx
 make clean TARGET=hw
 make host TARGET=hw
 
-navigate to tests/kernel/sync_dv/manager
+navigate to tests/kernel/sync_dv/manager_compute
 
 make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
 make clean TARGET=hw
@@ -43,22 +43,21 @@ qsfp_status
 ## 4. Run test 
 
 ```sh
-1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager.xclbin 0 200 1
+1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager_compute, and run
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1
 
 2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 2 16537454
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 1024
 
 ```
 
 ## 5. Run test in debug mode to read the stats registers during the run
 
 ```sh
-
-1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager.xclbin 0 200 1
+1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager_compute, and run
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1
 
 2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 2 16537454 debug
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 1024
 
 ```

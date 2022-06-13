@@ -127,33 +127,42 @@ class XNIK_DV{
                     hls::stream<ap_uint<t_NetDataBits> >& p_outDatStr,
                     hls::stream<ap_uint<t_DestBits> >& p_outDestStr,
                     hls::stream<ap_uint<5> >& p_outCtrlStr) {
-            ap_uint<5> l_ctrl = 0;
+            ap_uint<5> l_ctrl = 1;
+            ap_uint<4> l_rdCtrl= 0;
+            DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
+            ap_uint<t_NetDataBits> l_dat;
+            ap_uint<t_DestBits> l_dest;
             while (true) {
 #pragma HLS PIPELINE II=1
-                DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
-                l_dvPkt0 = p_inStr0.read();
-                l_dvPkt1 = p_inStr1.read();
-                l_dvPkt2 = p_inStr2.read();
-                l_dvPkt3 = p_inStr3.read();
+                if (!l_rdCtrl[0]) {
+                    l_rdCtrl[0] = p_inStr0.read_nb(l_dvPkt0);
+                }
+                if (!l_rdCtrl[1]) {
+                    l_rdCtrl[1] = p_inStr1.read_nb(l_dvPkt1);
+                }
+                if (!l_rdCtrl[2]) {
+                    l_rdCtrl[2] = p_inStr2.read_nb(l_dvPkt2);
+                }
+                if (!l_rdCtrl[3]) {
+                    l_rdCtrl[3] = p_inStr3.read_nb(l_dvPkt3);
+                }
                 
-                ap_uint<t_NetDataBits> l_dat;
-                l_dat(t_DVdataBits-1, 0) = l_dvPkt0.data;
-                l_dat(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
-                l_dat(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
-                l_dat(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
 
-                ap_uint<t_DestBits> l_dest;
-                l_dest = l_dvPkt0.dest;
-           
-                l_ctrl[4] = (l_dvPkt0.data(23,20) != 0); //not workload, pkt from manager
-                l_ctrl[0] = 1;
-                l_ctrl[1] = (l_dvPkt1.dest == l_dvPkt0.dest);
-                l_ctrl[2] = (l_dvPkt2.dest == l_dvPkt0.dest);
-                l_ctrl[3] = (l_dvPkt3.dest == l_dvPkt0.dest);
-
-                p_outDatStr.write(l_dat);
-                p_outDestStr.write(l_dest);
-                p_outCtrlStr.write(l_ctrl);
+                if (l_rdCtrl.and_reduce()) {
+                    l_dest = l_dvPkt0.dest;
+                    l_ctrl[4] = (l_dvPkt0.data(23,20) != 0); //not workload, pkt from manager
+                    l_ctrl[1] = (l_dvPkt1.dest == l_dest);
+                    l_ctrl[2] = (l_dvPkt2.dest == l_dest);
+                    l_ctrl[3] = (l_dvPkt3.dest == l_dest);
+                    l_dat(t_DVdataBits-1, 0) = l_dvPkt0.data;
+                    l_dat(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
+                    l_dat(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
+                    l_dat(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
+                    p_outDatStr.write(l_dat);
+                    p_outDestStr.write(l_dest);
+                    p_outCtrlStr.write(l_ctrl);
+                    l_rdCtrl = 0;
+                }
             }
         }
 
