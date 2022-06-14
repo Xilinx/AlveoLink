@@ -44,7 +44,7 @@ qsfp_status
 
 ```sh
 1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager_compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager_compute/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1
 
 2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 1024
@@ -55,9 +55,9 @@ qsfp_status
 
 ```sh
 1. on db1, start one terminal and navigate to tests/kernel/sync_dv/manager_compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager_compute.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/manager_compute/xnikSyncDV_manager_compute.xclbin 0 3 1024 200 1 debug 128 0 2
 
 2. on db1, start another terminal and navigate to tests/kernel/sync_dv/compute, and run
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 1024
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 1024 debug 128 0 2
 
 ```
