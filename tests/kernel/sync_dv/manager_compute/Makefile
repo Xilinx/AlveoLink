@@ -93,14 +93,14 @@ CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XIL
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
 VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl -t $(TARGET) --platform $(XPLATFORM) --save-temps 
 #VPP_LDFLAGS += --optimize 2 -R 2
-VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_XNIKinStr --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
+VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_DVinStr0 --debug.chipscope krnl_xnik_wide_0:p_DVinStr1  --debug.chipscope krnl_xnik_wide_0:p_DVinStr2 --debug.chipscope krnl_xnik_wide_0:p_DVinStr3 --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
 else ifeq ($(HOST_ARCH), aarch64)
 CXXFLAGS +=  -fmessage-length=0 --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(SYSROOT)/usr/lib -L$(XILINX_VITIS_AIETOOLS)/lib/aarch64.o -Wl,--as-needed -lxilinxopencl -lxrt_coreutil 
 VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl  -t $(TARGET) --platform $(XPLATFORM) --save-temps
  
 #VPP_LDFLAGS += --optimize 2 -R 2 
-VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_XNIKinStr --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
+VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_0:p_DVinStr0 --debug.chipscope krnl_xnik_wide_0:p_DVinStr1  --debug.chipscope krnl_xnik_wide_0:p_DVinStr2 --debug.chipscope krnl_xnik_wide_0:p_DVinStr3 --debug.chipscope krnl_xnik_wide_0:p_XNIKoutStr 
 endif
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)

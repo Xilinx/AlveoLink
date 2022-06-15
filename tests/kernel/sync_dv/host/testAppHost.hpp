@@ -35,44 +35,6 @@ class testAppHost {
         std::string l_cuName = "krnl_testApp:{krnl_testApp_" + std::to_string(p_id) + "}";
         m_krnlTestApp.createKernel(l_cuName);
     }
-    void createRecBufs(const size_t p_dataBytes) {
-        if (p_dataBytes % t_NetDataBytes != 0) {
-            throw basicInvalidValue("kernel data buffer size must be multiple of " +
-                                    std::to_string(t_NetDataBytes));
-        }
-        void* l_outDataBuf = m_krnlTestApp.createBO(1, p_dataBytes);
-        m_krnlTestApp.setMemArg(1);
-        m_krnlTestAppBufs.insert({1, l_outDataBuf});
-    }
-
-    void runCU(const unsigned int p_myId,
-               const unsigned int p_numDevs,
-               const unsigned int p_numPkts,
-               const unsigned int p_batchPkts,
-               const unsigned int p_timeOutCycles,
-               const unsigned int p_waitCycles) {
-        unsigned int l_argId = 4;
-        m_krnlTestApp.setScalarArg(l_argId++, p_myId);
-        m_krnlTestApp.setScalarArg(l_argId++, p_numDevs);
-        m_krnlTestApp.setScalarArg(l_argId++, p_numPkts);
-        m_krnlTestApp.setScalarArg(l_argId++, p_batchPkts);
-        m_krnlTestApp.setScalarArg(l_argId++, p_timeOutCycles);
-        m_krnlTestApp.setScalarArg(l_argId++, p_waitCycles);
-        m_krnlTestApp.run();
-    }
-
-    void* getRes() {
-        m_krnlTestApp.getBO(1);
-        void* l_outBuf = m_krnlTestAppBufs.find(1)->second;
-        return l_outBuf;
-    }
-
-    void* getTransBuf() {
-        m_krnlTestApp.getBO(0);
-        void* l_outBuf = m_krnlTestAppBufs.find(0)->second;
-        return l_outBuf;
-    }
-
     void* createTransBuf(const size_t p_dataBytes) {
         if (p_dataBytes % t_NetDataBytes != 0) {
             throw basicInvalidValue("kernel data buffer size must be multiple of " +
@@ -83,8 +45,66 @@ class testAppHost {
         m_krnlTestAppBufs.insert({0, l_outBuf});
         return l_outBuf;
     }
+    void* createRecBufs(const size_t p_dataBytes) {
+        if (p_dataBytes % t_NetDataBytes != 0) {
+            throw basicInvalidValue("kernel data buffer size must be multiple of " +
+                                    std::to_string(t_NetDataBytes));
+        }
+        void* l_outDataBuf = m_krnlTestApp.createBO(1, p_dataBytes);
+        m_krnlTestApp.setMemArg(1);
+        m_krnlTestAppBufs.insert({1, l_outDataBuf});
+        return l_outDataBuf;
+    }
 
-    void sendBO() { m_krnlTestApp.sendBO(0); }
+    void runCU(const unsigned int p_myId,
+               const unsigned int p_destId,
+               const unsigned int p_numDevs,
+               const unsigned int p_numPkts,
+               const unsigned int p_batchPkts,
+               const unsigned int p_timeOutCycles) {
+        unsigned int l_argId = 4;
+        m_krnlTestApp.setScalarArg(l_argId++, p_myId);
+        m_krnlTestApp.setScalarArg(l_argId++, p_destId);
+        m_krnlTestApp.setScalarArg(l_argId++, p_numDevs);
+        m_krnlTestApp.setScalarArg(l_argId++, p_numPkts);
+        m_krnlTestApp.setScalarArg(l_argId++, p_batchPkts);
+        m_krnlTestApp.setScalarArg(l_argId++, p_timeOutCycles);
+        m_krnlTestApp.run();
+    }
+
+    void sendBO() { 
+        m_krnlTestApp.sendBO(0); 
+        m_krnlTestApp.sendBO(1);
+    }
+    void* getTransBuf() {
+        m_krnlTestApp.getBO(0);
+        void* l_outBuf = m_krnlTestAppBufs.find(0)->second;
+        return l_outBuf;
+    }
+    void* getRes() {
+        m_krnlTestApp.getBO(1); //getBO will wait for kernel to finish
+        void* l_outBuf = m_krnlTestAppBufs.find(1)->second;
+        return l_outBuf;
+    }
+
+    void syncRes() { //update BO without waitfor kernel to finish
+        m_krnlTestApp.syncBO(1);
+        //void* l_outBuf = m_krnlTestAppBufs.find(1)->second;
+        //return l_outBuf;
+    }
+
+    void syncTrans() { //update BO without waitfor kernel to finish
+        m_krnlTestApp.syncBO(0);
+        //void* l_outBuf = m_krnlTestAppBufs.find(0)->second;
+        //return l_outBuf;
+    }
+
+    void finish() {
+        m_krnlTestApp.wait();
+    }
+
+
+
 
    private:
     AlveoLink::common::FPGA* m_card;

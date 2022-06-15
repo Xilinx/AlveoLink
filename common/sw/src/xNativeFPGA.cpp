@@ -113,6 +113,15 @@ void KERNEL::getBO(const int p_argIdx) {
     }
 }
 
+void KERNEL::syncBO(const int p_argIdx) {
+    if (m_bos.find(p_argIdx) != m_bos.end()) {
+        xrt::bo l_bo = m_bos.find(p_argIdx)->second;
+        l_bo.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    } else {
+        throw AlveoLink::common::xNativeFPGAInvalidValue("could not find the BO");
+    }
+}
+
 void KERNEL::wait() {
     auto state = m_run.wait();
     //std::cout << "state " << state << std::endl;

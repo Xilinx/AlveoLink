@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #include "hwManagerHost.hpp"
 #include "testAppHost.hpp"
@@ -51,14 +52,28 @@ int main(int argc, char** argv) {
     unsigned int l_waitCycles = atoi(argv[l_idx++]);
     unsigned int l_flushCounter = atoi(argv[l_idx++]);
     std::string l_debug = "";
-    if (argc == 8) {
+    if (argc > 7) {
         l_debug =  argv[l_idx++];
     }
 
     unsigned int l_batchPkts = 128;
     unsigned int l_timeOutCycles = 0;
-    unsigned int l_computeWaitCycles = 2 << 30;
+    unsigned int l_computeWaitSeconds = 2;
 
+    if (argc > 8) {
+        l_batchPkts = atoi(argv[l_idx++]);
+    }
+    if (argc > 9) {
+        l_timeOutCycles = atoi(argv[l_idx++]);
+    }
+    if (argc > 10) {
+        l_computeWaitSeconds = atoi(argv[l_idx++]);
+    }
+
+    std::cout << "INFO: batchPkts = " << l_batchPkts << std::endl;
+    std::cout << "INFO: timeOutCycles = " <<  l_timeOutCycles << std::endl;
+    std::cout << "INFO: computeWaitSeconds = " << l_computeWaitSeconds << std::endl;
+ 
     AlveoLink::common::FPGA l_card;
     AlveoLink::network_dv::dvNetLayer<AL_numInfs, AL_maxConnections, AL_destBits> l_dvNetLayer;
     AlveoLink::kernel::hwManagerHost<AL_maxConnections> l_manager;
@@ -81,11 +96,13 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::cout <<"INFO: total number of compute nodes: " << l_numDevs << std::endl;
     l_manager.init(&l_card);
     l_manager.createCU(0);
     l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter);
     l_manager.sendBO();
     l_manager.runCU();
+    std::cout <<"INFO: manager has started... " << std::endl;
 
     l_testAppHost.init(&l_card);
     l_testAppHost.createCU(0);
@@ -95,24 +112,19 @@ int main(int argc, char** argv) {
     uint8_t* l_transBuf;
     uint8_t* l_resBuf;
     l_transBuf = (uint8_t*)l_testAppHost.createTransBuf(l_transBytes);
-    l_testAppHost.createRecBufs(l_recBytes);
+    l_resBuf = (uint8_t*)l_testAppHost.createRecBufs(l_recBytes);
     
-    for (unsigned int i=1; i<(l_numPkts+1); ++i) {
-        std::vector<uint8_t> l_pkt(t_NetDataBytes);
-        l_pkt[1] = 0;
-        l_pkt[0] = (l_ids[0] + 1) % l_numDevs;
-        l_pkt[2] = AlveoLink::kernel::PKT_TYPE::workload;
-        l_pkt[2] = l_pkt[2] << 4;
-        std::memcpy(l_pkt.data()+3, (uint8_t*)(&i), 4);
-        for (unsigned int j=7; j<t_NetDataBytes; ++j) {
-            l_pkt[j] = 0;
-        }
-        std::memcpy(l_transBuf + i*t_NetDataBytes, l_pkt.data(), t_NetDataBytes); 
-    }
+    std::memset(l_transBuf, 0, l_transBytes);
+    std::memset(l_resBuf, 0, l_recBytes);    
     l_testAppHost.sendBO();
-    l_testAppHost.runCU(l_ids[0], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_computeWaitCycles);
-    l_resBuf = (uint8_t*)(l_testAppHost.getRes());
-    l_transBuf = (uint8_t*)(l_testAppHost.getTransBuf());
+
+    unsigned int l_destId = (l_ids[0] + 1);
+    if (l_destId == l_numDevs) {
+        l_destId = 0;
+    } 
+    l_testAppHost.runCU(l_ids[0], l_destId, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles);
+
+    sleep(l_computeWaitSeconds);
      
     if (l_debug == "debug") {
         std::vector<uint64_t> l_pktTxCnts = l_dvNetLayer.getLaneTxPktsCnt();
@@ -138,6 +150,14 @@ int main(int argc, char** argv) {
                 }
                 std::cout << std::endl;
             }
+            if ( i== 0) {
+                unsigned int l_lastTrans = (l_transBuf[l_numPkts*t_NetDataBytes+3]<<24);
+                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes+2]<<16;
+                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes+1]<<8;
+                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes];
+                std::cout << std::endl;
+                std::cout << "INFO: last tx pkt for port " << i << " in HBM is:  0x" << l_lastTrans << std::endl;
+            }
             std::cout << std::endl;
         }
         for (auto i=0; i<AL_numInfs; ++i) {
@@ -152,6 +172,10 @@ int main(int argc, char** argv) {
             std::cout << std::endl;
         }
     }
+    
+    l_testAppHost.syncRes();
+    l_testAppHost.syncTrans();
+
     std::cout << std::dec;
     unsigned int l_numTxPkts;
     unsigned int l_numRxPkts;
@@ -164,23 +188,80 @@ int main(int argc, char** argv) {
     l_numRxPkts  += (l_resBuf[2]<<16);
     l_numRxPkts  += (l_resBuf[1]<<8);
     l_numRxPkts  += l_resBuf[0];
+        
+    unsigned int l_wt0, l_wt1, l_wt2;
+    unsigned int l_wr0, l_wr1, l_wr2;
+    if (l_numTxPkts == 0) {
+        for (auto i=1; i<l_numPkts+1; ++i) {
+            l_wt0 = (l_transBuf[i*t_NetDataBytes+3]<<24);
+            l_wt0 += l_transBuf[i*t_NetDataBytes+2]<<16;
+            l_wt0 += l_transBuf[i*t_NetDataBytes+1]<<8;
+            l_wt0 += l_transBuf[i*t_NetDataBytes];
+            
+            l_wt1 = (l_transBuf[i*t_NetDataBytes+7]<<24);
+            l_wt1 += l_transBuf[i*t_NetDataBytes+6]<<16;
+            l_wt1 += l_transBuf[i*t_NetDataBytes+5]<<8;
+            l_wt1 += l_transBuf[i*t_NetDataBytes+4];
+            
+            l_wt2 = (l_transBuf[i*t_NetDataBytes+11]<<24);
+            l_wt2 += l_transBuf[i*t_NetDataBytes+10]<<16;
+            l_wt2 += l_transBuf[i*t_NetDataBytes+9]<<8;
+            l_wt2 += l_transBuf[i*t_NetDataBytes+8];
+
+            if ((l_wt0 == 0) && (l_wt1 == 0) && (l_wt2 == 0)) {
+                l_numTxPkts = i-1;
+                break;
+            }
+        }
+    }
+
+    if (l_numRxPkts == 0) {
+        for (auto i=1; i<l_numPkts+1; ++i) {
+            l_wr0 = (l_resBuf[i*t_NetDataBytes+3]<<24);
+            l_wr0 += l_resBuf[i*t_NetDataBytes+2]<<16;
+            l_wr0 += l_resBuf[i*t_NetDataBytes+1]<<8;
+            l_wr0 += l_resBuf[i*t_NetDataBytes];
+            
+            l_wr1 = (l_resBuf[i*t_NetDataBytes+7]<<24);
+            l_wr1 += l_resBuf[i*t_NetDataBytes+6]<<16;
+            l_wr1 += l_resBuf[i*t_NetDataBytes+5]<<8;
+            l_wr1 += l_resBuf[i*t_NetDataBytes+4];
+            
+            l_wr2 = (l_resBuf[i*t_NetDataBytes+11]<<24);
+            l_wr2 += l_resBuf[i*t_NetDataBytes+10]<<16;
+            l_wr2 += l_resBuf[i*t_NetDataBytes+9]<<8;
+            l_wr2 += l_resBuf[i*t_NetDataBytes+8];
+
+            if ((l_wr0 == 0) && (l_wr1 == 0) && (l_wr2 == 0)) {
+                l_numRxPkts = i-1;
+                break;
+            }
+        }
+    }
+
     std::cout << "INFO: kernel " << l_ids[0] << " num of transmitted pkts is: " << l_numTxPkts << std::endl;
     std::cout << "INFO: kernel " << l_ids[0] << " num of received pkts is: " << l_numRxPkts << std::endl;
+
+    int l_dataErr = 0;
+    if ((l_numTxPkts != l_numPkts) || (l_numRxPkts != l_numPkts)) {
+        std::cout << "ERROR: pkts transmitted or pkts received != " <<l_numPkts << std::endl;
+        l_dataErr++;
+    }
+    else {
+        l_testAppHost.finish();
+    }
+    if (l_dataErr != 0) {
+        return EXIT_FAILURE;
+    }
 
     l_manager.finish();
     std::cout << "INFO: system run finished!" << std::endl;
 
-    if ((l_numTxPkts != l_numPkts) || (l_numRxPkts != l_numPkts)) {
-        std::cout << "ERROR: pkts transmitted or pkts received != " <<l_numPkts << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    int l_dataErr = 0;
     for (unsigned int i=1; i<(l_numPkts+1); ++i) {
-        unsigned int l_res = (l_resBuf[i*t_NetDataBytes+6]<<24);
-        l_res += l_resBuf[i*t_NetDataBytes+5]<<16;
-        l_res += l_resBuf[i*t_NetDataBytes+4]<<8;
-        l_res += l_resBuf[i*t_NetDataBytes+3];
+        unsigned int l_res = (l_resBuf[i*t_NetDataBytes+7]<<24);
+        l_res += l_resBuf[i*t_NetDataBytes+6]<<16;
+        l_res += l_resBuf[i*t_NetDataBytes+5]<<8;
+        l_res += l_resBuf[i*t_NetDataBytes+4];
         if (l_res != i) {
             std::cout << "ERROR: Kernel " << l_ids[0] << " Pkt " << i << " received " << l_res << std::endl;
             l_dataErr++;

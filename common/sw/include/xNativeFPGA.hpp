@@ -72,6 +72,7 @@ class KERNEL {
     void run();
     void wait();
     void getBO(const int p_argIdx);
+    void syncBO(const int p_argIdx);
     void clearBOMap();
 
    protected:
