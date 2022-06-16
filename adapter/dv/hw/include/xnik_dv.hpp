@@ -19,7 +19,8 @@
 
 #include "ap_axi_sdata.h"
 #include "ap_int.h"
-#include "hls_stream.h" 
+#include "hls_stream.h"
+#include "xnikPktDefs.hpp"
 
 namespace AlveoLink {
 namespace adapter {
@@ -30,13 +31,11 @@ class XNIK_DV{
     public:
         static const unsigned int t_DVdataBits = t_NetDataBits / 4;
         static const unsigned int t_WideDvDataBits = t_DVdataBits + t_DestBits;
-        static const unsigned int t_WideNetDataBits = t_NetDataBits + t_DestBits;
         static const unsigned int t_WideDestBits = t_DestBits * 4;
         typedef ap_axiu<t_DVdataBits, 0, 0, t_DestBits> DV_PktType;
-        typedef ap_axiu<t_NetDataBits, 0, 0, t_DestBits> XNIK_WidePktType;
     public:
         XNIK_DV(){}
-        void readAXIS(hls::stream<XNIK_WidePktType>& p_inStr,
+        void readAXIS(hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
                       hls::stream<ap_uint<t_WideDvDataBits> >& p_outStr0,
                       hls::stream<ap_uint<t_WideDvDataBits> >& p_outStr1,
                       hls::stream<ap_uint<t_WideDvDataBits> >& p_outStr2,
@@ -44,20 +43,23 @@ class XNIK_DV{
             while (true) {
 #pragma HLS PIPELINE II=1
                 if (!p_outStr0.full() && !p_outStr1.full() && !p_outStr2.full() && !p_outStr3.full()) {
-                    XNIK_WidePktType l_xnikPkt = p_inStr.read();
+                    AlveoLink::kernel::DvHopCtrlPkt<t_NetDataBits, t_DestBits>  l_xnikPkt;
+                    l_xnikPkt.read(p_inStr);
                     ap_uint<t_WideDvDataBits> l_val0, l_val1, l_val2, l_val3;
 
-                    l_val0(t_DestBits-1,0) = l_xnikPkt.dest;
-                    l_val0(t_WideDvDataBits-1, t_DestBits) = l_xnikPkt.data(t_DVdataBits-1, 0);
+                    ap_uint<t_DestBits> l_dest = l_xnikPkt.getDest();
+                    ap_uint<t_NetDataBits> l_val = l_xnikPkt.getCtrlPkt();
+                    l_val0(t_DestBits-1,0) = l_dest;
+                    l_val0(t_WideDvDataBits-1, t_DestBits) = l_val(t_DVdataBits-1, 0);
 
-                    l_val1(t_DestBits-1,0) = l_xnikPkt.dest;
-                    l_val1(t_WideDvDataBits-1, t_DestBits) = l_xnikPkt.data(2*t_DVdataBits-1, t_DVdataBits);
+                    l_val1(t_DestBits-1,0) = l_dest;
+                    l_val1(t_WideDvDataBits-1, t_DestBits) = l_val(2*t_DVdataBits-1, t_DVdataBits);
 
-                    l_val2(t_DestBits-1,0) = l_xnikPkt.dest;
-                    l_val2(t_WideDvDataBits-1, t_DestBits) = l_xnikPkt.data(3*t_DVdataBits-1, 2*t_DVdataBits);
+                    l_val2(t_DestBits-1,0) = l_dest;
+                    l_val2(t_WideDvDataBits-1, t_DestBits) = l_val(3*t_DVdataBits-1, 2*t_DVdataBits);
 
-                    l_val3(t_DestBits-1,0) = l_xnikPkt.dest;
-                    l_val3(t_WideDvDataBits-1, t_DestBits) = l_xnikPkt.data(4*t_DVdataBits-1, 3*t_DVdataBits);
+                    l_val3(t_DestBits-1,0) = l_dest;
+                    l_val3(t_WideDvDataBits-1, t_DestBits) = l_val(4*t_DVdataBits-1, 3*t_DVdataBits);
 
                     p_outStr0.write(l_val0);
                     p_outStr1.write(l_val1);
@@ -80,7 +82,7 @@ class XNIK_DV{
         }
                 
 
-        void xnikWide2DV(hls::stream<XNIK_WidePktType>& p_inStr,
+        void xnikWide2DV(hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
                          hls::stream<DV_PktType>& p_outStr0,
                          hls::stream<DV_PktType>& p_outStr1,
                          hls::stream<DV_PktType>& p_outStr2,
@@ -100,21 +102,20 @@ class XNIK_DV{
                          hls::stream<DV_PktType>& p_inStr1,
                          hls::stream<DV_PktType>& p_inStr2,
                          hls::stream<DV_PktType>& p_inStr3,
-                         hls::stream<XNIK_WidePktType>& p_outStr) {
+                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
             while (true) {
 #pragma HLS PIPELINE II=1
-                XNIK_WidePktType l_xnikPkt;
+                ap_uint<t_NetDataBits>  l_xnikPkt;
                 DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
                 l_dvPkt0 = p_inStr0.read();
                 l_dvPkt1 = p_inStr1.read();
                 l_dvPkt2 = p_inStr2.read();
                 l_dvPkt3 = p_inStr3.read();
 
-                l_xnikPkt.data(t_DVdataBits-1, 0) = l_dvPkt0.data;
-                l_xnikPkt.data(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
-                l_xnikPkt.data(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
-                l_xnikPkt.data(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
-                l_xnikPkt.dest = l_dvPkt0.dest;
+                l_xnikPkt(t_DVdataBits-1, 0) = l_dvPkt0.data;
+                l_xnikPkt(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
+                l_xnikPkt(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
+                l_xnikPkt(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
                 p_outStr.write(l_xnikPkt);
             }
         }
@@ -169,32 +170,27 @@ class XNIK_DV{
         void splitPkt(hls::stream<ap_uint<t_NetDataBits> >& p_inDatStr, 
                       hls::stream<ap_uint<t_DestBits> >& p_inDestStr,
                       hls::stream<ap_uint<5> >& p_inCtrlStr,
-                      hls::stream<ap_uint<t_WideNetDataBits> >& p_outMgrStr,
-                      hls::stream<ap_uint<t_WideNetDataBits> >& p_outWorkStr) {
+                      hls::stream<ap_uint<t_NetDataBits> >& p_outMgrStr,
+                      hls::stream<ap_uint<t_NetDataBits> >& p_outWorkStr) {
             bool l_exit = false;
             while (!l_exit) {
 #pragma HLS PIPELINE II=1
                 ap_uint<t_NetDataBits> l_dat = p_inDatStr.read();
                 ap_uint<t_DestBits> l_dest = p_inDestStr.read();
                 ap_uint<5> l_ctrl = p_inCtrlStr.read();
-                ap_uint<t_WideNetDataBits> l_mgrDat, l_workDat;
-                l_mgrDat(t_DestBits-1, 0) = l_dest;
-                l_mgrDat(t_DVdataBits+t_DestBits-1, t_DestBits) = l_dat(t_DVdataBits-1, 0);
-                l_mgrDat(t_WideNetDataBits-1, t_DVdataBits+t_DestBits) = 0;
+                ap_uint<t_NetDataBits> l_mgrDat, l_workDat;
+                l_mgrDat(t_DVdataBits-1, 0) = l_dat(t_DVdataBits-1, 0);
+                l_mgrDat(t_NetDataBits-1, t_DVdataBits) = 0;
 
-                l_workDat(t_DestBits-1, 0) = 0;
                 for (auto i=0; i<4; ++i) {
                     if (l_ctrl[4] & l_ctrl[i]) {
-                        l_workDat(t_DVdataBits*(i+1)+t_DestBits-1, t_DestBits+i*t_DVdataBits) = 0;
+                        l_workDat(t_DVdataBits*(i+1)-1, i*t_DVdataBits) = 0;
                     }
                     else {
-                        l_workDat(t_DVdataBits*(i+1)+t_DestBits-1, t_DestBits+i*t_DVdataBits) = 
+                        l_workDat(t_DVdataBits*(i+1)-1, i*t_DVdataBits) = 
                             l_dat(t_DVdataBits*(i+1)-1, t_DVdataBits*i);
                     }
                 }
-
-                bool l_writeMgr = l_ctrl[4];
-                bool l_writeDat = !l_ctrl.and_reduce();
 
                 if (l_ctrl[4]) {
                     p_outMgrStr.write(l_mgrDat);
@@ -206,22 +202,18 @@ class XNIK_DV{
             }
         }
         
-        void mergePkt(hls::stream<ap_uint<t_WideNetDataBits> >& p_inMgrStr,
-                      hls::stream<ap_uint<t_WideNetDataBits> >& p_inWorkStr,
-                      hls::stream<XNIK_WidePktType>& p_outStr) {
+        void mergePkt(hls::stream<ap_uint<t_NetDataBits> >& p_inMgrStr,
+                      hls::stream<ap_uint<t_NetDataBits> >& p_inWorkStr,
+                      hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
             while (true) {
 #pragma HLS PIPELINE II=1
-                ap_uint<t_WideNetDataBits> l_dat;
-                XNIK_WidePktType l_xnikPkt;
+                ap_uint<t_NetDataBits> l_dat;
+                ap_uint<t_NetDataBits>  l_xnikPkt;
                 if (p_inMgrStr.read_nb(l_dat)) {
-                    l_xnikPkt.dest = l_dat(t_DestBits-1, 0);
-                    l_xnikPkt.data = l_dat(t_WideNetDataBits-1, t_DestBits);
-                    p_outStr.write(l_xnikPkt);
+                    p_outStr.write(l_dat);
                 }
                 else if(p_inWorkStr.read_nb(l_dat)) {
-                    l_xnikPkt.dest = l_dat(t_DestBits-1, 0);
-                    l_xnikPkt.data = l_dat(t_WideNetDataBits-1, t_DestBits);
-                    p_outStr.write(l_xnikPkt);
+                    p_outStr.write(l_dat);
                 }
             }
         }
@@ -230,13 +222,13 @@ class XNIK_DV{
                           hls::stream<DV_PktType>& p_inStr1,
                           hls::stream<DV_PktType>& p_inStr2,
                           hls::stream<DV_PktType>& p_inStr3,
-                          hls::stream<XNIK_WidePktType>& p_outStr) {
+                          hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 #pragma HLS DATAFLOW
             hls::stream<ap_uint<t_NetDataBits> > l_datStr;
             hls::stream<ap_uint<t_DestBits> > l_destStr;
             hls::stream<ap_uint<5> > l_ctrlStr;
-            hls::stream<ap_uint<t_WideNetDataBits> > l_mgrStr;
-            hls::stream<ap_uint<t_WideNetDataBits> > l_workStr;
+            hls::stream<ap_uint<t_NetDataBits> > l_mgrStr;
+            hls::stream<ap_uint<t_NetDataBits> > l_workStr;
 
 //#pragma HLS STREAM variable=l_datStr depth=4
 //#pragma HLS STREAM variable=l_destStr depth=4

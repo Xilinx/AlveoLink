@@ -17,15 +17,14 @@
 #include "xnik_dv.hpp"
 
 typedef AlveoLink::adapter::XNIK_DV<AL_netDataBits, AL_destBits>::DV_PktType DV_PktType;
-typedef AlveoLink::adapter::XNIK_DV<AL_netDataBits, AL_destBits>::XNIK_WidePktType XNIK_WidePktType;
 
-extern "C" void krnl_xnik_wide(hls::stream<XNIK_WidePktType>& p_XNIKinStr,
+extern "C" void krnl_xnik_wide(hls::stream<ap_uint<AL_netDataBits> >& p_XNIKinStr,
                                hls::stream<DV_PktType>& p_DVinStr0,
                                hls::stream<DV_PktType>& p_DVinStr1,
                                hls::stream<DV_PktType>& p_DVinStr2,
                                hls::stream<DV_PktType>& p_DVinStr3,
                                 
-                               hls::stream<XNIK_WidePktType >& p_XNIKoutStr,
+                               hls::stream<ap_uint<AL_netDataBits>  >& p_XNIKoutStr,
                                hls::stream<DV_PktType>& p_DVoutStr0,
                                hls::stream<DV_PktType>& p_DVoutStr1,
                                hls::stream<DV_PktType>& p_DVoutStr2,

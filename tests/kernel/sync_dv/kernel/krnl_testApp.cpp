@@ -25,6 +25,7 @@ void recData(ap_uint<AL_netDataBits>* p_nHopDataRecPtr,
              unsigned int p_numRecPkts) {
     bool l_exit = false;
     unsigned int l_pktNum = 1;
+    unsigned int l_totalRecNum = 1;
     AlveoLink::kernel::HopCtrlPkt<AL_netDataBits, AL_destBits> l_ctrlPkt;
 LOOP_TEST_RECDATA:
     while (!l_exit) {
@@ -36,17 +37,21 @@ LOOP_TEST_RECDATA:
                 l_exit = true;
             }
             else if (l_ctrlPkt.isWorkload()) {
-                p_nHopDataRecPtr[l_pktNum] = l_ctrlPkt.getCtrlPkt();
+                p_nHopDataRecPtr[l_totalRecNum] = l_ctrlPkt.getCtrlPkt();
                 if (l_pktNum == p_numRecPkts) {
                     l_ctrlPkt.setType(AlveoLink::kernel::PKT_TYPE::done);
                     l_ctrlPkt.write(p_ctrlStr);
+                    l_pktNum = 1;
                 }
-                l_pktNum++;
+                else {
+                    l_pktNum++;
+                }
+                l_totalRecNum++;
             }
         }
     }
     ap_uint<AL_netDataBits> l_cnts = 0;
-    l_cnts.range(31,0) = l_pktNum - 1;
+    l_cnts.range(31,0) = l_totalRecNum - 1;
     p_nHopDataRecPtr[0] = l_cnts;
 }
 
@@ -70,19 +75,21 @@ void transData(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
 
     bool l_exit = false;
     unsigned int l_numPkts = 1;
+    bool l_recDone = true;
+    bool l_transDone = false;
 LOOP_TEST_TRANSDATA:
     while (!l_exit) {
 #pragma HLS PIPELINE II=1
+        l_transDone = (l_numPkts > p_numPkts);
         if (l_ctrlPkt.readNB(p_ctrlStr)) {
             if (l_ctrlPkt.isDoneWork()) {
-                l_ctrlPkt.setSrcId(p_myId);
-                l_ctrlPkt.write(p_outStr);
+                l_recDone = true;
             }
             else if (l_ctrlPkt.isTerminate()) {
                 l_exit = true;
             }
         }
-        else if (l_numPkts <= p_numPkts) {
+        else if (!l_transDone) {
             ap_uint<AL_netDataBits> l_val = 0;
             l_val(AL_destBits-1, 0) = p_destId;
             l_val(23,20) = 0; //workload;
@@ -91,6 +98,12 @@ LOOP_TEST_TRANSDATA:
             p_nHopDataSendPtr[l_numPkts] = l_val;
             p_outStr.write(l_val);
             l_numPkts++;
+        }
+        else if (l_recDone && l_transDone) {
+            l_ctrlPkt.setType(AlveoLink::kernel::PKT_TYPE::done);
+            l_ctrlPkt.setSrcId(p_myId);
+            l_ctrlPkt.write(p_outStr);
+            l_recDone = false;
         }
     }
     ap_uint<AL_netDataBits> l_cnts = 0;

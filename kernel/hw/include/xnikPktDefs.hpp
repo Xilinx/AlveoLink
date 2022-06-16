@@ -247,6 +247,108 @@ namespace kernel {
             uint32_t m_waitCycles;
     };
 
+    template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits>
+    class DvHopCtrlPkt : public HopPktHeader<t_DestBits> {
+        public:
+            static const unsigned int t_HopPktHeaderBits = HopPktHeader<t_DestBits>::t_PktBits; 
+            static const unsigned int t_CtrlPktBits = 120;
+            static const unsigned int t_UnusedBits = t_NetDataBits - t_CtrlPktBits;
+            static const unsigned int t_DataDestBits = t_NetDataBits + t_DestBits;
+
+        public:
+            DvHopCtrlPkt() {
+                m_srcId = 0;
+                m_numDevs = 0;
+                m_batchPkts = 0;
+                m_timeOutCycles = 0;
+                m_rest = 0;
+            }
+            ap_uint<t_NetDataBits> getCtrlPkt() {
+#pragma HLS INLINE
+                ap_uint<t_NetDataBits> l_val;
+                l_val(t_HopPktHeaderBits-1,0) = this->getHeader();
+                l_val(t_HopPktHeaderBits+t_DestBits-1, t_HopPktHeaderBits) = m_srcId;
+                l_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits) = m_numDevs;
+                l_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits) = m_batchPkts;
+                l_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32) = m_timeOutCycles;
+                l_val(t_NetDataBits-1, t_CtrlPktBits) = m_rest;
+                return l_val;
+            }
+            void setCtrlPkt(const ap_uint<t_NetDataBits>& p_val) {
+#pragma HLS INLINE
+                this->setHeader(p_val(t_HopPktHeaderBits-1,0));
+                m_srcId = p_val(t_HopPktHeaderBits+t_DestBits-1, t_HopPktHeaderBits);
+                m_numDevs = p_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits);
+                m_batchPkts = p_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits);
+                m_timeOutCycles = p_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32);
+                m_rest = p_val(t_NetDataBits-1, t_CtrlPktBits);
+            
+            }
+            ap_uint<t_DestBits> getSrcId() {
+#pragma HLS INLINE
+                return m_srcId;
+            }
+            void setSrcId(const ap_uint<t_DestBits>& p_srcId) {
+#pragma HLS INLINE
+                m_srcId = p_srcId;
+            }
+            ap_uint<t_DestBits> getNumDevs() {
+#pragma HLS INLINE
+                return m_numDevs;
+            }
+            void setNumDevs(const ap_uint<t_DestBits>& p_numDevs) {
+#pragma HLS INLINE
+                m_numDevs = p_numDevs;
+            }
+            uint32_t getBatchPkts() {
+#pragma HLS INLINE
+                return m_batchPkts;
+            }
+            void setBatchPkts(const uint32_t p_batchPkts) {
+#pragma HLS INLINE
+                m_batchPkts = p_batchPkts;
+            }
+            uint32_t getTimeOutCycles() {
+#pragma HLS INLINE
+                return m_timeOutCycles;
+            }
+            void setTimeOutCycles(const uint32_t p_timeOutCycles) {
+#pragma HLS INLINE
+                m_timeOutCycles = p_timeOutCycles;
+            }
+            bool readNB(hls::stream<ap_uint<t_NetDataBits> >& p_str) {
+#pragma HLS INLINE
+                ap_uint<t_NetDataBits> l_val;
+                bool l_res = p_str.read_nb(l_val);
+                if (l_res) {
+                    setCtrlPkt(l_val);
+                }
+                return l_res;
+            }
+            void read(hls::stream<ap_uint<t_NetDataBits> >& p_str) {
+#pragma HLS INLINE
+                ap_uint<t_NetDataBits> l_val;
+                p_str.read(l_val);
+                setCtrlPkt(l_val);
+            }
+            void write(hls::stream<ap_uint<t_NetDataBits> >& p_str) {
+#pragma HLS INLINE
+                ap_uint<t_NetDataBits> l_val = getCtrlPkt();
+                p_str.write(l_val);
+            }
+            void write2Dest(const ap_uint<t_DestBits>& p_dest, hls::stream<ap_uint<t_NetDataBits> >& p_str) {
+                this->setDest(p_dest);
+                ap_uint<t_NetDataBits> l_val = getCtrlPkt();
+                p_str.write(l_val);
+            }
+        private:
+            ap_uint<t_DestBits> m_srcId;
+            ap_uint<t_DestBits> m_numDevs;
+            uint32_t m_batchPkts;
+            uint32_t m_timeOutCycles;
+            ap_uint<t_UnusedBits> m_rest;
+    };
 }
 }
 #endif

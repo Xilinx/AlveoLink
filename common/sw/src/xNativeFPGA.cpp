@@ -122,6 +122,14 @@ void KERNEL::syncBO(const int p_argIdx) {
     }
 }
 
+uint32_t KERNEL::readReg(const size_t p_regOffset) const {
+    return (m_kernel.read_register(p_regOffset));
+}
+
+void KERNEL::writeReg(const size_t p_regOffset, const uint32_t p_regVal) {
+    m_kernel.write_register(p_regOffset, p_regVal);
+}
+
 void KERNEL::wait() {
     auto state = m_run.wait();
     //std::cout << "state " << state << std::endl;

@@ -149,9 +149,9 @@ VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 200000000 
+VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 150000000 
 else
-VPP_LDFLAGS_krnl_testApp += --kernel_frequency 200
+VPP_LDFLAGS_krnl_testApp += --kernel_frequency 150
 endif
 
 ifeq ($(HOST_ARCH), x86)
@@ -167,12 +167,12 @@ $(TEMP_DIR)/krnl_testApp.xo: $(XFLIB_DIR)/tests/kernel/sync_dv/kernel/krnl_testA
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_testApp) $(VPP_FLAGS) -k krnl_testApp -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
-$(TEMP_DIR)/krnl_xnikSyncTX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncTX.cpp 
+$(TEMP_DIR)/krnl_xnikSyncTX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncTX_DV.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncTX"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncTX) $(VPP_FLAGS) -k krnl_xnikSyncTX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
-$(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX.cpp 
+$(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX_DV.cpp 
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncRX"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncRX) $(VPP_FLAGS) -k krnl_xnikSyncRX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
