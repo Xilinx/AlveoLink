@@ -38,7 +38,7 @@ constexpr unsigned int t_DestBytes = AL_destBits / 8;
 int main(int argc, char** argv) {
     if (argc < 5  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <xclbinfile> <devId> <numDevs> <numPkts> [debug]" << std::endl;
+        std::cout << argv[0] << " <xclbinfile> <devId> <numDevs> <numPkts> [debug] [batchPkts] [timeOutCycles] [waitSeconds] [mode]" << std::endl;
         std::cout << "test.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
     unsigned int l_batchPkts = 128; //atoi(argv[l_idx++]) - 1;
     unsigned int l_timeOutCycles = 0; //atoi(argv[l_idx++]) - 1;
     unsigned int l_waitSeconds = 2; //200; //atoi(argv[l_idx++]);
+    unsigned int l_mode = 0; //0: ring, 1: congestion 
 
     if (argc > 6) {
         l_batchPkts = atoi(argv[l_idx++]);
@@ -66,10 +67,14 @@ int main(int argc, char** argv) {
     if (argc > 8 ) {
         l_waitSeconds = atoi(argv[l_idx++]);
     }
+    if (argc > 9) {
+        l_mode = atoi(argv[l_idx++]);
+    }
    
     std::cout << "INFO: batchPkts = " << l_batchPkts << std::endl;
     std::cout << "INFO: timeOutCycles = " <<  l_timeOutCycles << std::endl;
     std::cout << "INFO: waitSeconds = " << l_waitSeconds << std::endl; 
+    std::cout << "INFO: communication mode (0:ring, 1:congestion) = " << l_mode << std::endl;
 
     uint32_t l_myID[AL_numInfs];
     AlveoLink::common::FPGA l_card;
@@ -93,6 +98,7 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
     }
+    l_dvNetLayer.clearCounters();
 
     std::cout <<"INFO: total number of compute nodes: " << l_numDevs << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
@@ -100,7 +106,7 @@ int main(int argc, char** argv) {
         l_testAppHost[i].createCU(i);
     }
     unsigned int l_transBytes = t_NetDataBytes * (l_numPkts+1);
-    unsigned int l_recBytes = l_transBytes;
+    unsigned int l_recBytes = (l_mode == 0)? l_transBytes: l_transBytes*2;
     assert(l_recBytes > 0);
     uint8_t* l_transBuf[AL_numInfs];
     uint8_t* l_resBuf[AL_numInfs];
@@ -119,14 +125,14 @@ int main(int argc, char** argv) {
     for (auto i=0; i<AL_numInfs; ++i) {
         unsigned int l_destId = (l_myID[i] + 1);
         if (l_destId == l_numDevs) {
-            l_destId = 0;
+            l_destId = (l_mode == 0)? 0: l_myID[i] - 1;
         } 
         l_testAppHost[i].runCU(l_myID[i], l_destId, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles);
     }
 
-    sleep(l_waitSeconds);
 
     if (l_debug == "debug") {
+        sleep(l_waitSeconds);
         std::vector<uint64_t> l_pktTxCnts = l_dvNetLayer.getLaneTxPktsCnt();
         for (auto i=0; i<AL_numInfs; ++i) {
             std::cout << "INFO: port " << i << std::endl;
@@ -166,6 +172,9 @@ int main(int argc, char** argv) {
     }
 
     for (auto i=0; i<AL_numInfs; ++i) {
+        if (l_debug != "debug") {
+            l_testAppHost[i].finish();
+        }
         l_testAppHost[i].syncRes();
         l_testAppHost[i].syncTrans();
     }
@@ -240,26 +249,57 @@ int main(int argc, char** argv) {
     }
     int l_dataErr = 0;
     for (auto k=0; k<AL_numInfs; ++k) {
-        if ((l_numTxPkts[k] != l_numPkts) || (l_numRxPkts[k] != l_numPkts)) {
-            std::cout << "ERROR: pkts transmitted or pkts received != " <<l_numPkts << std::endl;
+        if (l_numTxPkts[k] != l_numPkts) {
+            std::cout << "ERROR: pkts transmitted != " <<l_numPkts << std::endl;
             l_dataErr++;
         }
-        else {
+        else if (l_debug == "debug")  {
             l_testAppHost[k].finish();
         }
     }
     if (l_dataErr != 0) {
         return EXIT_FAILURE;
     }
+    unsigned int l_numRecPkts[AL_numInfs];
     for (auto k=0; k<AL_numInfs; ++k) {
-        for (unsigned int i=1; i<(l_numPkts+1); ++i) {
+        if (l_mode == 0) {
+            l_numRecPkts[k] = l_numPkts+1;
+        }
+        else {
+            if ((l_myID[k] == (l_numDevs -2)) && (l_numDevs > 2)) {
+                l_numRecPkts[k] = 2*l_numPkts+1;
+            }
+            else if ((l_myID[k] == 0) && (l_numDevs > 2)) {
+                l_numRecPkts[k] = 0;
+            }
+            else {
+                l_numRecPkts[k] = l_numPkts+1;
+            }
+        }
+        std::vector<unsigned int> l_expArr(l_numPkts+1, 0);
+
+        for (unsigned int i=1; i<(l_numRecPkts[k]); ++i) {
             unsigned int l_res = (l_resBuf[k][i*t_NetDataBytes+7]<<24);
             l_res += l_resBuf[k][i*t_NetDataBytes+6]<<16;
             l_res += l_resBuf[k][i*t_NetDataBytes+5]<<8;
             l_res += l_resBuf[k][i*t_NetDataBytes+4];
-            if (l_res != i) {
+            if ((l_res > l_numPkts) || (l_res < 1)) {
                 std::cout << "ERROR: Kernel " << k << " Pkt " << i << " received " << l_res << std::endl;
                 l_dataErr++;
+            }
+            else {
+                l_expArr[l_res] = l_expArr[l_res] + 1;
+            }
+        }
+
+        for (auto i=1; i<l_numPkts+1; ++i) {
+            if ((l_numRecPkts[k] > (l_numPkts+1)) && (l_expArr[i] != 2)) {
+                std::cout << "ERROR: Kernel " << k << " received value " << i << " " << l_expArr[i] << " times" << std::endl;
+                l_dataErr++; 
+            }
+            else if ((l_numRecPkts[k] == (l_numPkts+1)) && (l_expArr[i] != 1)) {
+                std::cout << "ERROR: Kernel " << k << " received value " << i << " " << l_expArr[i] << " times" << std::endl;
+                l_dataErr++; 
             }
         }
     }

@@ -164,7 +164,7 @@ $(TEMP_DIR)/krnl_echo.xo: $(XFLIB_DIR)/tests/kernel/sync_dv/kernel/krnl_echo.cpp
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_echo) $(VPP_FLAGS) -k krnl_echo -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
-$(TEMP_DIR)/krnl_xnikSyncManager.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncManager.cpp
+$(TEMP_DIR)/krnl_xnikSyncManager.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncManager_DV.cpp
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncManager"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncManager) $(VPP_FLAGS) -k krnl_xnikSyncManager -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
