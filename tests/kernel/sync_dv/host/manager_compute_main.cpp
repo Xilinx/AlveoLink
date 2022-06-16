@@ -150,14 +150,6 @@ int main(int argc, char** argv) {
                 }
                 std::cout << std::endl;
             }
-            if ( i== 0) {
-                unsigned int l_lastTrans = (l_transBuf[l_numPkts*t_NetDataBytes+3]<<24);
-                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes+2]<<16;
-                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes+1]<<8;
-                l_lastTrans += l_transBuf[l_numPkts*t_NetDataBytes];
-                std::cout << std::endl;
-                std::cout << "INFO: last tx pkt for port " << i << " in HBM is:  0x" << l_lastTrans << std::endl;
-            }
             std::cout << std::endl;
         }
         for (auto i=0; i<AL_numInfs; ++i) {
