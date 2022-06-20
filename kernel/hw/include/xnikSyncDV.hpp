@@ -204,17 +204,17 @@ LOOP_XNIK2NHOP:
                             }
                             break;
                         case SYNC_STATE::active:
-                            if (l_ctrlPkt.readNB(p_inStr)) {
+                            if (l_ctrlPkt.readNB(p_txStr)) {
+                                if (l_ctrlPkt.isDoneWork()) {
+                                    m_state = SYNC_STATE::state_done;
+                                }
+                            }
+                            else if (l_ctrlPkt.readNB(p_inStr)) {
                                 if (l_ctrlPkt.isQueryStatus()) {
                                     l_ctrlPkt.write(p_rxStr);
                                 }
                                 else if (l_ctrlPkt.isWorkload()) {
                                     l_ctrlPkt.write(p_xnik2nhopStr);
-                                }
-                            }
-                            else if (l_ctrlPkt.readNB(p_txStr)) {
-                                if (l_ctrlPkt.isDoneWork()) {
-                                    m_state = SYNC_STATE::state_done;
                                 }
                             }
                         break;
