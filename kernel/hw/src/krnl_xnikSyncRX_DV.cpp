@@ -20,13 +20,15 @@
 extern "C" void krnl_xnikSyncRX(hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_txStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_rxStr,
-                                 hls::stream<ap_uint<AL_netDataBits> >& p_xnik2nhopStr) {
+                                 hls::stream<ap_uint<AL_netDataBits> >& p_xnik2nhopStr,
+                                 uint32_t* p_stats) {
     AXIS(p_inStr)
     AXIS(p_txStr)
     AXIS(p_rxStr)
     AXIS(p_xnik2nhopStr)
-    AP_CTRL_NONE(return)
+    POINTER(p_stats, p_stats)
+    SCALAR(return)
 
     AlveoLink::kernel::xnikSync_RX<AL_netDataBits, AL_destBits> l_xnikSyncRX;
-    l_xnikSyncRX.process(p_inStr, p_txStr, p_rxStr, p_xnik2nhopStr);
+    l_xnikSyncRX.process(p_inStr, p_txStr, p_rxStr, p_xnik2nhopStr, p_stats);
 }

@@ -43,14 +43,27 @@ dataFwd<2> l_fwd0;
 dataFwd<2> l_fwd1;
 dataFwd<4> l_fwd2;
 dataFwd<8> l_fwd3;
+
+dataFwd<2> l_fwd4;
+dataFwd<2> l_fwd5;
+dataFwd<4> l_fwd6;
+dataFwd<8> l_fwd7;
 extern "C" void dv_adapter0(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axis) { 
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axisFromSwitch, 
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axis) { 
     // Connects the Rx and Tx AXI Streams
     AXIS(tx0_axis)
     AXIS(tx1_axis)
@@ -60,12 +73,26 @@ extern "C" void dv_adapter0(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
     AXIS(rx1_axis)
     AXIS(rx2_axis)
     AXIS(rx3_axis)
+    
+    AXIS(tx0_axis2Switch)
+    AXIS(tx1_axis2Switch)
+    AXIS(tx2_axis2Switch)
+    AXIS(tx3_axis2Switch)
+    AXIS(rx0_axisFromSwitch)
+    AXIS(rx1_axisFromSwitch)
+    AXIS(rx2_axisFromSwitch)
+    AXIS(rx3_axisFromSwitch)
 
     AP_CTRL_NONE(return)
     
 #pragma HLS DATAFLOW
-    l_fwd0.fwdAxis(tx0_axis, rx0_axis);
-    l_fwd1.fwdAxis(tx1_axis, rx1_axis);
-    l_fwd2.fwdAxis(tx2_axis, rx2_axis);
-    l_fwd3.fwdAxis(tx3_axis, rx3_axis);
+    l_fwd0.fwdAxis(tx0_axis, tx0_axis2Switch);
+    l_fwd1.fwdAxis(tx1_axis, tx1_axis2Switch);
+    l_fwd2.fwdAxis(tx2_axis, tx2_axis2Switch);
+    l_fwd3.fwdAxis(tx3_axis, tx3_axis2Switch);
+    
+    l_fwd4.fwdAxis(rx0_axisFromSwitch, rx0_axis);
+    l_fwd5.fwdAxis(rx1_axisFromSwitch, rx1_axis);
+    l_fwd6.fwdAxis(rx2_axisFromSwitch, rx2_axis);
+    l_fwd7.fwdAxis(rx3_axisFromSwitch, rx3_axis);
 }

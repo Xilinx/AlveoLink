@@ -21,13 +21,21 @@
 #include "ap_axi_sdata.h"
 
 extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis,
-                                  hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axis) { 
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis2Switch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axisFromSwitch,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axisFromSwitch, 
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis,
+                              hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axis) { 
     // Connects the Rx and Tx AXI Streams
     AXIS(tx0_axis)
     AXIS(tx1_axis)
@@ -37,23 +45,45 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
     AXIS(rx1_axis)
     AXIS(rx2_axis)
     AXIS(rx3_axis)
-
+    
+    AXIS(tx0_axis2Switch)
+    AXIS(tx1_axis2Switch)
+    AXIS(tx2_axis2Switch)
+    AXIS(tx3_axis2Switch)
+    AXIS(rx0_axisFromSwitch)
+    AXIS(rx1_axisFromSwitch)
+    AXIS(rx2_axisFromSwitch)
+    AXIS(rx3_axisFromSwitch)
     AP_CTRL_NONE(return)
 
     while (true) {
 #pragma HLS PIPELINE II=1
         ap_axiu<128, 0, 0, 16> l_val0, l_val1, l_val2, l_val3;
         if (tx0_axis.read_nb(l_val0)) {
-            rx0_axis.write(l_val0);
+            tx0_axis2Switch.write(l_val0);
         }
         if (tx1_axis.read_nb(l_val1)) {
-            rx1_axis.write(l_val1);
+            tx1_axis2Switch.write(l_val1);
         }
         if (tx2_axis.read_nb(l_val2)) {
-            rx2_axis.write(l_val2);
+            tx2_axis2Switch.write(l_val2);
         }
         if (tx3_axis.read_nb(l_val3)) {
-            rx3_axis.write(l_val3);
+            tx3_axis2Switch.write(l_val3);
+        }
+        
+        ap_axiu<128, 0, 0, 16> l_val4, l_val5, l_val6, l_val7;
+        if (rx0_axisFromSwitch.read_nb(l_val4)) {
+            rx0_axis.write(l_val4);
+        }
+        if (rx1_axisFromSwitch.read_nb(l_val5)) {
+            rx1_axis.write(l_val5);
+        }
+        if (rx2_axisFromSwitch.read_nb(l_val6)) {
+            rx2_axis.write(l_val6);
+        }
+        if (rx3_axisFromSwitch.read_nb(l_val7)) {
+            rx3_axis.write(l_val7);
         }
     }
 }

@@ -72,3 +72,11 @@ qsfp_status
 ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/test.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_dv/compute/xnikSyncDV_compute.xclbin 1 3 102400 debug 128 0 60 1 2>&1 | tee log
 
 ```
+
+## 7. Run hw_emu to with 3 compute and 1 hw manager
+
+``` sh
+1. navigate to tests/kernel/sync_dv/compute_manager_hw_emu
+
+2. make run TARGET=hw_emu DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+```

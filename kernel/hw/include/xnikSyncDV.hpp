@@ -53,15 +53,20 @@ namespace kernel {
                 m_response = true;
                 m_batchPkts = 128;
                 m_timeOutCycles = 0;
+                m_pktCnts = 0;
+                m_memLoc = 0;
             }
             void process(hls::stream<ap_uint<t_NetDataBits> >& p_nhop2xnikStr, 
                          hls::stream<ap_uint<t_NetDataBits> >& p_rxStr,
                          hls::stream<ap_uint<t_NetDataBits> >& p_txStr,
-                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr,
+                         uint32_t* p_stats) {
 
                 bool l_exit = false;
                 bool l_waitSending = false;
                 uint32_t l_batchPkts, l_timeOutCycles;
+                m_pktCnts = 0;
+                m_memLoc = 0;
 LOOP_NHOP2XNIK:
                 while(!l_exit) {
 #pragma HLS PIPELINE II=1
@@ -81,6 +86,7 @@ LOOP_NHOP2XNIK:
                                     l_ctrlPkt.setNumDevs(m_numDevs);
                                     l_ctrlPkt.setType(PKT_TYPE::start);
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
+                                    m_pktCnts++;
                                     m_state = SYNC_STATE::wait_start;
                                 }
                             }
@@ -110,10 +116,13 @@ LOOP_NHOP2XNIK:
                             }
                             else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {
                                 if (l_ctrlPkt.isDoneWork()) {
+                                    p_stats[m_memLoc] = m_pktCnts;
+                                    m_memLoc++;
                                     if (m_response) {
                                         l_ctrlPkt.setSrcId(m_myId);
                                         l_ctrlPkt.setType(PKT_TYPE::done);
                                         l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
+                                        m_pktCnts++;
                                         m_response = false;
                                     }
                                     l_ctrlPkt.write(p_txStr);
@@ -129,6 +138,7 @@ LOOP_NHOP2XNIK:
                                             l_batchPkts = l_batchPkts-1;
                                         }
                                         l_ctrlPkt.write(p_outStr);
+                                        m_pktCnts++;
                                     }
                                 }
                             }
@@ -142,6 +152,7 @@ LOOP_NHOP2XNIK:
                                     l_ctrlPkt.setSrcId(m_myId);
                                     l_ctrlPkt.setType(PKT_TYPE::idle_after_done);
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
+                                    m_pktCnts++;
                                 }
                                 else if (l_ctrlPkt.isTerminate()) {
                                     l_exit = true;
@@ -162,6 +173,8 @@ LOOP_NHOP2XNIK:
             bool m_response;
             uint32_t m_batchPkts;
             uint32_t m_timeOutCycles;
+            uint32_t m_pktCnts;
+            uint32_t m_memLoc;
     };
 
     template <unsigned int t_NetDataBits,
@@ -172,12 +185,17 @@ LOOP_NHOP2XNIK:
 #pragma HLS INLINE
                 m_state = SYNC_STATE::idle;
                 m_myId = 0;
+                m_pktCnts = 0;
+                m_memLoc = 0;
             }
             void process(hls::stream<ap_uint<t_NetDataBits>  >& p_inStr,
                          hls::stream<ap_uint<t_NetDataBits> >& p_txStr,
                          hls::stream<ap_uint<t_NetDataBits> >& p_rxStr,
-                         hls::stream<ap_uint<t_NetDataBits> >& p_xnik2nhopStr) {
+                         hls::stream<ap_uint<t_NetDataBits> >& p_xnik2nhopStr,
+                         uint32_t* p_stats) {
                 bool l_exit = false;
+                m_pktCnts = 0;
+                m_memLoc = 0;
 LOOP_XNIK2NHOP:
                 while (!l_exit) {
 #pragma HLS PIPELINE II=1
@@ -189,11 +207,13 @@ LOOP_XNIK2NHOP:
                                 m_state = SYNC_STATE::wait_start;
                             }
                             else if (l_ctrlPkt.readNB(p_inStr)) {
+                                m_pktCnts++;
                                 m_state = SYNC_STATE::idle;
                             } 
                         break;
                         case SYNC_STATE::wait_start:
                             if (l_ctrlPkt.readNB(p_inStr)) {
+                                m_pktCnts++;
                                 if (l_ctrlPkt.isStart()) {
                                     l_ctrlPkt.write(p_rxStr);
                                     m_state = SYNC_STATE::active;
@@ -206,10 +226,13 @@ LOOP_XNIK2NHOP:
                         case SYNC_STATE::active:
                             if (l_ctrlPkt.readNB(p_txStr)) {
                                 if (l_ctrlPkt.isDoneWork()) {
+                                    p_stats[m_memLoc] = m_pktCnts;
+                                    m_memLoc++;
                                     m_state = SYNC_STATE::state_done;
                                 }
                             }
                             else if (l_ctrlPkt.readNB(p_inStr)) {
+                                m_pktCnts++;
                                 if (l_ctrlPkt.isQueryStatus()) {
                                     l_ctrlPkt.write(p_rxStr);
                                 }
@@ -220,6 +243,7 @@ LOOP_XNIK2NHOP:
                         break;
                         case SYNC_STATE::state_done:
                             if (l_ctrlPkt.readNB(p_inStr)) {
+                                m_pktCnts++;
                                 l_ctrlPkt.write(p_rxStr);
                                 if (l_ctrlPkt.isWorkload()) {
                                     l_ctrlPkt.write(p_xnik2nhopStr);
@@ -242,6 +266,8 @@ LOOP_XNIK2NHOP:
         private:
             SYNC_STATE m_state; 
             ap_uint<t_DestBits> m_myId;
+            uint32_t m_pktCnts;
+            uint32_t m_memLoc;
     };
     
     template <unsigned int t_NetDataBits,
