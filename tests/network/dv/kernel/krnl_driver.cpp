@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstdint>
 #include "interface.hpp"
 #include "ap_int.h"
 #include "hls_stream.h"
@@ -37,19 +38,41 @@ void transData(unsigned int p_numWords,
     }
 }
 
-void recData(unsigned int p_numWords,
+void recData(unsigned int p_numTotalInts,
              hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
              ap_uint<AL_netDataBits>* p_recDataPtr,
              hls::stream<ap_uint<1> >& p_ctrlStr) {
-    for (auto i=0; i<p_numWords; ++i) {
+    const static unsigned int t_NumInts = (AL_netDataBits/sizeof(uint32_t));
+    bool l_exit = false;
+    uint32_t l_totalInts = 0;
+    uint32_t l_idx=1;
+    while (!l_exit) {
 #pragma HLS PIPELINE II=1
+        ap_uint<t_NumInts> l_intArr;
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
+        uint32_t l_ints = 0;
         l_val = p_inStr.read();
-        if ((i==0) || (i == (p_numWords-1))) {
+        if (l_idx==1) {
             p_ctrlStr.write(1);
         }
-        p_recDataPtr[i] = l_val.data;
+        for (auto i=0; i<t_NumInts; ++i) {
+            if (i==0) {
+                l_intArr[i] = 0;
+            }
+            else {
+                l_intArr[i] = (l_val.data((i+1)*32-1, i*32) !=0);
+            }
+        }
+        for (auto i=0; i<t_NumInts; ++i) {
+            l_ints = l_ints + l_intArr[i];
+        }
+        l_totalInts += l_ints;
+        p_recDataPtr[l_idx] = l_val.data;
+        l_idx++;
+        l_exit = !(l_totalInts < p_numTotalInts);
     }
+    p_ctrlStr.write(1);
+    p_recDataPtr[0] = l_idx-1;
 }
 
 void calcStats(hls::stream<ap_uint<1> >& p_sendCtrlStr,
@@ -80,13 +103,15 @@ extern "C" void krnl_driver(unsigned int p_numWords,
                           hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
                           hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
                           ap_uint<AL_netDataBits>* p_recDataPtr,
-                          ap_uint<32>* p_statsPtr) { 
+                          ap_uint<32>* p_statsPtr,
+                          unsigned int p_numTotalInts) { 
     POINTER(p_dataPtr, p_dataPtr)
     POINTER(p_recDataPtr, p_recDataPtr)
     POINTER(p_statsPtr, p_statsPtr)
     AXIS(p_outStr)
     AXIS(p_inStr)
     SCALAR(p_numWords)
+    SCALAR(p_numTotalInts)
     SCALAR(return)
 
     hls::stream<ap_uint<1> > l_sendCtrlStr, l_recCtrlStr;
@@ -96,6 +121,6 @@ extern "C" void krnl_driver(unsigned int p_numWords,
 #pragma HLS DATAFLOW
 
     transData(p_numWords, p_dataPtr, p_outStr, l_sendCtrlStr);
-    recData(p_numWords, p_inStr, p_recDataPtr, l_recCtrlStr);
+    recData(p_numTotalInts, p_inStr, p_recDataPtr, l_recCtrlStr);
     calcStats(l_sendCtrlStr, l_recCtrlStr, p_statsPtr);
 }

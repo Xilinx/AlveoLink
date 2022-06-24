@@ -24,6 +24,7 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx3_axis,
+#ifdef WITH_DVSWITCH
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis2Switch,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis2Switch,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis2Switch,
@@ -32,6 +33,7 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axisFromSwitch,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axisFromSwitch,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axisFromSwitch, 
+#endif
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis,
@@ -46,6 +48,7 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
     AXIS(rx2_axis)
     AXIS(rx3_axis)
     
+#ifdef WITH_DVSWITCH
     AXIS(tx0_axis2Switch)
     AXIS(tx1_axis2Switch)
     AXIS(tx2_axis2Switch)
@@ -54,11 +57,13 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
     AXIS(rx1_axisFromSwitch)
     AXIS(rx2_axisFromSwitch)
     AXIS(rx3_axisFromSwitch)
+#endif
     AP_CTRL_NONE(return)
 
     while (true) {
 #pragma HLS PIPELINE II=1
         ap_axiu<128, 0, 0, 16> l_val0, l_val1, l_val2, l_val3;
+#ifdef WITH_DVSWITCH
         if (tx0_axis.read_nb(l_val0)) {
             tx0_axis2Switch.write(l_val0);
         }
@@ -85,5 +90,19 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
         if (rx3_axisFromSwitch.read_nb(l_val7)) {
             rx3_axis.write(l_val7);
         }
+#else
+        if (tx0_axis.read_nb(l_val0)) {
+            rx0_axis.write(l_val0);
+        }
+        if (tx1_axis.read_nb(l_val1)) {
+            rx1_axis.write(l_val1);
+        }
+        if (tx2_axis.read_nb(l_val2)) {
+            rx2_axis.write(l_val2);
+        }
+        if (tx3_axis.read_nb(l_val3)) {
+            rx3_axis.write(l_val3);
+        }
+#endif
     }
 }

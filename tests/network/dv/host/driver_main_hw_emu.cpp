@@ -27,6 +27,8 @@
 #include "dvNetLayer.hpp"
 #include "basicHost.hpp"
 
+#define RunTimes 2
+
 constexpr unsigned int t_NetDataBytes = AL_netDataBits / 8;
 constexpr unsigned int t_ClockPeriod = 5; //clock period in ns
 
@@ -73,6 +75,11 @@ int main(int argc, char** argv) {
     uint32_t* l_dataRecBuf[AL_numInfs];
     uint32_t* l_statsBuf[AL_numInfs];
     unsigned int l_numData = l_numWidePkts * 16;
+    unsigned int l_totalNumInts = l_numWidePkts * 15;
+    unsigned int l_totalSum[AL_numInfs];
+    for (auto i=0; i<AL_numInfs; ++i) {
+        l_totalSum[i] = 0;
+    }
     for (auto i=0; i<AL_numInfs; ++i) {
         l_basicHost[i].init(&l_card);
         l_basicHost[i].createCU(i);
@@ -81,45 +88,49 @@ int main(int argc, char** argv) {
         l_dataSendBuf[i] = (uint32_t*)(l_basicHost[i].getTxDataPtr());
         for (auto j=0; j<l_numData; ++j) {
             if (j % 16 == 0) {
-                l_dataSendBuf[i][j] = (l_ids[i] + AL_numInfs) % l_numDests;
+                l_dataSendBuf[i][j] = (1<<31) + (l_ids[i] + AL_numInfs) % l_numDests;
             }
             else {
                 l_dataSendBuf[i][j] = j;
+                l_totalSum[i] += j;
             }
         } 
     }
-    for (auto i=0; i<AL_numInfs; ++i) {
-        l_basicHost[i].sendBO();
-        l_basicHost[i].runCU(l_numWidePkts);
-    }
-    for (auto i=0; i<AL_numInfs; ++i) {
-        l_dataRecBuf[i] = (uint32_t*)l_basicHost[i].getRecData();
-        l_statsBuf[i] = (uint32_t*)l_basicHost[i].getRecStats();
+
+    for (auto t=0; t<RunTimes; ++t) {
+        for (auto i=0; i<AL_numInfs; ++i) {
+            l_basicHost[i].sendBO();
+            l_basicHost[i].runCU(l_numWidePkts, l_totalNumInts);
+        }
+        for (auto i=0; i<AL_numInfs; ++i) {
+            l_dataRecBuf[i] = (uint32_t*)l_basicHost[i].getRecData();
+            l_statsBuf[i] = (uint32_t*)l_basicHost[i].getRecStats();
+        }
     }
     //check results
+    unsigned int l_totalSumRec[AL_numInfs];
+    for (auto i=0; i<AL_numInfs; ++i) {
+        l_totalSumRec[i] = 0;
+    }
     int l_dataErrs[AL_numInfs];
     int l_errs = 0;
-    std::cout << std::endl;
+    std::cout << std::dec << std::endl;
     for (auto i=0; i<AL_numInfs; ++i) {
-        l_dataErrs[i] = 0;
-    }
-    std::cout << std::endl;
-    for (auto i=0; i<AL_numInfs; ++i) {
-        for (auto j=0; j<l_numData; ++j) {
-            if (l_dataSendBuf[i][j] != l_dataRecBuf[i][j]) {
-                l_dataErrs[i]++;
-                l_errs++;
-                std::cout << "ERROR: port " << std::dec << i << " element "  << j;
-                std::cout << " send " << std::hex << l_dataSendBuf[i][j];
-                std::cout<< " != rec " << l_dataRecBuf[i][j]<< std::endl;
+        unsigned int l_recWideWords = l_dataRecBuf[i][0];
+        unsigned int l_totalRecInts = l_recWideWords * 16;
+        std::cout << "INFO: driver " << i << " received " << l_recWideWords << " 512-bit data" << std::endl; 
+        for (auto j=0; j<l_totalRecInts; ++j) {
+            uint32_t l_val = l_dataRecBuf[i][j+16];
+            if (((l_val >> 31) & 0x00000001) != 1) {
+                l_totalSumRec[i] += l_val;
             }
         }
     }    
     for (auto i=0; i<AL_numInfs; ++i) {
-        if (l_dataErrs[i] != 0) {
-            std::cout << "ERROR: port " << i << " has " << std::dec << l_dataErrs[i] << " data errors!" << std::endl;
-            std::cout << "    INFO: last uint32_t in dataSendBuf[" << i << "] = " << l_dataSendBuf[i][l_numData-1]  << std::endl;
-            std::cout << "    INFO: last uint32_t in dataRecBuf[" << i << "] = " << l_dataRecBuf[i][l_numData-1]  << std::endl;
+        if (l_totalSumRec[i] != l_totalSum[i]) {
+            std::cout << "ERROR: port " << i << " has data errors!" << std::endl;
+            std::cout << "    INFO: total sum of data sent " << l_totalSum[i]<< " != " << l_totalSumRec[i] << " the sum of received integers"  << std::endl;
+            l_errs++;
         }
     }
     if (l_errs != 0) {

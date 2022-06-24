@@ -32,6 +32,7 @@ class XNIK_DV{
         static const unsigned int t_DVdataBits = t_NetDataBits / 4;
         static const unsigned int t_WideDvDataBits = t_DVdataBits + t_DestBits;
         static const unsigned int t_WideDestBits = t_DestBits * 4;
+        static const unsigned int t_WideNetDataBits = t_NetDataBits+t_WideDestBits;
         typedef ap_axiu<t_DVdataBits, 0, 0, t_DestBits> DV_PktType;
     public:
         XNIK_DV(){}
@@ -125,80 +126,69 @@ class XNIK_DV{
                     hls::stream<DV_PktType>& p_inStr1,
                     hls::stream<DV_PktType>& p_inStr2,
                     hls::stream<DV_PktType>& p_inStr3,
-                    hls::stream<ap_uint<t_NetDataBits> >& p_outDatStr,
-                    hls::stream<ap_uint<t_DestBits> >& p_outDestStr,
-                    hls::stream<ap_uint<5> >& p_outCtrlStr) {
-            ap_uint<5> l_ctrl = 1;
-            ap_uint<4> l_rdCtrl= 0;
-            DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
+                    hls::stream<ap_uint<t_WideNetDataBits> >& p_outStr) {
             ap_uint<t_NetDataBits> l_dat;
             ap_uint<t_DestBits> l_dest;
             while (true) {
 #pragma HLS PIPELINE II=1
-                if (!l_rdCtrl[0]) {
-                    l_rdCtrl[0] = p_inStr0.read_nb(l_dvPkt0);
-                }
-                if (!l_rdCtrl[1]) {
-                    l_rdCtrl[1] = p_inStr1.read_nb(l_dvPkt1);
-                }
-                if (!l_rdCtrl[2]) {
-                    l_rdCtrl[2] = p_inStr2.read_nb(l_dvPkt2);
-                }
-                if (!l_rdCtrl[3]) {
-                    l_rdCtrl[3] = p_inStr3.read_nb(l_dvPkt3);
-                }
-                
-
-                if (l_rdCtrl.and_reduce()) {
-                    l_dest = l_dvPkt0.dest;
-                    l_ctrl[4] = (l_dvPkt0.data(23,20) != 0); //not workload, pkt from manager
-                    l_ctrl[1] = (l_dvPkt1.dest == l_dest);
-                    l_ctrl[2] = (l_dvPkt2.dest == l_dest);
-                    l_ctrl[3] = (l_dvPkt3.dest == l_dest);
-                    l_dat(t_DVdataBits-1, 0) = l_dvPkt0.data;
-                    l_dat(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
-                    l_dat(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
-                    l_dat(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
-                    p_outDatStr.write(l_dat);
-                    p_outDestStr.write(l_dest);
-                    p_outCtrlStr.write(l_ctrl);
-                    l_rdCtrl = 0;
+                DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
+                ap_uint<t_WideNetDataBits> l_val=0;
+                if (!p_inStr0.empty() || !p_inStr1.empty() || !p_inStr2.empty() || !p_inStr3.empty()) {
+                    if (p_inStr0.read_nb(l_dvPkt0)) {
+                        l_val(t_DestBits-1, 0) = l_dvPkt0.dest;
+                        l_val(t_WideDvDataBits-1, t_DestBits) = l_dvPkt0.data;
+                    }
+                    if (p_inStr1.read_nb(l_dvPkt1)) {
+                        l_val(t_DestBits+t_WideDvDataBits-1, t_WideDvDataBits) = l_dvPkt1.dest;
+                        l_val(2*t_WideDvDataBits-1, t_DestBits+t_WideDvDataBits) = l_dvPkt1.data;
+                    }
+                    if (p_inStr2.read_nb(l_dvPkt2)) {
+                        l_val(t_DestBits+2*t_WideDvDataBits-1, 2*t_WideDvDataBits) = l_dvPkt2.dest;
+                        l_val(3*t_WideDvDataBits-1, t_DestBits+2*t_WideDvDataBits) = l_dvPkt2.data;
+                    }
+                    if (p_inStr3.read_nb(l_dvPkt3)) {
+                        l_val(t_DestBits+3*t_WideDvDataBits-1, 3*t_WideDvDataBits) = l_dvPkt3.dest;
+                        l_val(4*t_WideDvDataBits-1, t_DestBits+3*t_WideDvDataBits) = l_dvPkt3.data;
+                    }
+                    p_outStr.write(l_val);
                 }
             }
         }
 
-        void splitPkt(hls::stream<ap_uint<t_NetDataBits> >& p_inDatStr, 
-                      hls::stream<ap_uint<t_DestBits> >& p_inDestStr,
-                      hls::stream<ap_uint<5> >& p_inCtrlStr,
+        void splitPkt(hls::stream<ap_uint<t_WideNetDataBits> >& p_inStr, 
                       hls::stream<ap_uint<t_NetDataBits> >& p_outMgrStr,
                       hls::stream<ap_uint<t_NetDataBits> >& p_outWorkStr) {
-            bool l_exit = false;
-            while (!l_exit) {
+            while (true) {
 #pragma HLS PIPELINE II=1
-                ap_uint<t_NetDataBits> l_dat = p_inDatStr.read();
-                ap_uint<t_DestBits> l_dest = p_inDestStr.read();
-                ap_uint<5> l_ctrl = p_inCtrlStr.read();
-                ap_uint<t_NetDataBits> l_mgrDat, l_workDat;
-                l_mgrDat(t_DVdataBits-1, 0) = l_dat(t_DVdataBits-1, 0);
-                l_mgrDat(t_NetDataBits-1, t_DVdataBits) = 0;
-
-                for (auto i=0; i<4; ++i) {
-                    if (l_ctrl[4] & l_ctrl[i]) {
-                        l_workDat(t_DVdataBits*(i+1)-1, i*t_DVdataBits) = 0;
+                ap_uint<t_NetDataBits> l_mgrDat = 0;
+                ap_uint<t_NetDataBits> l_workDat = 0;
+                ap_uint<t_WideDvDataBits> l_dvArr[4];
+                ap_uint<t_DVdataBits> l_dataArr[4];
+                ap_uint<t_DestBits> l_destArr[4];
+                bool l_writeMgr;
+#pragma HLS ARRAY_PARTITION variable = l_dvArr complete dim=1
+#pragma HLS ARRAY_PARTITION variable = l_dataArr complete dim=1
+#pragma HLS ARRAY_PARTITION variable = l_destArr complete dim=1
+                if (!p_inStr.empty()) {
+                    ap_uint<t_WideNetDataBits> l_val = p_inStr.read();
+                    for (auto i=0; i<4; ++i) {
+                        l_dvArr[i] = l_val((i+1)*t_WideDvDataBits-1, i*t_WideDvDataBits);
+                        l_dataArr[i] = l_dvArr[i](t_DVdataBits-1, t_DestBits);
+                        l_destArr[i] = l_dvArr[i](t_DestBits-1, 0);
+                        if (i==0) {
+                            l_mgrDat(t_DVdataBits-1, 0) = l_dataArr[0];
+                            l_writeMgr = (l_dataArr[0](23,20) != 0);
+                            l_workDat(t_DVdataBits-1, 0) = (l_writeMgr)? (ap_uint<t_DVdataBits>)0: l_dataArr[0];
+                        }
+                        else {
+                            l_workDat(t_DVdataBits*(i+1)-1, i*t_DVdataBits) = l_dataArr[i];
+                        }
                     }
-                    else {
-                        l_workDat(t_DVdataBits*(i+1)-1, i*t_DVdataBits) = 
-                            l_dat(t_DVdataBits*(i+1)-1, t_DVdataBits*i);
+                    if (l_writeMgr) {
+                        p_outMgrStr.write(l_mgrDat);
                     }
-                }
-
-                if (l_ctrl[4]) {
-                    p_outMgrStr.write(l_mgrDat);
-                }
-                if (!(l_ctrl.and_reduce())) {
                     p_outWorkStr.write(l_workDat);
                 }
-                l_exit = !(l_ctrl.or_reduce());
             }
         }
         
@@ -209,10 +199,13 @@ class XNIK_DV{
 #pragma HLS PIPELINE II=1
                 ap_uint<t_NetDataBits> l_dat;
                 ap_uint<t_NetDataBits>  l_xnikPkt;
-                if (p_inMgrStr.read_nb(l_dat)) {
-                    p_outStr.write(l_dat);
-                }
-                else if(p_inWorkStr.read_nb(l_dat)) {
+                if (!p_inMgrStr.empty() || !p_inWorkStr.empty()) {
+                    if (!p_inMgrStr.empty()) {
+                        l_dat = p_inMgrStr.read();
+                    }
+                    else if(!p_inWorkStr.empty()) {
+                        l_dat = p_inWorkStr.read();
+                    }
                     p_outStr.write(l_dat);
                 }
             }
@@ -224,20 +217,16 @@ class XNIK_DV{
                           hls::stream<DV_PktType>& p_inStr3,
                           hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 #pragma HLS DATAFLOW
-            hls::stream<ap_uint<t_NetDataBits> > l_datStr;
-            hls::stream<ap_uint<t_DestBits> > l_destStr;
-            hls::stream<ap_uint<5> > l_ctrlStr;
+            hls::stream<ap_uint<t_WideNetDataBits> > l_datStr;
             hls::stream<ap_uint<t_NetDataBits> > l_mgrStr;
             hls::stream<ap_uint<t_NetDataBits> > l_workStr;
 
 //#pragma HLS STREAM variable=l_datStr depth=4
-//#pragma HLS STREAM variable=l_destStr depth=4
-//#pragma HLS STREAM variable=l_ctrlStr depth=4
 //#pragma HLS STREAM variable=l_mgrStr depth=4
 //#pragma HLS STREAM variable=l_workStr depth=4
 
-            readDV(p_inStr0, p_inStr1, p_inStr2, p_inStr3, l_datStr, l_destStr, l_ctrlStr);
-            splitPkt(l_datStr, l_destStr, l_ctrlStr, l_mgrStr, l_workStr);
+            readDV(p_inStr0, p_inStr1, p_inStr2, p_inStr3, l_datStr);
+            splitPkt(l_datStr, l_mgrStr, l_workStr);
             mergePkt(l_mgrStr, l_workStr, p_outStr);
         }
 };
