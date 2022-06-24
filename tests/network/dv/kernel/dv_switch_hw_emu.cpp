@@ -20,78 +20,74 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
-void splitStr2Axis(hls::stream<ap_uint<160> >& p_inStr,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis0,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis1,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis2,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis3) {
+void splitAxis2Str(hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis,
+                  hls::stream<ap_uint<128> > p_outStr[4]) {
     while (true) {
 #pragma HLS PIPELINE II=1
-        ap_uint<160> l_inVal; // bit 15-0: dest, bit 31-16: src, bit 32-159: data
-        ap_axiu<128, 0, 0, 16>  l_outVal;
-        if (p_inStr.read_nb(l_inVal)) {
-            ap_uint<16> l_dest = l_inVal(15,0);
-            l_outVal.dest = l_inVal(31,16);
-            l_outVal.data = l_inVal(159, 32);
-            if (l_dest == 0) {
-                p_axis0.write(l_outVal);
+        if (!p_axis.empty()) {
+            ap_axiu<128, 0, 0, 16> l_inVal = p_axis.read();
+            ap_uint<2> l_dest = l_inVal.dest;
+            p_outStr[l_dest].write(l_inVal.data);
+        }
+    }
+}
+
+void mergeStr(hls::stream<ap_uint<128> > p_inStr[4][4],
+              hls::stream<ap_uint<144> > p_outStr[4]) {
+    while (true) {
+#pragma HLS PIPELINE II=1
+        for (auto b=0; b<4; ++b) {
+            ap_uint<2> l_src = 0;
+            for (auto n=0; n<4; ++n) {
+                if (!p_inStr[n][b].empty()) {
+                    l_src = n;
+                    break;
+                } 
             }
-            if (l_dest == 1) {
-                p_axis1.write(l_outVal);
-            }
-            if (l_dest == 2) {
-                p_axis2.write(l_outVal);
-            }
-            if (l_dest == 3) {
-                p_axis3.write(l_outVal);
+            
+            ap_uint<128> l_val;
+            ap_uint<144> l_outVal;
+            if (p_inStr[l_src][b].read_nb(l_val)) {
+                l_outVal(143,16) = l_val;
+                l_outVal(15,0) = l_src;
+                p_outStr[b].write(l_outVal);
             }
         }
     }
 }
 
-void mergeAxis2Str(hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis0,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis1,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis2,
-               hls::stream<ap_axiu<128, 0, 0, 16> >& p_axis3,
-               hls::stream<ap_uint<160> >& p_outStr) {
-    ap_uint<4> l_ctrl = 1;
+void strArr2Axis(hls::stream<ap_uint<144> > p_inStr[4],
+                 hls::stream<ap_axiu<128, 0, 0, 16> >& rx0_axis, 
+                 hls::stream<ap_axiu<128, 0, 0, 16> >& rx1_axis, 
+                 hls::stream<ap_axiu<128, 0, 0, 16> >& rx2_axis, 
+                 hls::stream<ap_axiu<128, 0, 0, 16> >& rx3_axis) {
     while (true) {
 #pragma HLS PIPELINE II=1
-        ap_axiu<128, 0, 0, 16> l_inVal;
-        ap_uint<160> l_outVal;
-        if (l_ctrl[0] && p_axis0.read_nb(l_inVal)) {
-            l_outVal(15,0) = l_inVal.dest;
-            l_outVal(31,16) = 0;
-            l_outVal(159,32) = l_inVal.data;
-            p_outStr.write(l_outVal);
+        ap_uint<144> l_val0, l_val1, l_val2, l_val3;
+        ap_axiu<128, 0, 0, 16> l_outVal0, l_outVal1, l_outVal2, l_outVal3;
+        if (p_inStr[0].read_nb(l_val0)) {
+            l_outVal0.data = l_val0(143,16);
+            l_outVal0.dest = l_val0(15,0);
+            rx0_axis.write(l_outVal0);
         }
-        else if (l_ctrl[1] && p_axis1.read_nb(l_inVal)) {
-            l_outVal(15,0) = l_inVal.dest;
-            l_outVal(31,16) = 1;
-            l_outVal(159,32) = l_inVal.data;
-            p_outStr.write(l_outVal);
+        if (p_inStr[1].read_nb(l_val1)) {
+            l_outVal1.data = l_val1(143,16);
+            l_outVal1.dest = l_val1(15,0);
+            rx1_axis.write(l_outVal1);
         }
-        else if (l_ctrl[2] && p_axis2.read_nb(l_inVal)) {
-            l_outVal(15,0) = l_inVal.dest;
-            l_outVal(31,16) = 2;
-            l_outVal(159,32) = l_inVal.data;
-            p_outStr.write(l_outVal);
+        if (p_inStr[2].read_nb(l_val2)) {
+            l_outVal2.data = l_val2(143,16);
+            l_outVal2.dest = l_val2(15,0);
+            rx2_axis.write(l_outVal2);
         }
-        else if (l_ctrl[3] && p_axis3.read_nb(l_inVal)) {
-            l_outVal(15,0) = l_inVal.dest;
-            l_outVal(31,16) = 3;
-            l_outVal(159,32) = l_inVal.data;
-            p_outStr.write(l_outVal);
-        }
-
-        if (l_ctrl[3]) {
-            l_ctrl = 1;
-        }
-        else {
-            l_ctrl = l_ctrl << 1;
+        if (p_inStr[3].read_nb(l_val3)) {
+            l_outVal3.data = l_val3(143,16);
+            l_outVal3.dest = l_val3(15,0);
+            rx3_axis.write(l_outVal3);
         }
     }
 }
+
 
 extern "C" void dv_switch(hls::stream<ap_axiu<128, 0, 0, 16> >& tx00_axis,
                                   hls::stream<ap_axiu<128, 0, 0, 16> >& tx01_axis,
@@ -164,17 +160,49 @@ extern "C" void dv_switch(hls::stream<ap_axiu<128, 0, 0, 16> >& tx00_axis,
 
     AP_CTRL_NONE(return)
 #pragma HLS DATAFLOW
-    hls::stream<ap_uint<160> > l_str0, l_str1, l_str2, l_str3;
-    mergeAxis2Str(tx00_axis, tx10_axis, tx20_axis, tx30_axis, l_str0);
-    splitStr2Axis(l_str0, rx00_axis, rx10_axis, rx20_axis, rx30_axis);
+    hls::stream<ap_uint<128> > l_strSplit0[4][4];
+    hls::stream<ap_uint<128> > l_strSplit1[4][4];
+    hls::stream<ap_uint<128> > l_strSplit2[4][4];
+    hls::stream<ap_uint<128> > l_strSplit3[4][4];
+#pragma HLS STREAM variable=l_strSplit0 depth = 4
+#pragma HLS STREAM variable=l_strSplit1 depth = 4
+#pragma HLS STREAM variable=l_strSplit2 depth = 4
+#pragma HLS STREAM variable=l_strSplit3 depth = 4
+    hls::stream<ap_uint<144> > l_strMerge0[4];
+    hls::stream<ap_uint<144> > l_strMerge1[4];
+    hls::stream<ap_uint<144> > l_strMerge2[4];
+    hls::stream<ap_uint<144> > l_strMerge3[4];
+#pragma HLS STREAM variable=l_strMerge0 depth = 4
+#pragma HLS STREAM variable=l_strMerge1 depth = 4
+#pragma HLS STREAM variable=l_strMerge2 depth = 4
+#pragma HLS STREAM variable=l_strMerge3 depth = 4
+    
+    splitAxis2Str(tx00_axis,l_strSplit0[0]);
+    splitAxis2Str(tx10_axis,l_strSplit0[1]);
+    splitAxis2Str(tx20_axis,l_strSplit0[2]);
+    splitAxis2Str(tx30_axis,l_strSplit0[3]);
+    mergeStr(l_strSplit0,l_strMerge0); 
+    strArr2Axis(l_strMerge0,rx00_axis,rx10_axis,rx20_axis, rx30_axis);
 
-    mergeAxis2Str(tx01_axis, tx11_axis, tx21_axis, tx31_axis, l_str1);
-    splitStr2Axis(l_str1, rx01_axis, rx11_axis, rx21_axis, rx31_axis);
+    splitAxis2Str(tx01_axis,l_strSplit1[0]);
+    splitAxis2Str(tx11_axis,l_strSplit1[1]);
+    splitAxis2Str(tx21_axis,l_strSplit1[2]);
+    splitAxis2Str(tx31_axis,l_strSplit1[3]);
+    mergeStr(l_strSplit1,l_strMerge1); 
+    strArr2Axis(l_strMerge1,rx01_axis,rx11_axis,rx21_axis, rx31_axis);
 
-    mergeAxis2Str(tx02_axis, tx12_axis, tx22_axis, tx32_axis, l_str2);
-    splitStr2Axis(l_str2, rx02_axis, rx12_axis, rx22_axis, rx32_axis);
+    splitAxis2Str(tx02_axis,l_strSplit2[0]);
+    splitAxis2Str(tx12_axis,l_strSplit2[1]);
+    splitAxis2Str(tx22_axis,l_strSplit2[2]);
+    splitAxis2Str(tx32_axis,l_strSplit2[3]);
+    mergeStr(l_strSplit2,l_strMerge2); 
+    strArr2Axis(l_strMerge2,rx02_axis,rx12_axis,rx22_axis, rx32_axis);
 
-    mergeAxis2Str(tx03_axis, tx13_axis, tx23_axis, tx33_axis, l_str3);
-    splitStr2Axis(l_str3, rx03_axis, rx13_axis, rx23_axis, rx33_axis);
+    splitAxis2Str(tx03_axis,l_strSplit3[0]);
+    splitAxis2Str(tx13_axis,l_strSplit3[1]);
+    splitAxis2Str(tx23_axis,l_strSplit3[2]);
+    splitAxis2Str(tx33_axis,l_strSplit3[3]);
+    mergeStr(l_strSplit3,l_strMerge3); 
+    strArr2Axis(l_strMerge3,rx03_axis,rx13_axis,rx23_axis, rx33_axis);
 
 }

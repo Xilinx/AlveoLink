@@ -22,24 +22,20 @@
 
 void transData(unsigned int p_numWords,
                ap_uint<AL_netDataBits>* p_dataPtr,
-               hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
+               hls::stream<ap_uint<AL_netDataBits> >& p_outStr,
                hls::stream<ap_uint<1> >& p_ctrlStr) {
     for (auto i=0; i<p_numWords; ++i) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_data = p_dataPtr[i];
-        ap_uint<AL_destBits> l_dest = l_data(AL_destBits-1, 0);
-        ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
-        l_val.data = l_data;
-        l_val.dest = l_dest;
         if (i==0) {
             p_ctrlStr.write(1);
         }
-        p_outStr.write(l_val);
+        p_outStr.write(l_data);
     }
 }
 
 void recData(unsigned int p_numTotalInts,
-             hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
+             hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
              ap_uint<AL_netDataBits>* p_recDataPtr,
              hls::stream<ap_uint<1> >& p_ctrlStr) {
     const static unsigned int t_NumInts = (AL_netDataBits/sizeof(uint32_t));
@@ -49,7 +45,7 @@ void recData(unsigned int p_numTotalInts,
     while (!l_exit) {
 #pragma HLS PIPELINE II=1
         ap_uint<t_NumInts> l_intArr;
-        ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val;
+        ap_uint<AL_netDataBits> l_val;
         uint32_t l_ints = 0;
         l_val = p_inStr.read();
         if (l_idx==1) {
@@ -60,14 +56,14 @@ void recData(unsigned int p_numTotalInts,
                 l_intArr[i] = 0;
             }
             else {
-                l_intArr[i] = (l_val.data((i+1)*32-1, i*32) !=0);
+                l_intArr[i] = (l_val((i+1)*32-1, i*32) !=0);
             }
         }
         for (auto i=0; i<t_NumInts; ++i) {
             l_ints = l_ints + l_intArr[i];
         }
         l_totalInts += l_ints;
-        p_recDataPtr[l_idx] = l_val.data;
+        p_recDataPtr[l_idx] = l_val;
         l_idx++;
         l_exit = !(l_totalInts < p_numTotalInts);
     }
@@ -100,8 +96,8 @@ void calcStats(hls::stream<ap_uint<1> >& p_sendCtrlStr,
 
 extern "C" void krnl_driver(unsigned int p_numWords,
                           ap_uint<AL_netDataBits>* p_dataPtr,
-                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr,
-                          hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
+                          hls::stream<ap_uint<AL_netDataBits> >& p_outStr,
+                          hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
                           ap_uint<AL_netDataBits>* p_recDataPtr,
                           ap_uint<32>* p_statsPtr,
                           unsigned int p_numTotalInts) { 

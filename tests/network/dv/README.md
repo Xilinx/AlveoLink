@@ -61,3 +61,10 @@ on db1, start one terminal and navigate to tests/network/dv/driver
 
 make -f hw_emu.mk run TARGET=hw_emu DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
 ```
+## 6. run HW Emulationi With DV Switch
+
+```sh
+on db1, start one terminal and navigate to tests/network/dv/driver_echo_hw_emu
+
+make run TARGET=hw_emu DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+```
