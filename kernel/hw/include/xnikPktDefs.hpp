@@ -94,7 +94,7 @@ namespace kernel {
                 m_type = p_type;
             }
             
-        private:
+        protected:
             ap_uint<t_DestBits> m_dest;
             ap_uint<4> m_len;
             ap_uint<4> m_type;

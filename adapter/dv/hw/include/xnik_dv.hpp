@@ -206,7 +206,9 @@ class XNIK_DV{
                     else if(!p_inWorkStr.empty()) {
                         l_dat = p_inWorkStr.read();
                     }
-                    p_outStr.write(l_dat);
+                    if (l_dat != 0) {
+                        p_outStr.write(l_dat);
+                    }
                 }
             }
         }

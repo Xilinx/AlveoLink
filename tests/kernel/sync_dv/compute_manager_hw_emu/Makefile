@@ -125,11 +125,11 @@ CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 EXE_NAME := manager_compute.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
-HOST_ARGS := $(BUILD_DIR)/xnikSyncDV_manager_compute.xclbin 0 16 10 1 0
+HOST_ARGS := $(BUILD_DIR)/xnikSyncDV_manager_compute.xclbin 0 8 10 1 0
 
 
 ########################## Kernel compiler global settings ##########################
-VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_destBits=16 
+VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_destBits=16 -D WITH_DVSWITCH 
 
 VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/dv/hw/include -I $(XFLIB_DIR)/tests/kernel/sync_dv/kernel
 

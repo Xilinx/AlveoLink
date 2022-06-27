@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 #include "hwManagerHost.hpp"
-#include "xnik_dv.hpp"
+//#include "xnik_dv.hpp"
 #include "testAppHost.hpp"
 #include "dvNetLayer.hpp"
 #include "graphPktDefs.hpp"
@@ -59,19 +59,15 @@ int main(int argc, char** argv) {
     unsigned int l_numDevs = 3;
     unsigned int l_batchPkts = 128;
     unsigned int l_timeOutCycles = 0;
-    unsigned int l_computeWaitSeconds = 2;
 
 
     std::cout << "INFO: batchPkts = " << l_batchPkts << std::endl;
     std::cout << "INFO: timeOutCycles = " <<  l_timeOutCycles << std::endl;
-    std::cout << "INFO: computeWaitSeconds = " << l_computeWaitSeconds << std::endl;
     std::cout << "INFO: communication mode (0:ring, 1:congestion) = " << l_mode << std::endl;
  
     AlveoLink::common::FPGA l_card;
     AlveoLink::kernel::hwManagerHost<AL_maxConnections> l_manager;
     testAppHost<AL_netDataBits> l_testAppHost[3];
-    AlveoLink::kernel::xnikTX<3> l_xnikTX[3];
-    AlveoLink::kernel::xnikRX<3> l_xnikRX[3];
 
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
@@ -86,56 +82,67 @@ int main(int argc, char** argv) {
     std::cout <<"INFO: manager has started... " << std::endl;
 
     for (auto i=0; i<3; ++i) {
-        l_xnikTX[i].init(&l_card);
-        l_xnikRX[i].init(&l_card);
         l_testAppHost[i].init(&l_card);
-        
-        l_xnikTX[i].createCU(i);
-        l_xnikRX[i].createCU(i);
         l_testAppHost[i].createCU(i);
     }
 
     unsigned int l_transBytes = t_NetDataBytes * (l_numPkts+1);
-    unsigned int l_recBytes = (l_mode == 0)? l_transBytes: l_transBytes*2;
-    unsigned int l_statsBytes = 128 * sizeof(uint32_t);
-    uint8_t* l_transBuf[3];
-    uint8_t* l_resBuf[3];
-    uint32_t* l_txStats[3];
-    uint32_t* l_rxStats[3];
+    unsigned int l_recBytes = (l_mode == 0)?(l_numPkts*4+1)*t_NetDataBytes: (l_numPkts*8+1)*t_NetDataBytes;
+    unsigned int l_numData = l_numPkts * 16;
+    unsigned int l_totalNumInts[3];
+    unsigned int l_totalSum[3];
+    unsigned int l_destId[3];
+    uint32_t* l_transBuf[3];
+    uint32_t* l_resBuf[3];
+    
+    for (auto i=0; i<3; ++i) {
+        l_totalSum[i] = 0;
+    }
 
     for (auto i=0; i<3; ++i) {
-        l_transBuf[i] = (uint8_t*)l_testAppHost[i].createTransBuf(l_transBytes);
-        l_resBuf[i] = (uint8_t*)l_testAppHost[i].createRecBufs(l_recBytes);
-        l_txStats[i] = (uint32_t*)l_xnikTX[i].createStatsBuf(l_statsBytes);
-        l_rxStats[i] = (uint32_t*)l_xnikRX[i].createStatsBuf(l_statsBytes);
+        l_transBuf[i] = (uint32_t*)l_testAppHost[i].createTransBuf(l_transBytes);
+        l_resBuf[i] = (uint32_t*)l_testAppHost[i].createRecBufs(l_recBytes);
+        if (l_mode == 0) {
+            l_totalNumInts[i] = (l_numPkts * 15);
+        }
+        else {
+            l_totalNumInts[i] = (i==1)? (l_numPkts * 15*2): (i==2)?(l_numPkts * 15): 0;
+        }
     
-        std::memset(l_transBuf[i], 0, l_transBytes);
         std::memset(l_resBuf[i], 0, l_recBytes);
-        std::memset(l_txStats[i], 0, l_statsBytes);
-        std::memset(l_rxStats[i], 0, l_statsBytes);
-        l_testAppHost[i].sendBO();
-        l_xnikTX[i].sendBO();
-        l_xnikRX[i].sendBO();
-    }
-    for (auto i=0; i<3; ++i) {//run all TX and RX
-        l_xnikTX[i].runCU();
-        l_xnikRX[i].runCU();
+        std::memset(l_transBuf[i], 0, l_transBytes);
+        l_destId[i] = (i + 1);
+        if (l_destId[i] == l_numDevs) {
+            l_destId[i] = (l_mode == 0)? 0: i - 1;
+        } 
+        for (auto j=0; j<l_numData; ++j) {
+            if (j % 16 == 0) {
+                l_transBuf[i][j+16] = (1<<31) + l_destId[i];
+            }
+            else {
+                l_transBuf[i][j+16] = j;
+                if ((l_mode == 0) || (i==2))  {
+                    l_totalSum[i] += j;
+                }
+                else if (l_mode == 1) {
+                    if (i==0) {
+                        l_totalSum[i] += 0;
+                    }
+                    else if (i==1) {
+                        l_totalSum[i] += j*2;
+                    }
+                }
+            }
+        }
     }
     
     for (auto i=0; i<3; ++i) {//start application kernel
-        unsigned int l_destId = (i + 1);
-        if (l_destId == l_numDevs) {
-            l_destId = (l_mode == 0)? 0: i - 1;
-        } 
-        l_testAppHost[i].runCU(i, l_destId, l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles);
+        l_testAppHost[i].sendBO();
+        l_testAppHost[i].runCU(i, l_destId[i], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_totalNumInts[i]);
     }
 
     for (auto i=0; i<3; ++i) {
-        l_xnikTX[i].finish();
-        l_xnikRX[i].finish();
         l_testAppHost[i].finish();
-        l_xnikTX[i].syncBO();
-        l_xnikRX[i].syncBO();
         l_testAppHost[i].syncRes();
         l_testAppHost[i].syncTrans();
     }
@@ -145,82 +152,37 @@ int main(int argc, char** argv) {
 
     std::cout << std::dec;
 
-    int l_dataErr = 0;
-    unsigned int l_numTxPkts[3];
-    unsigned int l_numRxPkts[3];
+    int l_errs = 0;
+    unsigned int l_totalSumRec[3];
     for (auto i=0; i<3; ++i) {
-        l_numTxPkts[i] = (l_transBuf[i][3]<<24);
-        l_numTxPkts[i]  += (l_transBuf[i][2]<<16);
-        l_numTxPkts[i]  += (l_transBuf[i][1]<<8);
-        l_numTxPkts[i]  += l_transBuf[i][0];
-
-        l_numRxPkts[i] = (l_resBuf[i][3]<<24);
-        l_numRxPkts[i]  += (l_resBuf[i][2]<<16);
-        l_numRxPkts[i]  += (l_resBuf[i][1]<<8);
-        l_numRxPkts[i]  += l_resBuf[i][0];
-        std::cout << "INFO: kernel " << i << " num of transmitted pkts is: " << l_numTxPkts[i] << std::endl;
-        std::cout << "INFO: kernel " << i << " num of received pkts is: " << l_numRxPkts[i] << std::endl;
-        
-        if (l_numTxPkts[i] != l_numPkts) {
-            l_dataErr++;
-            std::cout << "ERROR: kernel " << i << " pkts transmitted != " <<l_numPkts << std::endl;
-        }
-    }
-        
-    if (l_dataErr != 0) {
-        return EXIT_FAILURE;
+        l_totalSumRec[i] = 0;
     }
 
+    std::cout << std::dec << std::endl;
+    
 
-    unsigned int l_numRecPkts[3];
-    for (auto k=0; k<3; ++k) {
-        if (l_mode == 0) {
-            l_numRecPkts[k] = l_numPkts+1;
-        }
-        else {
-            if ((k == (l_numDevs -2)) && (l_numDevs > 2)) {
-                l_numRecPkts[k] = 2*l_numPkts+1;
-            }
-            else if ((k == 0) && (l_numDevs > 2)) {
-                l_numRecPkts[k] = 0;
-            }
-            else {
-                l_numRecPkts[k] = l_numPkts+1;
-            }
-        }
-        std::vector<unsigned int> l_expArr(l_numPkts+1, 0);
-
-        for (unsigned int i=1; i<(l_numRecPkts[k]); ++i) {
-            unsigned int l_res = (l_resBuf[k][i*t_NetDataBytes+7]<<24);
-            l_res += l_resBuf[k][i*t_NetDataBytes+6]<<16;
-            l_res += l_resBuf[k][i*t_NetDataBytes+5]<<8;
-            l_res += l_resBuf[k][i*t_NetDataBytes+4];
-            if ((l_res > l_numPkts) || (l_res < 1)) {
-                std::cout << "ERROR: Kernel " << k << " Pkt " << i << " received " << l_res << std::endl;
-                l_dataErr++;
-            }
-            else {
-                l_expArr[l_res] = l_expArr[l_res] + 1;
-            }
-        }
-
-        for (auto i=1; i<l_numPkts+1; ++i) {
-            if ((l_numRecPkts[k] > (l_numPkts+1)) && (l_expArr[i] != 2)) {
-                std::cout << "ERROR: Kernel " << k << " received value " << i << " " << l_expArr[i] << " times" << std::endl;
-                l_dataErr++; 
-            }
-            else if ((l_numRecPkts[k] == (l_numPkts+1)) && (l_expArr[i] != 1)) {
-                std::cout << "ERROR: Kernel " << k << " received value " << i << " " << l_expArr[i] << " times" << std::endl;
-                l_dataErr++; 
-            }
-        }
-    }
-
-    if (l_dataErr != 0) {
-        std::cout << "ERROR: data error!" << std::endl;
+    if (l_errs != 0) {
         return EXIT_FAILURE;
     }
     std::cout <<"Test Pass!" << std::endl;
+    for (auto i=0; i<3; ++i) {
+        unsigned int l_recWideWords = l_resBuf[i][0];
+        unsigned int l_totalRecInts = l_recWideWords * 16;
+        std::cout << "INFO: kernel " << i << " received " << l_recWideWords << " 512-bit data" << std::endl;
+        for (auto j=0; j<l_totalRecInts; ++j) {
+            uint32_t l_val = l_resBuf[i][j+16];
+            if (((l_val >> 31) & 0x00000001) != 1) {
+                l_totalSumRec[i] += l_val;
+            }
+        }
+    }
+    for (auto i=0; i<3; ++i) {
+        if (l_totalSumRec[i] != l_totalSum[i]) {
+            std::cout << "ERROR: kernel " << i << " has data errors!" << std::endl;
+            std::cout << "    INFO: total sum of data sent " << l_totalSum[i]<< " != " << l_totalSumRec[i] << " the sum of receivedintegers"  << std::endl;
+            l_errs++;
+        }
+    }
 
     return EXIT_SUCCESS;
 }
