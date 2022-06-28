@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
                 l_dataSendBuf[i][j] = (1<<31) + (l_ids[i] + AL_numInfs) % l_numDests;
             }
             else {
-                l_dataSendBuf[i][j] = j;
-                l_totalSum[i] += j;
+                l_dataSendBuf[i][j] = (j<<16) + j;
+                l_totalSum[i] += j*2;
             }
         } 
     }
@@ -122,7 +122,8 @@ int main(int argc, char** argv) {
         for (auto j=0; j<l_totalRecInts; ++j) {
             uint32_t l_val = l_dataRecBuf[i][j+16];
             if (((l_val >> 31) & 0x00000001) != 1) {
-                l_totalSumRec[i] += l_val;
+                l_totalSumRec[i] += l_val & 0x0000ffff;
+                l_totalSumRec[i] += (l_val >> 16) & 0x0000ffff;
             }
         }
     }    

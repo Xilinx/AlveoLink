@@ -173,7 +173,7 @@ class XNIK_DV{
                     ap_uint<t_WideNetDataBits> l_val = p_inStr.read();
                     for (auto i=0; i<4; ++i) {
                         l_dvArr[i] = l_val((i+1)*t_WideDvDataBits-1, i*t_WideDvDataBits);
-                        l_dataArr[i] = l_dvArr[i](t_DVdataBits-1, t_DestBits);
+                        l_dataArr[i] = l_dvArr[i](t_WideDvDataBits-1, t_DestBits);
                         l_destArr[i] = l_dvArr[i](t_DestBits-1, 0);
                         if (i==0) {
                             l_mgrDat(t_DVdataBits-1, 0) = l_dataArr[0];
