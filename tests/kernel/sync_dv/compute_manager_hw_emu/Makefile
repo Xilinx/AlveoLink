@@ -147,8 +147,7 @@ VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
 VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
-VPP_FLAGS_dv_adapter0 += --hls.clock 300000000:dv_adapter0
-VPP_FLAGS_dv_adapter1 += --hls.clock 300000000:dv_adapter1
+VPP_FLAGS_dv_adapter += --hls.clock 300000000:dv_adapter
 VPP_FLAGS_dv_switch += --hls.clock 300000000:dv_switch
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_manager += --clock.defaultFreqHz 150000000 
@@ -188,14 +187,10 @@ $(TEMP_DIR)/krnl_xnik_wide.xo: $(XFLIB_DIR)/adapter/dv/hw/src/krnl_xnik_wide.cpp
 	$(ECHO) "Compiling Kernel: krnl_xnik_wide"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnik_wide) $(VPP_FLAGS) -k krnl_xnik_wide -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/dv_adapter0.xo: $(XFLIB_DIR)/tests/network/dv/kernel/dv_adapter0_hw_emu.cpp 
-	$(ECHO) "Compiling Kernel: dv_adapter0"
+$(TEMP_DIR)/dv_adapter.xo: $(XFLIB_DIR)/tests/network/dv/kernel/dv_adapter_hw_emu.cpp 
+	$(ECHO) "Compiling Kernel: dv_adapter"
 	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_dv_adapter0) $(VPP_FLAGS) -k dv_adapter0 -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/dv_adapter1.xo: $(XFLIB_DIR)/tests/network/dv/kernel/dv_adapter1_hw_emu.cpp 
-	$(ECHO) "Compiling Kernel: dv_adapter1"
-	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_dv_adapter1) $(VPP_FLAGS) -k dv_adapter1 -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+	$(VPP) -c $(VPP_FLAGS_dv_adapter) $(VPP_FLAGS) -k dv_adapter -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 $(TEMP_DIR)/dv_switch.xo: $(XFLIB_DIR)/tests/network/dv/kernel/dv_switch_hw_emu.cpp 
 	$(ECHO) "Compiling Kernel: dv_switch"
 	mkdir -p $(TEMP_DIR)
@@ -206,8 +201,7 @@ BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncTX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncRX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncManager.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_wide.xo
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/dv_adapter0.xo
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/dv_adapter1.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/dv_adapter.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/dv_switch.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_testApp_OBJS)
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
@@ -315,7 +309,6 @@ endif
 ifeq ($(TARGET), hw)
 ifeq ($(HOST_ARCH), x86)
     $(EXE_FILE) $(HOST_ARGS)
-    
 else
     $(ECHO) "Please copy the content of sd_card folder and data to an SD Card and run on the board"
 endif
