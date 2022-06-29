@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     unsigned int l_waitCycles = atoi(argv[l_idx++]);
     unsigned int l_flushCounter = atoi(argv[l_idx++]);
     unsigned int l_mode = 0; //0: ring, 1: congestion
-    if (argc > 7) {
+    if (argc > 6) {
         l_mode =  atoi(argv[l_idx++]);
     }
 

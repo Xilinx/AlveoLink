@@ -36,7 +36,7 @@ class dataFwd {
                     m_cnts = t_Interval;
                 }
                 else {
-                    m_cnts;
+                    m_cnts--;
                 }
             }
 }
@@ -45,14 +45,14 @@ class dataFwd {
 };
 
 dataFwd<0> l_fwd0;
-dataFwd<0> l_fwd1;
-dataFwd<0> l_fwd2;
-dataFwd<0> l_fwd3;
+dataFwd<1> l_fwd1;
+dataFwd<2> l_fwd2;
+dataFwd<3> l_fwd3;
 
-dataFwd<0> l_fwd4;
-dataFwd<0> l_fwd5;
-dataFwd<0> l_fwd6;
-dataFwd<0> l_fwd7;
+dataFwd<4> l_fwd4;
+dataFwd<5> l_fwd5;
+dataFwd<6> l_fwd6;
+dataFwd<7> l_fwd7;
 extern "C" void dv_adapter(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
