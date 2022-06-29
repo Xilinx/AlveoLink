@@ -19,35 +19,40 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
-template<unsigned int t_Mod>
+template<unsigned int t_Interval>
 class dataFwd {
     public:
-        dataFwd() {m_cnts = 0;}
+        dataFwd() {m_cnts = t_Interval;}
     public:
         void fwdAxis(hls::stream<ap_axiu<128, 0, 0, 16> >& p_inAxis,
                      hls::stream<ap_axiu<128, 0, 0, 16> >& p_outAxis) {
             while (true) {
         #pragma HLS PIPELINE II=1
-                if (!p_inAxis.empty() && ((m_cnts % t_Mod) == 0)) {
-                    ap_axiu<128, 0, 0, 16> l_val = p_inAxis.read();
-                    p_outAxis.write(l_val);
+                if (m_cnts == 0) {
+                    if (!p_inAxis.empty()) {
+                        ap_axiu<128, 0, 0, 16> l_val = p_inAxis.read();
+                        p_outAxis.write(l_val);
+                    }
+                    m_cnts = t_Interval;
                 }
-                m_cnts++;
+                else {
+                    m_cnts;
+                }
             }
 }
     private:
         unsigned int m_cnts;
 };
 
-dataFwd<2> l_fwd0;
-dataFwd<2> l_fwd1;
-dataFwd<4> l_fwd2;
-dataFwd<8> l_fwd3;
+dataFwd<0> l_fwd0;
+dataFwd<0> l_fwd1;
+dataFwd<0> l_fwd2;
+dataFwd<0> l_fwd3;
 
-dataFwd<2> l_fwd4;
-dataFwd<2> l_fwd5;
-dataFwd<4> l_fwd6;
-dataFwd<8> l_fwd7;
+dataFwd<0> l_fwd4;
+dataFwd<0> l_fwd5;
+dataFwd<0> l_fwd6;
+dataFwd<0> l_fwd7;
 extern "C" void dv_adapter0(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,

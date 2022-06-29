@@ -20,6 +20,17 @@
 #include "hls_stream.h"
 #include "ap_axi_sdata.h"
 
+void fwdAxis(hls::stream<ap_axiu<128, 0, 0, 16> >& p_inAxis,
+             hls::stream<ap_axiu<128, 0, 0, 16> >& p_outAxis) {
+    while (true) {
+#pragma HLS PIPELINE II=1
+        if (!p_inAxis.empty()) {
+            ap_axiu<128, 0, 0, 16> l_val = p_inAxis.read();
+            p_outAxis.write(l_val);
+        }
+    }
+}
+
 extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx1_axis,
                               hls::stream<ap_axiu<128, 0, 0, 16> >& tx2_axis,
@@ -59,50 +70,23 @@ extern "C" void dv_adapter1(hls::stream<ap_axiu<128, 0, 0, 16> >& tx0_axis,
     AXIS(rx3_axisFromSwitch)
 #endif
     AP_CTRL_NONE(return)
+#pragma HLS DATAFLOW
 
-    while (true) {
-#pragma HLS PIPELINE II=1
-        ap_axiu<128, 0, 0, 16> l_val0, l_val1, l_val2, l_val3;
 #ifdef WITH_DVSWITCH
-        if (tx0_axis.read_nb(l_val0)) {
-            tx0_axis2Switch.write(l_val0);
-        }
-        if (tx1_axis.read_nb(l_val1)) {
-            tx1_axis2Switch.write(l_val1);
-        }
-        if (tx2_axis.read_nb(l_val2)) {
-            tx2_axis2Switch.write(l_val2);
-        }
-        if (tx3_axis.read_nb(l_val3)) {
-            tx3_axis2Switch.write(l_val3);
-        }
-        
-        ap_axiu<128, 0, 0, 16> l_val4, l_val5, l_val6, l_val7;
-        if (rx0_axisFromSwitch.read_nb(l_val4)) {
-            rx0_axis.write(l_val4);
-        }
-        if (rx1_axisFromSwitch.read_nb(l_val5)) {
-            rx1_axis.write(l_val5);
-        }
-        if (rx2_axisFromSwitch.read_nb(l_val6)) {
-            rx2_axis.write(l_val6);
-        }
-        if (rx3_axisFromSwitch.read_nb(l_val7)) {
-            rx3_axis.write(l_val7);
-        }
+        fwdAxis(tx0_axis,tx0_axis2Switch);
+        fwdAxis(tx1_axis,tx1_axis2Switch);
+        fwdAxis(tx2_axis,tx2_axis2Switch);
+        fwdAxis(tx3_axis,tx3_axis2Switch);
+
+        fwdAxis(rx0_axisFromSwitch,rx0_axis); 
+        fwdAxis(rx1_axisFromSwitch,rx1_axis); 
+        fwdAxis(rx2_axisFromSwitch,rx2_axis); 
+        fwdAxis(rx3_axisFromSwitch,rx3_axis);
+ 
 #else
-        if (tx0_axis.read_nb(l_val0)) {
-            rx0_axis.write(l_val0);
-        }
-        if (tx1_axis.read_nb(l_val1)) {
-            rx1_axis.write(l_val1);
-        }
-        if (tx2_axis.read_nb(l_val2)) {
-            rx2_axis.write(l_val2);
-        }
-        if (tx3_axis.read_nb(l_val3)) {
-            rx3_axis.write(l_val3);
-        }
+        fwdAxis(tx0_axis,rx0_axis);
+        fwdAxis(tx1_axis,rx1_axis);
+        fwdAxis(tx2_axis,rx2_axis);
+        fwdAxis(tx3_axis,rx3_axis);
 #endif
-    }
 }
