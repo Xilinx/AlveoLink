@@ -216,6 +216,15 @@ LOOP_XNIK2NHOP:
                                 else if (l_ctrlPkt.isWorkload()) {
                                     l_ctrlPkt.write(p_xnik2nhopStr);
                                 }
+#ifdef HLS_SIM
+                                else if (l_ctrlPkt.isTerminate()) {
+                                    l_ctrlPkt.write(p_rxStr);
+                                    l_ctrlPkt.setType(PKT_TYPE::done);
+                                    l_ctrlPkt.write(p_xnik2nhopStr);
+                                    l_exit = true;
+                                    m_state = SYNC_STATE::idle;
+                                }
+#endif
                             }
                         break;
                         case SYNC_STATE::state_done:
