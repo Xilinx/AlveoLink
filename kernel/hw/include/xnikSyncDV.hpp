@@ -38,8 +38,80 @@ namespace kernel {
         query,
         query_2_termination,
         termination,
-        termination_2_idle
+        termination_2_idle,
+        wait_terminate
     } MANAGER_STATE;
+
+    template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits>
+    void readAxis(hls::stream<ap_axiu<t_NetDataBits, 0, 0, t_DestBits> >& p_inStr,
+             hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+        bool l_exit = false;
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_axiu<t_NetDataBits, 0, 0, t_DestBits> l_pkt = p_inStr.read();
+            ap_uint<t_NetDataBits> l_val = l_pkt.data;
+            l_val(t_DestBits-1, 0) = l_pkt.dest;
+            p_outStr.write(l_val);
+            l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate); 
+        }
+    }
+
+    template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits>
+    void readAxis(const uint16_t p_numDevs,
+             hls::stream<ap_axiu<t_NetDataBits, 0, 0, t_DestBits> >& p_inStr,
+             hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+        uint16_t l_exitCnts = p_numDevs;
+        bool l_exit = (l_exitCnts == 0);
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_axiu<t_NetDataBits, 0, 0, t_DestBits> l_pkt = p_inStr.read();
+            ap_uint<t_NetDataBits> l_val = l_pkt.data;
+            l_val(t_DestBits-1, 0) = l_pkt.dest;
+            p_outStr.write(l_val);
+            if (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate) {
+                l_exitCnts--;
+            }
+            l_exit = (l_exitCnts == 0);
+        }
+    }
+
+    template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits>
+    void writeAxis(hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
+                   hls::stream<ap_axiu<t_NetDataBits, 0, 0, t_DestBits> >& p_outStr) {
+        bool l_exit = false;
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_uint<t_NetDataBits> l_val = p_inStr.read();
+            ap_axiu<t_NetDataBits, 0, 0, t_DestBits> l_pkt;
+            l_pkt.data = l_val;
+            l_pkt.dest = l_val(t_DestBits-1, 0);
+            p_outStr.write(l_pkt);
+            l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate);
+        }
+    }
+    template <unsigned int t_NetDataBits,
+              unsigned int t_DestBits>
+    void writeAxis(const uint16_t p_numDevs,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
+                   hls::stream<ap_axiu<t_NetDataBits, 0, 0, t_DestBits> >& p_outStr) {
+        uint16_t l_exitCnts = p_numDevs;
+        bool l_exit = (l_exitCnts == 0);
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_uint<t_NetDataBits> l_val = p_inStr.read();
+            ap_axiu<t_NetDataBits, 0, 0, t_DestBits> l_pkt;
+            l_pkt.data = l_val;
+            l_pkt.dest = l_val(t_DestBits-1, 0);
+            p_outStr.write(l_pkt);
+            if (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate) {
+                l_exitCnts--;
+            }
+            l_exit = (l_exitCnts == 0);
+        }
+    }
 
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
@@ -144,6 +216,7 @@ LOOP_NHOP2XNIK:
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
                                 }
                                 else if (l_ctrlPkt.isTerminate()) {
+                                    l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
                                     l_exit = true;
                                     m_state = SYNC_STATE::idle;
                                 }
@@ -310,13 +383,16 @@ LOOP_MANAGER_SENDALL:
                 }
             }
 
-            void process(uint16_t* p_config,
-                         hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
-                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+            void process(uint16_t p_numDevs,
+                        uint16_t p_waitCycles,
+                        uint16_t p_flushCounter,
+                        hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
+                        hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+#pragma HLS PIPELINE off
 
-                    m_numDevs = p_config[0];
-                    m_waitCycles = p_config[1];
-                    m_flushCounter = p_config[2];
+                    m_numDevs = p_numDevs;
+                    m_waitCycles = p_waitCycles;
+                    m_flushCounter = p_flushCounter;
                     uint16_t l_flushCounter;
                     bool l_allIdle =true;
                     bool l_procExit = false;
@@ -362,8 +438,7 @@ LOOP_MANAGER:
                             case MANAGER_STATE::termination_2_idle:
                                 if (l_allIdle && (l_flushCounter == 0)) {
                                     sendAllPkts(PKT_TYPE::terminate, p_outStr);
-                                    l_procExit = true;
-                                    m_state = MANAGER_STATE::manager_idle;
+                                    m_state = MANAGER_STATE::wait_terminate;
                                 }
                                 else if (l_allIdle && (l_cycleCounter == 0)) {
                                     sendAllPkts(PKT_TYPE::query_status, p_outStr);
@@ -378,6 +453,11 @@ LOOP_MANAGER:
                                     sendAllPkts(PKT_TYPE::query_status, p_outStr);
                                     m_state = MANAGER_STATE::query;
                                 }
+                                break;
+                            case MANAGER_STATE::wait_terminate:
+                                recAllPkts(PKT_TYPE::terminate, p_inStr);
+                                l_procExit = true;
+                                m_state = MANAGER_STATE::manager_idle;
                                 break;
                         }
                     }

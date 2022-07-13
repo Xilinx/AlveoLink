@@ -20,7 +20,7 @@
 extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<AL_netDataBits> >& p_nhop2xnikStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_rxStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_txStr,
-                                 hls::stream<ap_uint<AL_netDataBits> >& p_outStr) {
+                                 hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr) {
     AXIS(p_nhop2xnikStr)
     AXIS(p_rxStr)
     AXIS(p_txStr)
@@ -28,5 +28,8 @@ extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<AL_netDataBits> >& p_nhop2xn
     AP_CTRL_NONE(return)
 
     AlveoLink::kernel::xnikSync_TX<AL_netDataBits, AL_destBits> l_xnikSyncTX;
-    l_xnikSyncTX.process(p_nhop2xnikStr,p_rxStr,p_txStr,p_outStr);
+    hls::stream<ap_uint<AL_netDataBits> > l_netStr;
+#pragma HLS DATAFLOW
+    l_xnikSyncTX.process(p_nhop2xnikStr,p_rxStr,p_txStr,l_netStr);
+    AlveoLink::kernel::writeAxis<AL_netDataBits, AL_destBits>(l_netStr, p_outStr);
 }

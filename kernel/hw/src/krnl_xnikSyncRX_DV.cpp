@@ -17,7 +17,9 @@
 #include "interface.hpp"
 #include "xnikSyncDV.hpp"
 
-extern "C" void krnl_xnikSyncRX(hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
+
+
+extern "C" void krnl_xnikSyncRX(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_txStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_rxStr,
                                  hls::stream<ap_uint<AL_netDataBits> >& p_xnik2nhopStr) {
@@ -28,5 +30,8 @@ extern "C" void krnl_xnikSyncRX(hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
     AP_CTRL_NONE(return)
 
     AlveoLink::kernel::xnikSync_RX<AL_netDataBits, AL_destBits> l_xnikSyncRX;
-    l_xnikSyncRX.process(p_inStr, p_txStr, p_rxStr, p_xnik2nhopStr);
+    hls::stream<ap_uint<AL_netDataBits> > l_netStr;
+#pragma HLS DATAFLOW
+    AlveoLink::kernel::readAxis<AL_netDataBits, AL_destBits>(p_inStr, l_netStr);
+    l_xnikSyncRX.process(l_netStr, p_txStr, p_rxStr, p_xnik2nhopStr);
 }
