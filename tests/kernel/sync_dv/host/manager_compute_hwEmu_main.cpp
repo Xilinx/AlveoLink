@@ -28,6 +28,7 @@
 
 #include "hwManagerHost.hpp"
 //#include "xnik_dv.hpp"
+#include "cntPktsHost.hpp"
 #include "testAppHost.hpp"
 #include "dvNetLayer.hpp"
 #include "graphPktDefs.hpp"
@@ -68,12 +69,18 @@ int main(int argc, char** argv) {
     AlveoLink::common::FPGA l_card;
     AlveoLink::kernel::hwManagerHost<AL_maxConnections> l_manager;
     testAppHost<AL_netDataBits> l_testAppHost[3];
+    cntPktsHost<2> l_cntPktsHost;
 
     l_card.setId(l_devId);
     l_card.load_xclbin(l_xclbinName);
     std::cout << "INFO: loading xclbin successfully!" << std::endl;
 
     std::cout <<"INFO: total number of compute nodes: " << l_numDevs << std::endl;
+    unsigned int l_numNetPkts[2], l_numRxUsrPkts;
+    l_cntPktsHost.init(&l_card);
+    l_cntPktsHost.createCU(0, 0);
+    l_cntPktsHost.runCU(l_numNetPkts, l_numRxUsrPkts);
+
     l_manager.init(&l_card);
     l_manager.createCU(0);
     l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter);
@@ -146,9 +153,17 @@ int main(int argc, char** argv) {
         l_testAppHost[i].syncRes();
         l_testAppHost[i].syncTrans();
     }
-
+    
     l_manager.finish();
+    l_cntPktsHost.finish();
     std::cout << "INFO: system run finished!" << std::endl;
+
+    l_cntPktsHost.getNumTxNetPkts(0, l_numNetPkts[0]);
+    l_cntPktsHost.getNumRxNetPkts(0, l_numNetPkts[1]);
+    l_cntPktsHost.getNumRxUsrPkts(l_numRxUsrPkts);
+    std::cout <<"INFO: testApp0+XNIK has transmitted " << l_numNetPkts[0] << " net pkts." << std::endl;
+    std::cout <<"INFO: testApp0+XNIK has received " << l_numNetPkts[1] << " net pkts." << std::endl;
+    std::cout <<"INFO: testApp0 has received " << l_numRxUsrPkts << " usr pkts from XNIK." << std::endl;
 
     std::cout << std::dec;
 

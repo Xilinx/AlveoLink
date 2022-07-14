@@ -74,8 +74,8 @@ class KERNEL {
     void getBO(const int p_argIdx);
     void syncBO(const int p_argIdx);
     void clearBOMap();
-    uint32_t readReg(const size_t p_regOffset) const;
-    void writeReg(const size_t p_regOffset, const uint32_t p_regVal);
+    uint32_t readReg(const size_t p_argIdx) const;
+    void writeReg(const size_t p_argIdx, const uint32_t p_regVal);
 
    protected:
     FPGA* m_fpga;

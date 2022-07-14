@@ -146,6 +146,8 @@ VPP_FLAGS_krnl_testApp += --hls.clock 300000000:krnl_testApp
 VPP_FLAGS_krnl_xnikSyncManager += --hls.clock 300000000:krnl_xnikSyncManager
 VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
+VPP_FLAGS_krnl_cntNetPkts += --hls.clock 300000000:krnl_cntNetPkts
+VPP_FLAGS_krnl_cntUsrPkts += --hls.clock 300000000:krnl_cntUsrPkts
 VPP_FLAGS_dv_switch += --hls.clock 300000000:dv_switch
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_manager += --clock.defaultFreqHz 150000000 
@@ -176,6 +178,16 @@ $(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX_DV.cp
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncRX) $(VPP_FLAGS) -k krnl_xnikSyncRX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
+$(TEMP_DIR)/krnl_cntNetPkts.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_cntNetPkts.cpp 
+	$(ECHO) "Compiling Kernel: krnl_cntNetPkts"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_cntNetPkts) $(VPP_FLAGS) -k krnl_cntNetPkts -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+
+$(TEMP_DIR)/krnl_cntUsrPkts.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_cntUsrPkts.cpp 
+	$(ECHO) "Compiling Kernel: krnl_cntUsrPkts"
+	mkdir -p $(TEMP_DIR)
+	$(VPP) -c $(VPP_FLAGS_krnl_cntUsrPkts) $(VPP_FLAGS) -k krnl_cntUsrPkts -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+
 $(TEMP_DIR)/krnl_xnikSyncManager.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncManager_DV.cpp
 	$(ECHO) "Compiling Kernel: krnl_xnikSyncManager"
 	mkdir -p $(TEMP_DIR)
@@ -189,6 +201,8 @@ $(TEMP_DIR)/dv_switch.xo: $(XFLIB_DIR)/tests/network/dv/kernel/dv_switch512_hw_e
 BINARY_CONTAINER_krnl_testApp_OBJS += $(TEMP_DIR)/krnl_testApp.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncTX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncRX.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_cntNetPkts.xo
+BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_cntUsrPkts.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncManager.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/dv_switch.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_testApp_OBJS)

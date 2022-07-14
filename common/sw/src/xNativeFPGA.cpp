@@ -52,7 +52,7 @@ void KERNEL::fpga(FPGA* p_fpga) {
 }
 
 void KERNEL::createKernel(const std::string& name) {
-    m_kernel = xrt::kernel(m_fpga->getDevice(), m_fpga->getUUID().get(), name);
+    m_kernel = xrt::kernel(m_fpga->getDevice(), m_fpga->getUUID().get(), name, xrt::kernel::cu_access_mode::exclusive);
     m_run = xrt::run(m_kernel);
 }
 
@@ -122,12 +122,14 @@ void KERNEL::syncBO(const int p_argIdx) {
     }
 }
 
-uint32_t KERNEL::readReg(const size_t p_regOffset) const {
-    return (m_kernel.read_register(p_regOffset));
+uint32_t KERNEL::readReg(const size_t p_argIdx) const {
+    auto l_regAddr = m_kernel.offset(p_argIdx);
+    return (m_kernel.read_register(l_regAddr));
 }
 
-void KERNEL::writeReg(const size_t p_regOffset, const uint32_t p_regVal) {
-    m_kernel.write_register(p_regOffset, p_regVal);
+void KERNEL::writeReg(const size_t p_argIdx, const uint32_t p_regVal) {
+    auto l_regAddr = m_kernel.offset(p_argIdx);
+    m_kernel.write_register(l_regAddr, p_regVal);
 }
 
 void KERNEL::wait() {
