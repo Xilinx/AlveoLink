@@ -29,6 +29,9 @@ make build TARGET=hw
 $cd ./HiveNet/sw
 $make run_col
 
+$Do you want to enable RS-FEC? (answer 0/1)
+1
+
 $Do you want to turn on generator? (answer 0/1)
 $0
 ```
@@ -37,6 +40,9 @@ $0
 ```
 cd ./hw
 make run_gen
+
+$Do you want to enable RS-FEC? (answer 0/1)
+1
 
 $Do you want to turn on generator? (answer 0/1)
 $1
