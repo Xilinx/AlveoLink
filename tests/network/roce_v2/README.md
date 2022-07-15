@@ -18,7 +18,7 @@ export AL_PATH=/proj/rdi-xsj/staff/lingl/nobkup/FaaSApps/AlveoLink
 ## Build HW
 
 ```
-cd ./HiveNet/hw
+cd AlveoLink/tests/network/roce_v2/hw/
 make build TARGET=hw
 ```
 
@@ -26,7 +26,7 @@ make build TARGET=hw
 
 ### Run Echo Kernel 
 ```
-$cd ./HiveNet/sw
+$cd AlveoLink/tests/network/roce_v2/sw/
 $make run_col
 
 $Do you want to enable RS-FEC? (answer 0/1)
@@ -38,7 +38,7 @@ $0
 
 ### Run Generator
 ```
-cd ./hw
+cd AlveoLink/tests/network/roce_v2/sw/
 make run_gen
 
 $Do you want to enable RS-FEC? (answer 0/1)
