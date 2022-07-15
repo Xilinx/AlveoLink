@@ -24,6 +24,8 @@ make build TARGET=hw
 
 ## Run SW
 
+Both echo kernel and latency kernel run infinite. Please use Ctrl+C to kill the process. 
+
 ### Run Echo Kernel 
 ```
 $cd AlveoLink/tests/network/roce_v2/sw/
@@ -36,7 +38,7 @@ $Do you want to turn on generator? (answer 0/1)
 $0
 ```
 
-### Run Generator
+### Run Latency Kernel
 ```
 cd AlveoLink/tests/network/roce_v2/sw/
 make run_gen
