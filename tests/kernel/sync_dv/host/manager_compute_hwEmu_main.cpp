@@ -79,14 +79,11 @@ int main(int argc, char** argv) {
     unsigned int l_numNetPkts[2], l_numRxUsrPkts;
     l_cntPktsHost.init(&l_card);
     l_cntPktsHost.createCU(0, 0);
-    l_cntPktsHost.runCU(l_numNetPkts, l_numRxUsrPkts);
 
     l_manager.init(&l_card);
     l_manager.createCU(0);
     l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter);
     l_manager.sendBO();
-    l_manager.runCU();
-    std::cout <<"INFO: manager has started... " << std::endl;
 
     for (auto i=0; i<3; ++i) {
         l_testAppHost[i].init(&l_card);
@@ -145,17 +142,27 @@ int main(int argc, char** argv) {
     
     for (auto i=0; i<3; ++i) {//start application kernel
         l_testAppHost[i].sendBO();
-        l_testAppHost[i].runCU(i, l_destId[i], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_totalNumInts[i]);
     }
 
-    for (auto i=0; i<3; ++i) {
-        l_testAppHost[i].finish();
-        l_testAppHost[i].syncRes();
-        l_testAppHost[i].syncTrans();
+    for (auto runId = 0; runId < 2; ++ runId) {
+        l_manager.runCU();
+        l_cntPktsHost.runCU(l_numNetPkts, l_numRxUsrPkts);
+        std::cout <<"INFO: manager has started... " << std::endl;
+
+
+        for (auto i=0; i<3; ++i) {//start application kernel
+            l_testAppHost[i].runCU(i, l_destId[i], l_numDevs, l_numPkts, l_batchPkts, l_timeOutCycles, l_totalNumInts[i]);
+        }
+
+        for (auto i=0; i<3; ++i) {
+            l_testAppHost[i].finish();
+            l_testAppHost[i].syncRes();
+            l_testAppHost[i].syncTrans();
+        }
+        
+        l_manager.finish();
+        l_cntPktsHost.finish();
     }
-    
-    l_manager.finish();
-    l_cntPktsHost.finish();
     std::cout << "INFO: system run finished!" << std::endl;
 
     l_cntPktsHost.getNumTxNetPkts(0, l_numNetPkts[0]);

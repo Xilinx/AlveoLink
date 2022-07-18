@@ -33,5 +33,4 @@ extern "C" void krnl_echo(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits>
         ap_axiu<AL_netDataBits, 0, 0, AL_destBits> l_val = p_inStr.read(); 
         p_outStr.write(l_val);
     }
-
 }

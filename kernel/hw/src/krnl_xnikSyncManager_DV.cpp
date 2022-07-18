@@ -16,6 +16,18 @@
 #include "interface.hpp"
 #include "xnikSyncDV.hpp"
 
+void xnikSyncManager(uint16_t p_numDevs, uint16_t p_waitCycles, uint16_t p_flushCounter,
+                     hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
+                     hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr) {
+    AlveoLink::kernel::xnikSync_Manager<AL_netDataBits, AL_destBits> l_xnikSyncManager;
+    hls::stream<ap_uint<AL_netDataBits> > l_inNetStr;
+    hls::stream<ap_uint<AL_netDataBits> > l_outNetStr;
+#pragma HLS DATAFLOW
+    AlveoLink::kernel::readAxis<AL_netDataBits, AL_destBits>(p_numDevs, p_inStr, l_inNetStr);
+    l_xnikSyncManager.process(p_numDevs, p_waitCycles, p_flushCounter, l_inNetStr, l_outNetStr);
+    AlveoLink::kernel::writeAxis<AL_netDataBits, AL_destBits>(p_numDevs, l_outNetStr, p_outStr);
+}
+
 extern "C" void krnl_xnikSyncManager(uint16_t* p_config,
                                  hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_inStr,
                                  hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_destBits> >& p_outStr) {
@@ -24,15 +36,8 @@ extern "C" void krnl_xnikSyncManager(uint16_t* p_config,
     AXIS(p_outStr)
     SCALAR(return)
 
-    AlveoLink::kernel::xnikSync_Manager<AL_netDataBits, AL_destBits> l_xnikSyncManager;
     uint16_t l_numDevs = p_config[0];
     uint16_t l_waitCycles = p_config[1];
     uint16_t l_flushCounter = p_config[2];
-#pragma HLS DATAFLOW
-    hls::stream<ap_uint<AL_netDataBits> > l_inNetStr;
-    hls::stream<ap_uint<AL_netDataBits> > l_outNetStr;
-
-    AlveoLink::kernel::readAxis<AL_netDataBits, AL_destBits>(l_numDevs, p_inStr, l_inNetStr);
-    l_xnikSyncManager.process(l_numDevs, l_waitCycles, l_flushCounter, l_inNetStr, l_outNetStr);
-    AlveoLink::kernel::writeAxis<AL_netDataBits, AL_destBits>(l_numDevs, l_outNetStr, p_outStr);
+    xnikSyncManager(l_numDevs, l_waitCycles, l_flushCounter, p_inStr, p_outStr);
 }

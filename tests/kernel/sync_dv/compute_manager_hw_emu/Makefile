@@ -92,6 +92,7 @@ ifeq ($(HOST_ARCH), x86)
 CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
 VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl -t $(TARGET) --platform $(XPLATFORM) --save-temps 
+#VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps 
 #VPP_LDFLAGS += --optimize 2 -R 2
 VPP_LDFLAGS += --debug
 else ifeq ($(HOST_ARCH), aarch64)

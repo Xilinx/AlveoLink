@@ -216,9 +216,10 @@ LOOP_NHOP2XNIK:
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
                                 }
                                 else if (l_ctrlPkt.isTerminate()) {
+                                    l_ctrlPkt.setSrcId(m_myId);
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
-                                    l_exit = true;
                                     m_state = SYNC_STATE::idle;
+                                    l_exit = true;
                                 }
                             }
                             else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {//do nothing, just avoid FIFO block
@@ -456,8 +457,8 @@ LOOP_MANAGER:
                                 break;
                             case MANAGER_STATE::wait_terminate:
                                 recAllPkts(PKT_TYPE::terminate, p_inStr);
-                                l_procExit = true;
                                 m_state = MANAGER_STATE::manager_idle;
+                                l_procExit = true;
                                 break;
                         }
                     }

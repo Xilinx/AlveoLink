@@ -27,14 +27,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000000 us"></ZoomStartTime>
-      <ZoomEndTime time="22.240001 us"></ZoomEndTime>
-      <Cursor1Time time="0.000000 us"></Cursor1Time>
+      <ZoomEndTime time="56.219576 us"></ZoomEndTime>
+      <Cursor1Time time="22.098750 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="216"></NameColumnWidth>
-      <ValueColumnWidth column_width="76"></ValueColumnWidth>
+      <ValueColumnWidth column_width="68"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="118" />
+   <WVObjectSize size="119" />
    <wave_markers>
       <marker label="" time="27067079" />
       <marker label="" time="27090417" />
@@ -194,6 +194,11 @@
    <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/ap_done">
       <obj_property name="ElementShortName">ap_done</obj_property>
       <obj_property name="ObjectShortName">ap_done</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/inst/grp_xnikSyncManager_fu_106/process_U0/this_m_state_out_dead_read_write_to_tmp_0_load_load_fu_169_p1">
+      <obj_property name="ElementShortName">this_m_state_out_dead_read_write_to_tmp_0_load_load_fu_169_p1[3:0]</obj_property>
+      <obj_property name="ObjectShortName">this_m_state_out_dead_read_write_to_tmp_0_load_load_fu_169_p1[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/pfm_top_wrapper/pfm_top_i/pfm_dynamic_inst/krnl_xnikSyncManager_0/p_inStr_TVALID">
       <obj_property name="ElementShortName">p_inStr_TVALID</obj_property>

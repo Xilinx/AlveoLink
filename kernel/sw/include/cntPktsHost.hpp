@@ -18,7 +18,7 @@
 #define CNTPKTHOST_HPP
 
 #include "xNativeFPGA.hpp"
-#include "basicException.hpp"
+//#include "basicException.hpp"
 
 template <unsigned int t_numNetPktsCnts>
 class cntPktsHost {
