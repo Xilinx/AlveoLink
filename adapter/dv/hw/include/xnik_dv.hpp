@@ -29,7 +29,11 @@ template <unsigned int t_NetDataBits = 512,
           unsigned int t_DestBits = 16>
 class XNIK_DV{
     public:
+#ifdef DV_128
         static const unsigned int t_DVdataBits = t_NetDataBits / 4;
+#else
+        static const unsigned int t_DVdataBits = t_NetDataBits;
+#endif
         static const unsigned int t_WideDvDataBits = t_DVdataBits + t_DestBits;
         static const unsigned int t_WideDestBits = t_DestBits * 4;
         static const unsigned int t_WideNetDataBits = t_NetDataBits+t_WideDestBits;
@@ -74,11 +78,13 @@ class XNIK_DV{
                        hls::stream<DV_PktType>& p_outStr) {
             while (true) {
 #pragma HLS PIPELINE II=1
-                ap_uint<t_WideDvDataBits> l_val = p_inStr.read();
-                DV_PktType l_dvPkt;
-                l_dvPkt.dest = l_val(t_DestBits-1,0);
-                l_dvPkt.data = l_val(t_WideDvDataBits-1, t_DestBits);
-                p_outStr.write(l_dvPkt); 
+                if (!p_inStr.empty()) {
+                    ap_uint<t_WideDvDataBits> l_val = p_inStr.read();
+                    DV_PktType l_dvPkt;
+                    l_dvPkt.dest = l_val(t_DestBits-1,0);
+                    l_dvPkt.data = l_val(t_WideDvDataBits-1, t_DestBits);
+                    p_outStr.write(l_dvPkt); 
+                }
             }
         }
                 
@@ -99,28 +105,21 @@ class XNIK_DV{
             writeAXIS(l_str[3], p_outStr3);
             
         }
-        void DV2XnikWide(hls::stream<DV_PktType>& p_inStr0,
-                         hls::stream<DV_PktType>& p_inStr1,
-                         hls::stream<DV_PktType>& p_inStr2,
-                         hls::stream<DV_PktType>& p_inStr3,
-                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+
+        void xnik2DV(hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
+                     hls::stream<DV_PktType>& p_outStr) {
             while (true) {
 #pragma HLS PIPELINE II=1
-                ap_uint<t_NetDataBits>  l_xnikPkt;
-                DV_PktType l_dvPkt0, l_dvPkt1, l_dvPkt2, l_dvPkt3;
-                l_dvPkt0 = p_inStr0.read();
-                l_dvPkt1 = p_inStr1.read();
-                l_dvPkt2 = p_inStr2.read();
-                l_dvPkt3 = p_inStr3.read();
-
-                l_xnikPkt(t_DVdataBits-1, 0) = l_dvPkt0.data;
-                l_xnikPkt(2*t_DVdataBits-1, t_DVdataBits) = l_dvPkt1.data;
-                l_xnikPkt(3*t_DVdataBits-1, 2*t_DVdataBits) = l_dvPkt2.data;
-                l_xnikPkt(4*t_DVdataBits-1, 3*t_DVdataBits) = l_dvPkt3.data;
-                p_outStr.write(l_xnikPkt);
+                if (!p_inStr.empty()) {
+                    ap_uint<t_NetDataBits> l_val = p_inStr.read();
+                    DV_PktType l_dvPkt;
+                    l_dvPkt.dest = l_val(t_DestBits-1,0);
+                    l_dvPkt.data = l_val;
+                    p_outStr.write(l_dvPkt); 
+                }
             }
+            
         }
-
         //following code is a work around out-of-order pkts for nhop. 
         void readDV(hls::stream<DV_PktType>& p_inStr0,
                     hls::stream<DV_PktType>& p_inStr1,
@@ -165,7 +164,7 @@ class XNIK_DV{
                 ap_uint<t_WideDvDataBits> l_dvArr[4];
                 ap_uint<t_DVdataBits> l_dataArr[4];
                 ap_uint<t_DestBits> l_destArr[4];
-                bool l_writeMgr;
+                bool l_writeMgr=false;
 #pragma HLS ARRAY_PARTITION variable = l_dvArr complete dim=1
 #pragma HLS ARRAY_PARTITION variable = l_dataArr complete dim=1
 #pragma HLS ARRAY_PARTITION variable = l_destArr complete dim=1
@@ -230,6 +229,19 @@ class XNIK_DV{
             readDV(p_inStr0, p_inStr1, p_inStr2, p_inStr3, l_datStr);
             splitPkt(l_datStr, l_mgrStr, l_workStr);
             mergePkt(l_mgrStr, l_workStr, p_outStr);
+        }
+
+        void DV2Xnik(hls::stream<DV_PktType>& p_inStr,
+                     hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+            while (true) {
+#pragma HLS PIPELINE II=1
+                if (!p_inStr.empty()) {
+                    DV_PktType l_dvPkt = p_inStr.read();
+                    ap_uint<t_NetDataBits> l_val = l_dvPkt.data;
+                    l_val(t_DestBits-1,0) = l_dvPkt.dest;
+                    p_outStr.write(l_val);
+                }
+            }
         }
 };
 }

@@ -17,6 +17,7 @@
 #ifndef DVADAPTER_HPP
 #define DVADAPTER_HPP
 
+#include <cassert>
 #include <bitset>
 #include <vector>
 #include <string>
@@ -25,62 +26,65 @@
 namespace AlveoLink {
 namespace network_dv {
 
-constexpr size_t ClrCnts = 0x00;  // Write Clears All Counters -- Reads as DEADBEEF
-constexpr size_t IdStatus = 0x04;  // bit[15:0]: port ID, bit[19:16]: lane status, 1-up, 0-down, bit[20]: port valid, 1-when all lanes are up
-constexpr size_t CardMap = 0x08;  // Card Address Map -- 1 signifies that card is present & ready
-constexpr size_t RSVD0 = 0x0C;    // Reserved0
-constexpr size_t RxCntL0 = 0x10;  // Rx Count0 Low Word
-constexpr size_t RxCntH0 = 0x14;  // Rx Count0 High Word
-constexpr size_t RxCntL1 = 0x18;  // Rx Count1 Low Word
-constexpr size_t RxCntH1 = 0x1C;  // Rx Count1 High Word
-constexpr size_t RxCntL2 = 0x20;  // Rx Count2 Low Word
-constexpr size_t RxCntH2 = 0x24;  // Rx Count2 High Word
-constexpr size_t RxCntL3 = 0x28;  // Rx Count3 Low Word
-constexpr size_t RxCntH3 = 0x2C;  // Rx Count3 High Word
-constexpr size_t TxCntL0 = 0x30;  // Tx Count0 Low Word
-constexpr size_t TxCntH0 = 0x34;  // Tx Count0 High Word
-constexpr size_t TxCntL1 = 0x38;  // Tx Count1 Low Word
-constexpr size_t TxCntH1 = 0x3C;  // Tx Count1 High Word
-constexpr size_t TxCntL2 = 0x40;  // Tx Count2 Low Word
-constexpr size_t TxCntH2 = 0x44;  // Tx Count2 High Word
-constexpr size_t TxCntL3 = 0x48;  // Tx Count3 Low Word
-constexpr size_t TxCntH3 = 0x4C;  // Tx Count3 High Word
-constexpr size_t RETRYL0 = 0x50;  // Retry Count Lane 0
-constexpr size_t RETRYL1 = 0x54;  // Retry Count Lane 1
-constexpr size_t RETRYL2 = 0x58;  // Retry Count Lane 2
-constexpr size_t RETRYL3 = 0x5C;  // Retry Count Lane 3
-constexpr size_t LSTPKTL0W0 = 0x60;   // Last Rx Pkt L0 Wrd0
-constexpr size_t LSTPKTL0W1 = 0x64;   // Last Rx Pkt L0 Wrd1
-constexpr size_t LSTPKTL0W2 = 0x68;   // Last Rx Pkt L0 Wrd2
-constexpr size_t LSTPKTL0W3 = 0x6C;   // Last Rx Pkt L0 Wrd3
-constexpr size_t LSTPKTL1W0 = 0x70;   // Last Rx Pkt L1 Wrd0
-constexpr size_t LSTPKTL1W1 = 0x74;   // Last Rx Pkt L1 Wrd1
-constexpr size_t LSTPKTL1W2 = 0x78;   // Last Rx Pkt L1 Wrd2
-constexpr size_t LSTPKTL1W3 = 0x7C;   // Last Rx Pkt L1 Wrd3
-constexpr size_t LSTPKTL2W0 = 0x80;   // Last Rx Pkt L2 Wrd0
-constexpr size_t LSTPKTL2W1 = 0x84;   // Last Rx Pkt L2 Wrd1
-constexpr size_t LSTPKTL2W2 = 0x88;   // Last Rx Pkt L2 Wrd2
-constexpr size_t LSTPKTL2W3 = 0x8C;   // Last Rx Pkt L2 Wrd3
-constexpr size_t LSTPKTL3W0 = 0x90;   // Last Rx Pkt L3 Wrd0
-constexpr size_t LSTPKTL3W1 = 0x94;   // Last Rx Pkt L3 Wrd1
-constexpr size_t LSTPKTL3W2 = 0x98;   // Last Rx Pkt L3 Wrd2
-constexpr size_t LSTPKTL3W3 = 0x9C;   // Last Rx Pkt L3 Wrd3
-constexpr size_t LSTTXPKTL0W0 = 0xA0; //Last Tx Pkt L0 Wrd0
-constexpr size_t LSTTXPKTL0W1 = 0xA4; //Last Tx Pkt L0 Wrd1
-constexpr size_t LSTTXPKTL0W2 = 0xA8; //Last Tx Pkt L0 Wrd2
-constexpr size_t LSTTXPKTL0W3 = 0xAC; //Last Tx Pkt L0 Wrd3
-constexpr size_t LSTTXPKTL1W0 = 0xB0; //Last Tx Pkt L1 Wrd0
-constexpr size_t LSTTXPKTL1W1 = 0xB4; //Last Tx Pkt L1 Wrd1
-constexpr size_t LSTTXPKTL1W2 = 0xB8; //Last Tx Pkt L1 Wrd2
-constexpr size_t LSTTXPKTL1W3 = 0xBC; //Last Tx Pkt L1 Wrd3
-constexpr size_t LSTTXPKTL2W0 = 0xC0; //Last Tx Pkt L2 Wrd0
-constexpr size_t LSTTXPKTL2W1 = 0xC4; //Last Tx Pkt L2 Wrd1
-constexpr size_t LSTTXPKTL2W2 = 0xC8; //Last Tx Pkt L2 Wrd2
-constexpr size_t LSTTXPKTL2W3 = 0xCC; //Last Tx Pkt L2 Wrd3
-constexpr size_t LSTTXPKTL3W0 = 0xD0; //Last Tx Pkt L3 Wrd0
-constexpr size_t LSTTXPKTL3W1 = 0xD4; //Last Tx Pkt L3 Wrd1
-constexpr size_t LSTTXPKTL3W2 = 0xD8; //Last Tx Pkt L3 Wrd2
-constexpr size_t LSTTXPKTL3W3 = 0xDC; //Last Tx Pkt L3 Wrd3
+constexpr size_t ClrCnts = 0x08;  // Write Clears All Counters -- Reads as DEADBEEF
+constexpr size_t IdStatus = 0x0C;  // bit[15:0]: port ID, bit[19:16]: lane status, 1-up, 0-down, bit[20]: port valid, 1-when all lanes are up
+constexpr size_t CardID01 = 0x10;
+constexpr size_t CardID23 = 0x14;
+
+constexpr size_t CardMap = 0x18;  // Card Address Map -- 1 signifies that card is present & ready
+constexpr size_t RSVD0 = 0x00;    // Reserved0
+constexpr size_t RxCntL0 = 0x40;  // Rx Count0 Low Word
+constexpr size_t RxCntH0 = 0x44;  // Rx Count0 High Word
+constexpr size_t RxCntL1 = 0x48;  // Rx Count1 Low Word
+constexpr size_t RxCntH1 = 0x4C;  // Rx Count1 High Word
+constexpr size_t RxCntL2 = 0x50;  // Rx Count2 Low Word
+constexpr size_t RxCntH2 = 0x54;  // Rx Count2 High Word
+constexpr size_t RxCntL3 = 0x58;  // Rx Count3 Low Word
+constexpr size_t RxCntH3 = 0x5C;  // Rx Count3 High Word
+constexpr size_t TxCntL0 = 0x60;  // Tx Count0 Low Word
+constexpr size_t TxCntH0 = 0x64;  // Tx Count0 High Word
+constexpr size_t TxCntL1 = 0x68;  // Tx Count1 Low Word
+constexpr size_t TxCntH1 = 0x6C;  // Tx Count1 High Word
+constexpr size_t TxCntL2 = 0x70;  // Tx Count2 Low Word
+constexpr size_t TxCntH2 = 0x74;  // Tx Count2 High Word
+constexpr size_t TxCntL3 = 0x78;  // Tx Count3 Low Word
+constexpr size_t TxCntH3 = 0x7C;  // Tx Count3 High Word
+constexpr size_t RETRYL0 = 0x30;  // Retry Count Lane 0
+constexpr size_t RETRYL1 = 0x34;  // Retry Count Lane 1
+constexpr size_t RETRYL2 = 0x38;  // Retry Count Lane 2
+constexpr size_t RETRYL3 = 0x3C;  // Retry Count Lane 3
+constexpr size_t LSTPKTL0W0 = 0x80;   // Last Rx Pkt L0 Wrd0
+constexpr size_t LSTPKTL0W1 = 0x84;   // Last Rx Pkt L0 Wrd1
+constexpr size_t LSTPKTL0W2 = 0x88;   // Last Rx Pkt L0 Wrd2
+constexpr size_t LSTPKTL0W3 = 0x8C;   // Last Rx Pkt L0 Wrd3
+constexpr size_t LSTPKTL1W0 = 0x90;   // Last Rx Pkt L1 Wrd0
+constexpr size_t LSTPKTL1W1 = 0x94;   // Last Rx Pkt L1 Wrd1
+constexpr size_t LSTPKTL1W2 = 0x98;   // Last Rx Pkt L1 Wrd2
+constexpr size_t LSTPKTL1W3 = 0x9C;   // Last Rx Pkt L1 Wrd3
+constexpr size_t LSTPKTL2W0 = 0xA0;   // Last Rx Pkt L2 Wrd0
+constexpr size_t LSTPKTL2W1 = 0xA4;   // Last Rx Pkt L2 Wrd1
+constexpr size_t LSTPKTL2W2 = 0xA8;   // Last Rx Pkt L2 Wrd2
+constexpr size_t LSTPKTL2W3 = 0xAC;   // Last Rx Pkt L2 Wrd3
+constexpr size_t LSTPKTL3W0 = 0xB0;   // Last Rx Pkt L3 Wrd0
+constexpr size_t LSTPKTL3W1 = 0xB4;   // Last Rx Pkt L3 Wrd1
+constexpr size_t LSTPKTL3W2 = 0xB8;   // Last Rx Pkt L3 Wrd2
+constexpr size_t LSTPKTL3W3 = 0xBC;   // Last Rx Pkt L3 Wrd3
+constexpr size_t LSTTXPKTL0W0 = 0xC0; //Last Tx Pkt L0 Wrd0
+constexpr size_t LSTTXPKTL0W1 = 0xC4; //Last Tx Pkt L0 Wrd1
+constexpr size_t LSTTXPKTL0W2 = 0xC8; //Last Tx Pkt L0 Wrd2
+constexpr size_t LSTTXPKTL0W3 = 0xCC; //Last Tx Pkt L0 Wrd3
+constexpr size_t LSTTXPKTL1W0 = 0xD0; //Last Tx Pkt L1 Wrd0
+constexpr size_t LSTTXPKTL1W1 = 0xD4; //Last Tx Pkt L1 Wrd1
+constexpr size_t LSTTXPKTL1W2 = 0xD8; //Last Tx Pkt L1 Wrd2
+constexpr size_t LSTTXPKTL1W3 = 0xDC; //Last Tx Pkt L1 Wrd3
+constexpr size_t LSTTXPKTL2W0 = 0xE0; //Last Tx Pkt L2 Wrd0
+constexpr size_t LSTTXPKTL2W1 = 0xE4; //Last Tx Pkt L2 Wrd1
+constexpr size_t LSTTXPKTL2W2 = 0xE8; //Last Tx Pkt L2 Wrd2
+constexpr size_t LSTTXPKTL2W3 = 0xEC; //Last Tx Pkt L2 Wrd3
+constexpr size_t LSTTXPKTL3W0 = 0xF0; //Last Tx Pkt L3 Wrd0
+constexpr size_t LSTTXPKTL3W1 = 0xF4; //Last Tx Pkt L3 Wrd1
+constexpr size_t LSTTXPKTL3W2 = 0xF8; //Last Tx Pkt L3 Wrd2
+constexpr size_t LSTTXPKTL3W3 = 0xFC; //Last Tx Pkt L3 Wrd3
 
 
 
@@ -93,6 +97,9 @@ class dvAdapter : public AlveoLink::common::IP {
             m_linkUp = false;
             m_myId = 0;
             m_numDests = 0;
+            for (auto i=0; i<4; ++i) {
+                m_laneIds[i] = 0;
+            }
         }
         void initCU(const unsigned int p_id) {
             std::string l_cuName = "dv_adapter"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
@@ -110,9 +117,8 @@ class dvAdapter : public AlveoLink::common::IP {
                     m_dests[i] = false;
                 }
             }
-            int l_idStatus = readReg(IdStatus);
-            m_myId = l_idStatus & 0x0ffff;
-            int l_laneStatus = l_idStatus >> t_DestBits;
+            int l_status = readReg(IdStatus);
+            int l_laneStatus = l_status;
             for (auto i=0; i<4; ++i) {
                 if (((l_laneStatus >> i) & 0x01) == 1) {
                     m_laneStatus[i] = true;
@@ -122,6 +128,16 @@ class dvAdapter : public AlveoLink::common::IP {
                 }
             }
             m_linkUp = m_laneStatus.all(); 
+            int l_ids01 = readReg(CardID01);
+            int l_ids23 = readReg(CardID23);
+            m_laneIds[0] = l_ids01 & 0x0ff;
+            m_laneIds[1] = (l_ids01 >> 16) & 0x0ff;
+            m_laneIds[2] = l_ids23 & 0x0ff;
+            m_laneIds[3] = (l_ids23 >> 16) & 0x0ff;
+            assert(m_laneIds[0] == m_laneIds[1]);
+            assert(m_laneIds[1] == m_laneIds[2]);
+            assert(m_laneIds[2] == m_laneIds[3]);
+            m_myId = m_laneIds[0];
         }
         
         std::bitset<t_MaxConnections> getDestMap() {
@@ -141,7 +157,7 @@ class dvAdapter : public AlveoLink::common::IP {
         }
 
         void clearCounters() {
-            writeReg(ClrCnts, 1);
+            writeReg(ClrCnts, 2);
         }
         unsigned int getClrCnts() {
             unsigned int l_res = readReg(ClrCnts);
@@ -194,6 +210,7 @@ class dvAdapter : public AlveoLink::common::IP {
         bool m_linkUp;
         uint16_t m_numDests;
         uint16_t m_myId;
+        uint16_t m_laneIds[4];
 };
 }
 }
