@@ -33,12 +33,9 @@ int main(int argc, char** argv) {
         return 1;
     }
     std::string binaryFile = argv[1];
-    AlveoLink::common::FPGA fpga_card0, fpga_card1;
+    AlveoLink::common::FPGA fpga_card0;
     fpga_card0.setId(0);
-    fpga_card1.setId(1);
     std::cout << "Loading xclbin to FPGA_0" << std::endl;
-    fpga_card1.load_xclbin(binaryFile);
-    std::cout << "Loading xclbin to FPGA_1" << std::endl;
     fpga_card0.load_xclbin(binaryFile);
 
     AlveoLink::network_roce_v2::HiveNet hivenet0, hivenet1;
@@ -46,18 +43,22 @@ int main(int argc, char** argv) {
 
     hivenet0.fpga(&fpga_card0);
     hivenet0.initCU(0);
-    hivenet0.setLocalID(1);
+    hivenet0.setIPSubnet(0x0000a8c0);
+    hivenet0.setMACSubnet(0x665544332211);
+    hivenet0.setLocalID(14);
 
-    std::cout << "Configuring HiveNet_0 on Fpga_1" << std::endl;
-    hivenet1.fpga(&fpga_card1);
-    hivenet1.initCU(0);
-    hivenet1.setLocalID(20);
+    std::cout << "Configuring HiveNet_1 on Fpga_0" << std::endl;
+    hivenet1.fpga(&fpga_card0);
+    hivenet1.initCU(1);
+    hivenet1.setIPSubnet(0x0000a8c0);
+    hivenet1.setMACSubnet(0x665544332211);
+    hivenet1.setLocalID(15);
 
     AlveoLink::network_roce_v2::KernelCMAC cmac_0, cmac_1;
     cmac_0.fpga(&fpga_card0);
-    cmac_1.fpga(&fpga_card1);
+    cmac_1.fpga(&fpga_card0);
     cmac_0.initCU(0);
-    cmac_1.initCU(0);
+    cmac_1.initCU(1);
 
     std::cout << "Configuring RS-FEC on Fpga_0 and Fpga_1" << std::endl;
     cmac_0.turnOn_RS_FEC(true);
@@ -91,26 +92,29 @@ int main(int argc, char** argv) {
         sleep(1);
     }
 
-    AlveoLink::common::IP ip_gen_0; 
+    AlveoLink::common::IP ip_gen_0;
     AlveoLink::common::IP ip_coll_0;
-    
+
     ip_gen_0.fpga(&fpga_card0);
-    ip_coll_0.fpga(&fpga_card1);
-    
-    ip_gen_0.getIP("generator_user_latency");
-    ip_coll_0.getIP("generator_user_latency");
-    
+    ip_coll_0.fpga(&fpga_card0);
+
+    ip_gen_0.getIP("generator_user_latency:{generator_user_latency_" + std::to_string(2) + "}");
+    ip_coll_0.getIP("generator_user_latency:{generator_user_latency_" + std::to_string(1) + "}");
+
     ip_gen_0.writeReg(0x18, 1);
-    ip_gen_0.writeReg(0x20, 20);
+    ip_gen_0.writeReg(0x20, 14);
 
     ip_coll_0.writeReg(0x18, 0);
-    ip_coll_0.writeReg(0x20, 1);
+    ip_coll_0.writeReg(0x20, 15);
 
     ip_coll_0.writeReg(0x10, 1);
     ip_gen_0.writeReg(0x10, 1);
 
     sleep(2);
     ip_gen_0.readReg(0x28);
-    std::cout << "Avarage latency:" << std::dec << ip_gen_0.readReg(0x28) * 3 << " ns" << std::endl;
+    for (int i = 0; i < 16; ++i) {
+        std::cout << "Avarage latency:" << std::dec << ip_gen_0.readReg(0x28) * 3.3333333333 << " ns" << std::endl;
+        sleep(1);
+    }
     return 0;
 }
