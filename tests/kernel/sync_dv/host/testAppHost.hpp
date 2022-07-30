@@ -60,16 +60,14 @@ class testAppHost {
                const unsigned int p_destId,
                const unsigned int p_numDevs,
                const unsigned int p_numPkts,
-               const unsigned int p_batchPkts,
-               const unsigned int p_timeOutCycles,
+               const unsigned int p_tmId,
                const unsigned int p_numTotalInts) {
         unsigned int l_argId = 4;
         m_krnlTestApp.setScalarArg(l_argId++, p_myId);
         m_krnlTestApp.setScalarArg(l_argId++, p_destId);
         m_krnlTestApp.setScalarArg(l_argId++, p_numDevs);
         m_krnlTestApp.setScalarArg(l_argId++, p_numPkts);
-        m_krnlTestApp.setScalarArg(l_argId++, p_batchPkts);
-        m_krnlTestApp.setScalarArg(l_argId++, p_timeOutCycles);
+        m_krnlTestApp.setScalarArg(l_argId++, p_tmId);
         m_krnlTestApp.setScalarArg(l_argId++, p_numTotalInts);
         m_krnlTestApp.run();
     }

@@ -82,14 +82,12 @@ void transData(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
                unsigned int p_destId,
                unsigned int p_numDevs,
                unsigned int p_numPkts,
-               unsigned int p_batchPkts,
-               unsigned int p_timeOutCycles) {
+               unsigned int p_tmId) {
 
-    AlveoLink::kernel::HopCtrlPkt<AL_netDataBits, AL_destBits> l_ctrlPkt;
+    AlveoLink::kernel::DvHopCtrlPkt<AL_netDataBits, AL_destBits> l_ctrlPkt;
     l_ctrlPkt.setSrcId(p_myId);
+    l_ctrlPkt.setTmId(p_tmId);
     l_ctrlPkt.setNumDevs(p_numDevs);
-    l_ctrlPkt.setBatchPkts(p_batchPkts);
-    l_ctrlPkt.setTimeOutCycles(p_timeOutCycles);
     l_ctrlPkt.setType(AlveoLink::kernel::PKT_TYPE::config);
     l_ctrlPkt.write(p_outStr);
 
@@ -134,8 +132,7 @@ extern "C" void krnl_testApp(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
                           unsigned int p_destId,
                           unsigned int p_numDevs,
                           unsigned int p_numPkts,
-                          unsigned int p_batchPkts,
-                          unsigned int p_timeOutCycles,
+                          unsigned int p_tmId,
                           unsigned int p_numTotalInts) {     
     POINTER(p_nHopDataSendPtr, p_nHopDataSendPtr)
     POINTER(p_nHopDataRecPtr, p_nHopDataRecPtr)
@@ -145,8 +142,7 @@ extern "C" void krnl_testApp(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
     SCALAR(p_destId)
     SCALAR(p_numDevs)
     SCALAR(p_numPkts)
-    SCALAR(p_batchPkts)
-    SCALAR(p_timeOutCycles)
+    SCALAR(p_tmId)
     SCALAR(p_numTotalInts)
     SCALAR(return)
 
@@ -154,5 +150,5 @@ extern "C" void krnl_testApp(ap_uint<AL_netDataBits>* p_nHopDataSendPtr,
     hls::stream<ap_uint<AL_netDataBits> > l_ctrlStr;
 #pragma HLS STREAM variable=l_ctrlStr depth=16
     recData(p_nHopDataRecPtr, p_inStr, l_ctrlStr, p_numTotalInts);
-    transData(p_nHopDataSendPtr, l_ctrlStr, p_outStr, p_myId, p_destId, p_numDevs, p_numPkts, p_batchPkts, p_timeOutCycles);
+    transData(p_nHopDataSendPtr, l_ctrlStr, p_outStr, p_myId, p_destId, p_numDevs, p_numPkts, p_tmId);
 }
