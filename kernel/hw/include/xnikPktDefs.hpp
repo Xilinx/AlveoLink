@@ -252,16 +252,15 @@ namespace kernel {
     class DvHopCtrlPkt : public HopPktHeader<t_DestBits> {
         public:
             static const unsigned int t_HopPktHeaderBits = HopPktHeader<t_DestBits>::t_PktBits; 
-            static const unsigned int t_CtrlPktBits = 120;
+            static const unsigned int t_CtrlPktBits = 72;
             static const unsigned int t_UnusedBits = t_NetDataBits - t_CtrlPktBits;
             static const unsigned int t_DataDestBits = t_NetDataBits + t_DestBits;
 
         public:
             DvHopCtrlPkt() {
                 m_srcId = 0;
+                m_tmId = 0;
                 m_numDevs = 0;
-                m_batchPkts = 0;
-                m_timeOutCycles = 0;
                 m_rest = 0;
             }
             ap_uint<t_NetDataBits> getCtrlPkt() {
@@ -270,8 +269,7 @@ namespace kernel {
                 l_val(t_HopPktHeaderBits-1,0) = this->getHeader();
                 l_val(t_HopPktHeaderBits+t_DestBits-1, t_HopPktHeaderBits) = m_srcId;
                 l_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits) = m_numDevs;
-                l_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits) = m_batchPkts;
-                l_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32) = m_timeOutCycles;
+                l_val(t_HopPktHeaderBits+2*t_DestBits+15, t_HopPktHeaderBits+2*t_DestBits) = m_tmId;
                 l_val(t_NetDataBits-1, t_CtrlPktBits) = m_rest;
                 return l_val;
             }
@@ -280,8 +278,7 @@ namespace kernel {
                 this->setHeader(p_val(t_HopPktHeaderBits-1,0));
                 m_srcId = p_val(t_HopPktHeaderBits+t_DestBits-1, t_HopPktHeaderBits);
                 m_numDevs = p_val(t_HopPktHeaderBits+2*t_DestBits-1, t_HopPktHeaderBits+t_DestBits);
-                m_batchPkts = p_val(t_HopPktHeaderBits+2*t_DestBits+31, t_HopPktHeaderBits+2*t_DestBits);
-                m_timeOutCycles = p_val(t_HopPktHeaderBits+2*t_DestBits+63, t_HopPktHeaderBits+2*t_DestBits+32);
+                m_tmId = p_val(t_HopPktHeaderBits+2*t_DestBits+15, t_HopPktHeaderBits+2*t_DestBits);
                 m_rest = p_val(t_NetDataBits-1, t_CtrlPktBits);
             
             }
@@ -301,21 +298,13 @@ namespace kernel {
 #pragma HLS INLINE
                 m_numDevs = p_numDevs;
             }
-            uint32_t getBatchPkts() {
+            ap_uint<t_DestBits> getTmId() {
 #pragma HLS INLINE
-                return m_batchPkts;
+                return m_tmId;
             }
-            void setBatchPkts(const uint32_t p_batchPkts) {
+            void setTmId(const ap_uint<t_DestBits>& p_tmId) {
 #pragma HLS INLINE
-                m_batchPkts = p_batchPkts;
-            }
-            uint32_t getTimeOutCycles() {
-#pragma HLS INLINE
-                return m_timeOutCycles;
-            }
-            void setTimeOutCycles(const uint32_t p_timeOutCycles) {
-#pragma HLS INLINE
-                m_timeOutCycles = p_timeOutCycles;
+                m_tmId = p_tmId;
             }
             bool readNB(hls::stream<ap_uint<t_NetDataBits> >& p_str) {
 #pragma HLS INLINE
@@ -344,9 +333,8 @@ namespace kernel {
             }
         private:
             ap_uint<t_DestBits> m_srcId;
+            ap_uint<t_DestBits> m_tmId;
             ap_uint<t_DestBits> m_numDevs;
-            uint32_t m_batchPkts;
-            uint32_t m_timeOutCycles;
             ap_uint<t_UnusedBits> m_rest;
     };
 }

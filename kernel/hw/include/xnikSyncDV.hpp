@@ -92,6 +92,19 @@ namespace kernel {
             l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate);
         }
     }
+    
+    template <unsigned int t_NetDataBits>
+    void fwdStr(hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
+        bool l_exit = false;
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_uint<t_NetDataBits> l_val = p_inStr.read();
+            p_outStr.write(l_val);
+            l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::done);
+        }
+    }
+
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
     void writeAxis(const uint16_t p_numDevs,
@@ -121,10 +134,9 @@ namespace kernel {
 #pragma HLS INLINE
                 m_state = SYNC_STATE::idle;
                 m_myId = 0;
+                m_tmId = 0;
                 m_numDevs = 0;
                 m_response = true;
-                m_batchPkts = 128;
-                m_timeOutCycles = 0;
             }
             void process(hls::stream<ap_uint<t_NetDataBits> >& p_nhop2xnikStr, 
                          hls::stream<ap_uint<t_NetDataBits> >& p_rxStr,
@@ -132,7 +144,6 @@ namespace kernel {
                          hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 
                 bool l_exit = false;
-                bool l_waitSending = false;
                 uint32_t l_batchPkts, l_timeOutCycles;
 LOOP_NHOP2XNIK:
                 while(!l_exit) {
@@ -143,13 +154,11 @@ LOOP_NHOP2XNIK:
                             if (l_ctrlPkt.readNB(p_nhop2xnikStr)) { 
                                 if (l_ctrlPkt.isConfig()) {
                                     m_myId = l_ctrlPkt.getSrcId();
+                                    m_tmId = l_ctrlPkt.getTmId();
                                     m_numDevs = l_ctrlPkt.getNumDevs();
-                                    m_batchPkts = l_ctrlPkt.getBatchPkts();
-                                    m_timeOutCycles = l_ctrlPkt.getTimeOutCycles();
-                                    l_batchPkts = m_batchPkts;
-                                    l_timeOutCycles = m_timeOutCycles;
                                     l_ctrlPkt.write(p_txStr);
                                     l_ctrlPkt.setSrcId(m_myId);
+                                    l_ctrlPkt.setTmId(m_tmId);
                                     l_ctrlPkt.setNumDevs(m_numDevs);
                                     l_ctrlPkt.setType(PKT_TYPE::start);
                                     l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
@@ -167,17 +176,11 @@ LOOP_NHOP2XNIK:
                             break;
                         case SYNC_STATE::active:
                             if (l_ctrlPkt.readNB(p_rxStr)) {
+                                if (l_ctrlPkt.isWorkload()) {
+                                    l_ctrlPkt.write2Dest(m_tmId, p_outStr);
+                                }
                                 if (l_ctrlPkt.isQueryStatus()) {
                                     m_response = true;
-                                }
-                            }
-                            else if (l_waitSending) {
-                                if (l_timeOutCycles == 0) {
-                                    l_waitSending = false;
-                                    l_timeOutCycles = m_timeOutCycles;
-                                }
-                                else {
-                                    l_timeOutCycles = l_timeOutCycles-1;
                                 }
                             }
                             else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {
@@ -192,16 +195,7 @@ LOOP_NHOP2XNIK:
                                     m_state = SYNC_STATE::state_done;
                                 }
                                 else if (l_ctrlPkt.isWorkload()) {
-                                    if (!l_waitSending) {
-                                        if (l_batchPkts == 0) {
-                                            l_waitSending = true;
-                                            l_batchPkts = m_batchPkts;
-                                        }
-                                        else {
-                                            l_batchPkts = l_batchPkts-1;
-                                        }
-                                        l_ctrlPkt.write(p_outStr);
-                                    }
+                                    l_ctrlPkt.write(p_outStr);
                                 }
                             }
                             break;
@@ -232,10 +226,8 @@ LOOP_NHOP2XNIK:
             
         private:
             SYNC_STATE m_state; 
-            ap_uint<t_DestBits> m_myId, m_numDevs;
+            ap_uint<t_DestBits> m_myId, m_tmId, m_numDevs;
             bool m_response;
-            uint32_t m_batchPkts;
-            uint32_t m_timeOutCycles;
     };
 
     template <unsigned int t_NetDataBits,
@@ -246,6 +238,7 @@ LOOP_NHOP2XNIK:
 #pragma HLS INLINE
                 m_state = SYNC_STATE::idle;
                 m_myId = 0;
+                m_tmId = 0;
             }
             void process(hls::stream<ap_uint<t_NetDataBits>  >& p_inStr,
                          hls::stream<ap_uint<t_NetDataBits> >& p_txStr,
@@ -260,6 +253,7 @@ LOOP_XNIK2NHOP:
                         case SYNC_STATE::idle:
                             if (l_ctrlPkt.readNB(p_txStr)) {//should only receive cfg pkt from txStr
                                 m_myId = l_ctrlPkt.getSrcId();
+                                m_tmId = l_ctrlPkt.getTmId();
                                 m_state = SYNC_STATE::wait_start;
                             }
                             else if (l_ctrlPkt.readNB(p_inStr)) {
@@ -288,7 +282,13 @@ LOOP_XNIK2NHOP:
                                     l_ctrlPkt.write(p_rxStr);
                                 }
                                 else if (l_ctrlPkt.isWorkload()) {
-                                    l_ctrlPkt.write(p_xnik2nhopStr);
+                                    if (!p_xnik2nhopStr.full()) {
+                                        l_ctrlPkt.write(p_xnik2nhopStr);
+                                    }
+                                    else {
+                                        l_ctrlPkt.setDest(m_tmId);
+                                        l_ctrlPkt.write(p_rxStr);
+                                    }
                                 }
 #ifdef HLS_SIM
                                 else if (l_ctrlPkt.isTerminate()) {
@@ -324,7 +324,7 @@ LOOP_XNIK2NHOP:
             }
         private:
             SYNC_STATE m_state; 
-            ap_uint<t_DestBits> m_myId;
+            ap_uint<t_DestBits> m_myId, m_tmId;
     };
     
     template <unsigned int t_NetDataBits,
