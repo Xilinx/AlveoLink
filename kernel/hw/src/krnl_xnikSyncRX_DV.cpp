@@ -33,6 +33,7 @@ extern "C" void krnl_xnikSyncRX(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_des
     hls::stream<ap_uint<AL_netDataBits> > l_netStr;
     hls::stream<ap_uint<AL_netDataBits> > l_toKernelStr;
 #pragma HLS stream variable = l_toKernelStr depth=4096
+//#pragma HLS stream variable = l_toKernelStr depth=16
 #pragma HLS bind_storage variable = l_toKernelStr type = ram_2p impl = uram
 #pragma HLS DATAFLOW
     AlveoLink::kernel::readAxis<AL_netDataBits, AL_destBits>(p_inStr, l_netStr);

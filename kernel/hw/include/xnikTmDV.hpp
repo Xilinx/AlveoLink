@@ -88,17 +88,10 @@ LOOP_TM_RECEIVING:
                               hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 #pragma HLS INLINE
     LOOP_TM_SENDING:
-                    while (m_rdAddr != m_wrAddr) {
+                    while ((m_rdAddr != m_wrAddr) && p_inStr.empty()) {
             #pragma HLS PIPELINE II=1
-                        if (!p_inStr.empty()) {
-                            ap_uint<t_NetDataBits> l_val = p_inStr.read();
-                            p_memPtr[m_wrAddr] = l_val;
-                            incrWrAddr();
-                            m_state = TM_STATE::tm_receiving;
-                            break;
-                        }
-                        ap_uint<t_NetDataBits> l_val = p_memPtr[m_rdAddr];
-                        p_outStr.write(l_val);
+                        ap_uint<t_NetDataBits> l_rdVal = p_memPtr[m_rdAddr];
+                        p_outStr.write(l_rdVal);
                         incrRdAddr();
                     }
                 }
@@ -116,7 +109,7 @@ LOOP_TM_RECEIVING:
                     m_numDevs = p_numDevs;
                     m_waitCycles = p_waitCycles;
                     m_maxAddr = p_maxAddr;
-                    while (!l_procExit) {
+                    while (!l_procExit || (m_state != TM_STATE::tm_idle)) {
 //#pragma HLS PIPELINE off
                         DvHopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
                         switch(m_state) {
@@ -136,9 +129,14 @@ LOOP_TM_RECEIVING:
 
                             case TM_STATE::tm_sending:
                                 loadPkts(p_inStr, p_memPtr, p_outStr);
-                                l_ctrlPkt.setType(PKT_TYPE::done);
-                                l_ctrlPkt.write(p_outStr);
-                                m_state = TM_STATE::tm_done;
+                                if (!p_inStr.empty()) {
+                                    m_state = TM_STATE::tm_receiving;
+                                }
+                                else {
+                                    l_ctrlPkt.setType(PKT_TYPE::done);
+                                    l_ctrlPkt.write(p_outStr);
+                                    m_state = TM_STATE::tm_done;
+                                }
                             break;
 
                         case TM_STATE::tm_done:
@@ -148,9 +146,9 @@ LOOP_TM_RECEIVING:
                                     incrWrAddr();
                                     m_state = TM_STATE::tm_receiving;
                                 }
-                                else if (l_ctrlPkt.isDone()) {
-                                    l_procExit = true;
+                                else if (l_ctrlPkt.isDoneWork()) {
                                     m_state = TM_STATE::tm_idle;
+                                    l_procExit = true;
                                 }
                              }
                         break;

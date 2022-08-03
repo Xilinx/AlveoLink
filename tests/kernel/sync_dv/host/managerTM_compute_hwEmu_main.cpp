@@ -111,8 +111,8 @@ int main(int argc, char** argv) {
                 l_transBuf[i][j+16] = (1<<31) + l_destId[i];
             }
             else {
-                l_transBuf[i][j+16] = j;
-                l_totalSum[i] += j;
+                l_transBuf[i][j+16] = i+j;
+                l_totalSum[i] = l_totalSum[i]+i+j;
             }
         }
     }
@@ -163,9 +163,9 @@ int main(int argc, char** argv) {
         }
     }
     for (auto i=0; i<2; ++i) {
-        if (l_totalSumRec[i] != l_totalSum[i]) {
+        if (l_totalSumRec[i] != l_totalSum[1-i]) {
             std::cout << "ERROR: kernel " << i << " has data errors!" << std::endl;
-            std::cout << "    INFO: total sum of data sent " << l_totalSum[i]<< " != " << l_totalSumRec[i] << " the sum of receivedintegers"  << std::endl;
+            std::cout << "    INFO: total sum of data sent " << l_totalSum[1-i]<< " != " << l_totalSumRec[i] << " the sum of receivedintegers"  << std::endl;
             l_errs++;
         }
     }

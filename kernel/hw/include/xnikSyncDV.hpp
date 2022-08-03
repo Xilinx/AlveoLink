@@ -282,7 +282,7 @@ LOOP_XNIK2NHOP:
                                     l_ctrlPkt.write(p_rxStr);
                                 }
                                 else if (l_ctrlPkt.isWorkload()) {
-                                    if (!p_xnik2nhopStr.full()) {
+                                    if (!p_xnik2nhopStr.full() || (m_myId == m_tmId)) {
                                         l_ctrlPkt.write(p_xnik2nhopStr);
                                     }
                                     else {
