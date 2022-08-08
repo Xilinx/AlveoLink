@@ -180,20 +180,78 @@ if {[dict exists ${config_info} kernels]} {
 
 puts "${__TCLID} QSFP GT pins TCL hook DONE!"
 puts "${__TCLID} Reset_100 hook DONE!"
-puts "${__TCLID} Resets hook DONE!"
+ puts "${__TCLID} Resets hook DONE!"
+ startgroup
+ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_0
+ endgroup
+ set_property -dict [list CONFIG.REG_CONFIG {12}] [get_bd_cells axis_register_slice_0]
+ copy_bd_objs /  [get_bd_cells {axis_register_slice_0}]
+ delete_bd_objs [get_bd_intf_nets HiveNet_kernel_0_tx]
+ connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_0/tx] [get_bd_intf_pins axis_register_slice_0/S_AXIS]
+ connect_bd_intf_net [get_bd_intf_pins axis_register_slice_0/M_AXIS] [get_bd_intf_pins cmac_0/S_AXIS]
+ delete_bd_objs [get_bd_intf_nets cmac_0_M_AXIS]
+ connect_bd_intf_net [get_bd_intf_pins cmac_0/M_AXIS] [get_bd_intf_pins axis_register_slice_1/S_AXIS]
+ connect_bd_intf_net [get_bd_intf_pins axis_register_slice_1/M_AXIS] [get_bd_intf_pins HiveNet_kernel_0/rx]
+ connect_bd_net [get_bd_pins axis_register_slice_1/aclk] [get_bd_pins axis_register_slice_0/aclk]
+ connect_bd_net [get_bd_pins axis_register_slice_0/aclk] [get_bd_pins clk_wiz/clk_out2]
+ connect_bd_net [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins axis_register_slice_1/aresetn]
+ connect_bd_net [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins rst_clk_wiz_300M/peripheral_aresetn]
 
+
+#startgroup
+#create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_0
+#endgroup
+#set_property -dict [list CONFIG.REG_CONFIG {12}] [get_bd_cells axis_register_slice_0]
+#copy_bd_objs /  [get_bd_cells {axis_register_slice_0}]
+#
+#delete_bd_objs [get_bd_intf_nets cmac_0_M_AXIS]
+#connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_0/rx] [get_bd_intf_pins axis_register_slice_0/M_AXIS]
+#connect_bd_intf_net [get_bd_intf_pins cmac_0/M_AXIS] [get_bd_intf_pins axis_register_slice_0/S_AXIS]
+#connect_bd_net [get_bd_pins axis_register_slice_0/aclk] [get_bd_pins clk_wiz/clk_out2]
+#connect_bd_net [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins rst_clk_wiz_333M/peripheral_aresetn]
+#
+#delete_bd_objs [get_bd_intf_nets bandwidth_kernel_1_M_AXIS]
+#connect_bd_intf_net [get_bd_intf_pins bandwidth_kernel_1/M_AXIS] [get_bd_intf_pins axis_register_slice_1/S_AXIS]
+#connect_bd_intf_net [get_bd_intf_pins axis_register_slice_1/M_AXIS] [get_bd_intf_pins cmac_0/S_AXIS]
+#connect_bd_net [get_bd_pins axis_register_slice_1/aclk] [get_bd_pins clk_wiz/clk_out2]
+#connect_bd_net [get_bd_pins axis_register_slice_1/aresetn] [get_bd_pins rst_clk_wiz_333M/peripheral_aresetn]
+
+#startgroup
+#create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 axi_register_slice_0
+#endgroup
+#set_property -dict [list CONFIG.PROTOCOL.VALUE_SRC USER] [get_bd_cells axi_register_slice_0]
+#set_property -dict [list CONFIG.PROTOCOL {AXI4LITE} CONFIG.REG_W {7} CONFIG.REG_R {7}] [get_bd_cells axi_register_slice_0]
+#set_property location {10 4546 565} [get_bd_cells axi_register_slice_0]
+#set_property location {8.5 4259 577} [get_bd_cells SLR0]
+#copy_bd_objs /  [get_bd_cells {axi_register_slice_0}]
+#delete_bd_objs [get_bd_intf_nets SLR0_M03_AXI] [get_bd_intf_nets SLR0_M04_AXI]
+#connect_bd_intf_net -boundary_type upper [get_bd_intf_pins SLR0/M03_AXI] [get_bd_intf_pins axi_register_slice_1/S_AXI]
+#connect_bd_intf_net [get_bd_intf_pins axi_register_slice_1/M_AXI] [get_bd_intf_pins cmac_0/S_AXILITE]
+#connect_bd_intf_net -boundary_type upper [get_bd_intf_pins SLR0/M04_AXI] [get_bd_intf_pins axi_register_slice_0/S_AXI]
+#connect_bd_intf_net [get_bd_intf_pins axi_register_slice_0/M_AXI] [get_bd_intf_pins cmac_1/S_AXILITE]
+#connect_bd_net [get_bd_pins axi_register_slice_0/aclk] [get_bd_pins clk_wiz/clk_out2]
+#connect_bd_net [get_bd_pins axi_register_slice_0/aresetn] [get_bd_pins rst_clk_wiz_300M/peripheral_aresetn]
+#connect_bd_net [get_bd_pins axi_register_slice_1/aclk] [get_bd_pins clk_wiz/clk_out2]
+#connect_bd_net [get_bd_pins axi_register_slice_1/aresetn] [get_bd_pins rst_clk_wiz_300M/peripheral_aresetn]
+#prop=run.impl_1.strategy=Performance_BalanceSLRs
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_2
 endgroup
-set_property -dict [list CONFIG.REG_CONFIG {12}] [get_bd_cells axis_register_slice_0]
-copy_bd_objs /  [get_bd_cells {axis_register_slice_0}]
-delete_bd_objs [get_bd_intf_nets HiveNet_kernel_0_1_tx]
-connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_0_1/tx] [get_bd_intf_pins axis_register_slice_0/S_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axis_register_slice_0/M_AXIS] [get_bd_intf_pins cmac_0_1/S_AXIS]
-delete_bd_objs [get_bd_intf_nets cmac_0_1_M_AXIS]
-connect_bd_intf_net [get_bd_intf_pins cmac_0_1/M_AXIS] [get_bd_intf_pins axis_register_slice_1/S_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axis_register_slice_1/M_AXIS] [get_bd_intf_pins HiveNet_kernel_0_1/rx]
-connect_bd_net [get_bd_pins axis_register_slice_1/aclk] [get_bd_pins axis_register_slice_0/aclk]
-connect_bd_net [get_bd_pins axis_register_slice_0/aclk] [get_bd_pins clk_wiz/clk_out3]
-connect_bd_net [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins axis_register_slice_1/aresetn]
-connect_bd_net [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins rst_clk_wiz_333M/peripheral_aresetn]
+set_property -dict [list CONFIG.REG_CONFIG {8}] [get_bd_cells axis_register_slice_2]
+copy_bd_objs /  [get_bd_cells {axis_register_slice_2}]
+delete_bd_objs [get_bd_intf_nets HiveNet_kernel_1_tx] [get_bd_intf_nets cmac_1_M_AXIS]
+connect_bd_intf_net [get_bd_intf_pins cmac_1/M_AXIS] [get_bd_intf_pins axis_register_slice_2/S_AXIS]
+connect_bd_intf_net [get_bd_intf_pins axis_register_slice_2/M_AXIS] [get_bd_intf_pins HiveNet_kernel_1/rx]
+connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_1/tx] [get_bd_intf_pins axis_register_slice_3/S_AXIS]
+connect_bd_intf_net [get_bd_intf_pins axis_register_slice_3/M_AXIS] [get_bd_intf_pins cmac_1/S_AXIS]
+connect_bd_net [get_bd_pins axis_register_slice_3/aclk] [get_bd_pins axis_register_slice_2/aclk]
+connect_bd_net [get_bd_pins axis_register_slice_2/aclk] [get_bd_pins clk_wiz/clk_out2]
+connect_bd_net [get_bd_pins axis_register_slice_2/aresetn] [get_bd_pins axis_register_slice_3/aresetn]
+connect_bd_net [get_bd_pins axis_register_slice_3/aresetn] [get_bd_pins rst_clk_wiz_300M/peripheral_aresetn]
+
+#disconnect_bd_net ${__freerunclk_connection} [get_bd_pins HiveNet_kernel_0/ref_clock]
+#disconnect_bd_net ${__freerunclk_connection} [get_bd_pins HiveNet_kernel_1/ref_clock]
+#
+#connect_bd_net [get_bd_pins ${__bd_free_running_clk}] [get_bd_pins HiveNet_kernel_0/ref_clock]
+#connect_bd_net [get_bd_pins ${__bd_free_running_clk}] [get_bd_pins HiveNet_kernel_1/ref_clock]
+#
