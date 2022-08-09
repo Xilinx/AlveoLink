@@ -5,7 +5,7 @@
 typedef ap_axiu<512,0,0,13> out_t;
 
 typedef ap_axiu<512,0,0,13> in_t;
-void generator_collector(	ap_uint<1> &gen_col_i,
+extern "C" void generator_collector(	ap_uint<1> &gen_col_i,
 						 	ap_uint<1> &start_i,
 							ap_uint<13> &id_i,
 							ap_uint<8> &byte_counter_o,

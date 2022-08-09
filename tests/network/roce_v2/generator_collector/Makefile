@@ -61,7 +61,7 @@ ifeq ($(PLATFORM),)
 PLATFORM := $(DEVICE)
 endif
 ifeq ($(PLATFORM),)
-PLATFORM := xilinx_u55c_gen3x16_xdma_2_202110_1
+PLATFORM := xilinx_u55c_gen3x16_xdma_3_202210_1 
 endif
 
 # #################### Checking if PLATFORM in whitelist ############################
@@ -131,52 +131,45 @@ EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 ########################## Kernel compiler global settings ##########################
 VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 -D AL_destBits=16 
 
-VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/roce_v2/hw/include -I $(XFLIB_DIR)/tests/network/dv/kernel
+VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/roce_v2/hw/include -I $(XFLIB_DIR)/tests/network/roce_v2/generator_collector/kernel
 
 ifeq ($(INTERFACE), 0)
 VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if0.tmp.cfg
-else ifeq ($(INTERFACE), 2)
+else ifeq ($(INTERFACE), 3)
 VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if2.tmp.cfg
 endif
 
 
 
 ######################### binary container global settings ##########################
-VPP_FLAGS_krnl_driver +=  -D KERNEL_NAME=krnl_driver
-VPP_FLAGS_krnl_driver += --hls.clock 300000000:krnl_driver
-VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
+VPP_FLAGS_generator_collector +=  -D KERNEL_NAME=generator_collector
+VPP_FLAGS_generator_collector += --hls.clock 300000000:generator_collector
 ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_krnl_driver += --clock.defaultFreqHz 200000000 
+VPP_LDFLAGS_generator_collector += --clock.defaultFreqHz 200000000 
 else
-VPP_LDFLAGS_krnl_driver += --kernel_frequency 200
+VPP_LDFLAGS_generator_collector += --kernel_frequency 200
 endif
 
 ifeq ($(HOST_ARCH), x86)
-BINARY_CONTAINERS += $(BUILD_DIR)/dvTestDriver.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/hiveNetTest.xclbin
 else
-BINARY_CONTAINERS += $(BUILD_DIR)/dvTestDriver_pkg.xclbin
-BINARY_CONTAINERS_PKG += $(BUILD_DIR)/dvTestDriver.xclbin
+BINARY_CONTAINERS += $(BUILD_DIR)/hiveNetTest_pkg.xclbin
+BINARY_CONTAINERS_PKG += $(BUILD_DIR)/hiveNetTest.xclbin
 endif
 
 # ################ Setting Rules for Binary Containers (Building Kernels) ################
-$(TEMP_DIR)/krnl_driver.xo: $(XFLIB_DIR)/tests/network/dv/kernel/krnl_driver.cpp 
-	$(ECHO) "Compiling Kernel: krnl_driver"
+$(TEMP_DIR)/generator_collector.xo: $(XFLIB_DIR)/tests/network/roce_v2/generator_collector/kernel/generator.cpp 
+	$(ECHO) "Compiling Kernel: generator_collector"
 	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_driver) $(VPP_FLAGS) -k krnl_driver -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-$(TEMP_DIR)/krnl_xnik_wide.xo: $(XFLIB_DIR)/adapter/roce_v2/hw/src/krnl_xnik_wide.cpp 
-	$(ECHO) "Compiling Kernel: krnl_xnik_wide"
-	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_xnik_wide) $(VPP_FLAGS) -k krnl_xnik_wide -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
+	$(VPP) -c $(VPP_FLAGS_generator_collector) $(VPP_FLAGS) -k generator_collector -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
-BINARY_CONTAINER_krnl_driver_OBJS += $(TEMP_DIR)/krnl_driver.xo
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_wide.xo
-BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_driver_OBJS)
-BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
+BINARY_CONTAINER_generator_collector_OBJS += $(TEMP_DIR)/generator_collector.xo
+BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_generator_collector_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)
 
 $(BINARY_CONTAINERS): $(BINARY_CONTAINERS_DEPS)
 	mkdir -p $(BUILD_DIR)
-	$(VPP) -l $(VPP_FLAGS) --temp_dir $(TEMP_DIR) --report_dir $(BUILD_REPORT_DIR)/krnl_driver $(VPP_LDFLAGS)  $(VPP_LDFLAGS_krnl_driver) $(AIE_LDFLAGS)   -o $@ $^
+	$(VPP) -l $(VPP_FLAGS) --temp_dir $(TEMP_DIR) --report_dir $(BUILD_REPORT_DIR)/generator_collector $(VPP_LDFLAGS)  $(VPP_LDFLAGS_generator_collector) $(AIE_LDFLAGS)   -o $@ $^
 
 ############################## Setting Rules for Host (Building Host Executable) ##############################
 ifeq ($(HOST_ARCH), x86)
@@ -263,8 +256,7 @@ endif
 .PHONY: xclbin
 ifeq ($(HOST_ARCH), x86)
 ifeq ($(TARGET),hw)
-#xclbin:  check_vpp check_xrt create-conf-file $(BINARY_CONTAINERS)
-xclbin:  check_vpp check_xrt create-conf-file buildcmac
+xclbin:  check_vpp check_xrt create-conf-file buildcmac $(BINARY_CONTAINERS)
 else
 xclbin:  check_vpp check_xrt $(BINARY_CONTAINERS) 
 endif
