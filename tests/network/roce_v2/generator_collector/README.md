@@ -30,13 +30,13 @@ make host TARGET=hw
 ```
 
 ### Allowed options:
-  -h, --help                          produce help message
-  -d, --dev_1 arg (=0)                Device 1 PCIe number
-  -k, --dev_2 arg (=1)                Device 2 PCIe number
-  -x, --xclbin arg (=binary_container_1.xclbin)
-  -s, --sender_id arg (=1)            sender id
-  -r, --reciver_id arg (=2)           reciver id
-  -c, --cnt arg (=32)                 packet count
+  * -h, --help                          produce help message
+  * -d, --dev_1 arg (=0)                Device 1 PCIe number
+  * -k, --dev_2 arg (=1)                Device 2 PCIe number
+  * -x, --xclbin arg (=binary_container_1.xclbin)
+  * -s, --sender_id arg (=1)            sender id
+  * -r, --reciver_id arg (=2)           reciver id
+  * -c, --cnt arg (=32)                 packet count
 
 
 
