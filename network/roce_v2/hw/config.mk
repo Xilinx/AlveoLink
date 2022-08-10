@@ -21,18 +21,17 @@ XUPDIR=$(AL_PATH)/../xup_vitis_network_example
 CMACDIR=$(XUPDIR)/Ethernet
 NETLAYERDIR=$(AL_PATH)/network/roce_v2/hw/HiveNet
 
-XSA := $(DEVICE)
-TEMP_DIR := _x.$(XSA)
+TEMP_DIR := _x.$(PLATFORM_NAME)
 
 # Include cmac and HiveNet IPs depending on the interface
 ifeq (3,$(INTERFACE))
 	LIST_XO += $(CMACDIR)/$(TEMP_DIR)/cmac_0.xo
 	LIST_XO += $(CMACDIR)/$(TEMP_DIR)/cmac_1.xo
-	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kerel_0.xo
-	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kerel_1.xo
+	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kernel_0.xo
+	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kernel_1.xo
 else
 	LIST_XO += $(CMACDIR)/$(TEMP_DIR)/cmac_$(INTERFACE).xo
-	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kerel_0.xo
+	LIST_XO += $(NETLAYERDIR)/build/HiveNet_kernel_0.xo
 endif
 
 POSTSYSLINKTCL ?= $(shell readlink -f $(ROCEV2_DIR)/hw/post_sys_link.tcl)
@@ -51,25 +50,26 @@ create-conf-file: $(CUR_DIR)/conn_u55c_if2.cfg
 endif
 
 
-# Building IPs 
-buildcmac: $(XUPDIR)
+# Building IPs
+ultraclean:
+	rm -rf $(XUPDIR) 
+	rm -rf $(NETLAYERDIR)/build/*.xo
 
-$(CMACDIR)/$(TEMP_DIR)/%.xo:
+buildcmac: $(XUPDIR)
 	make -C $(CMACDIR) all DEVICE=$(DEVICE) INTERFACE=$(INTERFACE)
 
+
 ifeq ($(INTERFACE), 0)
-$(NETLAYERDIR)/build/%.xo:
-	$(XILINX_VIVADO)/bin/vivado -mode batch -source HiveNet_bd.tcl -tclargs $(NETLAYERDIR)/src 0 0
+buildhivenet:
 else ifeq ($(INTERFACE), 3)
-$(NETLAYERDIR)/build/HiveNet_kerel_0.xo:
-	$(XILINX_VIVADO)/bin/vivado -mode batch -source HiveNet_bd.tcl -tclargs $(NETLAYERDIR)/src 0 0
-$(NETLAYERDIR)/build/HiveNet_kerel_1.xo:
-	$(XILINX_VIVADO)/bin/vivado -mode batch -source HiveNet_bd.tcl -tclargs $(NETLAYERDIR)/src 1 3
+buildhivenet:
+	cd $(ROCEV2_DIR)/hw && ./build_hivenet.sh def
+	cd $(CUR_DIR)
 endif
 
 $(XUPDIR):
 	git clone https://github.com/Xilinx/xup_vitis_network_example.git $(XUPDIR)
 	cd $(XUPDIR)
-	git checkout @{c16cba6598099f87e203659d7f8d6a536d97ef86}
+	#git checkout @{c16cba6598099f87e203659d7f8d6a536d97ef86}
 	cp $(ROCEV2_DIR)/hw/cmac/template.xml $(CMACDIR)
 	cp $(ROCEV2_DIR)/hw/cmac/bd_cmac.tcl $(CMACDIR) 

@@ -70,9 +70,6 @@ PLATFORM_BLOCKLIST +=  zc
 
 include ./utils.mk
 
-ifeq ($(TARGET),hw)
-include $(XFLIB_DIR)/network/roce_v2/hw/config.mk
-endif
 
 TEMP_DIR := _x_temp.$(TARGET).$(PLATFORM_NAME)
 TEMP_REPORT_DIR := $(CUR_DIR)/reports/_x.$(TARGET).$(PLATFORM_NAME)
@@ -81,6 +78,10 @@ BUILD_REPORT_DIR := $(CUR_DIR)/reports/_build.$(TARGET).$(PLATFORM_NAME)
 EMCONFIG := $(BUILD_DIR)/emconfig.json
 XCLBIN_DIR := $(CUR_DIR)/$(BUILD_DIR)
 export XCL_BINDIR = $(XCLBIN_DIR)
+
+ifeq ($(TARGET),hw)
+include $(XFLIB_DIR)/network/roce_v2/hw/config.mk
+endif
 
 EXE_FILE_DEPS :=
 BINARY_CONTAINERS_DEPS :=
@@ -134,9 +135,9 @@ VPP_FLAGS +=  -D AL_mtuBytes=1472 -D AL_maxConnections=16 -D AL_netDataBits=512 
 VPP_FLAGS +=  -I $(XFLIB_DIR)/common/hw/include -I $(XFLIB_DIR)/kernel/hw/include -I $(XFLIB_DIR)/adapter/roce_v2/hw/include -I $(XFLIB_DIR)/tests/network/roce_v2/generator_collector/kernel
 
 ifeq ($(INTERFACE), 0)
-VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if0.tmp.cfg
+VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55c_if0.tmp.cfg
 else ifeq ($(INTERFACE), 3)
-VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55_if2.tmp.cfg
+VPP_LDFLAGS += --config $(CUR_DIR)/conn_u55c_if2.tmp.cfg
 endif
 
 
@@ -144,11 +145,11 @@ endif
 ######################### binary container global settings ##########################
 VPP_FLAGS_generator_collector +=  -D KERNEL_NAME=generator_collector
 VPP_FLAGS_generator_collector += --hls.clock 300000000:generator_collector
-ifneq ($(HOST_ARCH), x86)
-VPP_LDFLAGS_generator_collector += --clock.defaultFreqHz 200000000 
-else
-VPP_LDFLAGS_generator_collector += --kernel_frequency 200
-endif
+#ifneq ($(HOST_ARCH), x86)
+#VPP_LDFLAGS_generator_collector += --clock.defaultFreqHz 200000000 
+#else
+#VPP_LDFLAGS_generator_collector += --kernel_frequency 200
+#endif
 
 ifeq ($(HOST_ARCH), x86)
 BINARY_CONTAINERS += $(BUILD_DIR)/hiveNetTest.xclbin
@@ -256,7 +257,7 @@ endif
 .PHONY: xclbin
 ifeq ($(HOST_ARCH), x86)
 ifeq ($(TARGET),hw)
-xclbin:  check_vpp check_xrt create-conf-file buildcmac $(BINARY_CONTAINERS)
+xclbin:  check_vpp check_xrt create-conf-file buildcmac buildhivenet $(BINARY_CONTAINERS)
 else
 xclbin:  check_vpp check_xrt $(BINARY_CONTAINERS) 
 endif
@@ -275,7 +276,7 @@ cleank:
 	-$(RMDIR) _x_temp.*/dltmp* _x_temp.*/kernel_info.dat _x_temp.*/*.log
 	-$(RMDIR) _x_temp.* 
 
-cleanall: cleanh cleank
+cleanall: cleanh cleank ultraclean
 	-$(RMDIR) $(BUILD_DIR)  build_dir.* emconfig.json *.html $(TEMP_DIR) $(CUR_DIR)/reports *.csv *.run_summary  $(CUR_DIR)/*.raw package_*   $(BUILD_DIR)/run_script.sh .ipcache *.str
 	-$(RMDIR) $(XFLIB_DIR)/common/data/*.xe2xd* $(XFLIB_DIR)/common/data/*.orig*
 	-$(RMDIR)  $(CUR_DIR)/Work $(CUR_DIR)/*.xpe $(CUR_DIR)/hw.o $(CUR_DIR)/*.xsa $(CUR_DIR)/xnwOut
