@@ -40,10 +40,7 @@ class HiveNet : public AlveoLink::common::IP {
             "HiveNet_kernel_" + std::to_string(p_id) /*+ ":{HiveNet_kernel_" + std::to_string(p_id) + "}"*/;
         this->getIP(l_cuName);
         resetARPTable();
-        setLocalID(1);
         setTimeOut(0xffff);
-        setIPSubnet(0x0000a8c0);
-        setMACSubnet(0x665544332211);
         setNretranssmitions(0x3);
         setUDPPort(0x12b7);
     }

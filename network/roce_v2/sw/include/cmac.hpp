@@ -53,9 +53,15 @@ class KernelCMAC : public AlveoLink::common::IP {
     }
     void turnOn_RS_FEC(bool enable_fec) {
         if (enable_fec) {
-            this->writeReg(rsfec_config_enable, 0x3);
+            if (!get_RS_FEC_enable()) {
+                this->writeReg(rsfec_config_enable, 0x3);
+                sleep(5);
+            }
         } else {
-            this->writeReg(rsfec_config_enable, 0);
+            if (get_RS_FEC_enable()) {
+                this->writeReg(rsfec_config_enable, 0x0);
+                sleep(5);
+            }
         }
     }
     bool get_RS_FEC_enable() {

@@ -116,16 +116,11 @@ CXXFLAGS += -D HW_EMU_TEST
 endif
 
 #Inclue Required Host Source Files
-ifeq ($(TARGET),hw)
-HOST_SRCS += $(XFLIB_DIR)/tests/network/dv/host/driver_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
-endif
-CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2
-CXXFLAGS +=  -I $(XFLIB_DIR)/tests/network/dv/host -I $(XFLIB_DIR)/network/dv/sw/include -I $(XFLIB_DIR)/common/sw/include
-#CXXFLAGS += -O3 
-CXXFLAGS += -g -O0 
-CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
+HOST_SRCS += $(CUR_DIR)/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 
-EXE_NAME := driver.exe
+CXXFLAGS += -I$(CUR_DIR)/host/ -I $(XFLIB_DIR)/common/sw/include -I $(XFLIB_DIR)/network/roce_v2/sw/include
+
+EXE_NAME := HiveNet_test.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
 
