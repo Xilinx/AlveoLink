@@ -30,47 +30,10 @@ constexpr size_t stat_rx_status = 0x0204;
 class KernelCMAC : public AlveoLink::common::IP {
    public:
     KernelCMAC() = default;
-    void initCU(const unsigned int p_id) {
-        std::string l_cuName = "cmac_" + std::to_string(p_id);
-        this->getIP(l_cuName);
-    }
-    std::map<std::string, bool> linkStatus() {
-        std::map<std::string, bool> status_dict;
-        uint32_t l_rxStatus = this->readReg(stat_rx_status);
-        std::bitset<32> l_rxBits(l_rxStatus);
-        uint32_t l_txStatus = this->readReg(stat_tx_status);
-        std::bitset<32> l_txBits(l_txStatus);
-        status_dict.insert({"rx_status", l_rxBits.test(0)});
-        status_dict.insert({"rx_aligned", l_rxBits.test(1)});
-        status_dict.insert({"rx_misaligned", l_rxBits.test(2)});
-        status_dict.insert({"rx_aligned_err", l_rxBits.test(3)});
-        status_dict.insert({"rx_hi_ber", l_rxBits.test(4)});
-        status_dict.insert({"rx_remote_fault", l_rxBits.test(5)});
-        status_dict.insert({"rx_local_fault", l_rxBits.test(6)});
-        status_dict.insert({"rx_got_signal_os", l_rxBits.test(14)});
-        status_dict.insert({"tx_local_fault", l_txBits.test(0)});
-        return status_dict;
-    }
-    void turnOn_RS_FEC(bool enable_fec) {
-        if (enable_fec) {
-            if (!get_RS_FEC_enable()) {
-                this->writeReg(rsfec_config_enable, 0x3);
-                sleep(5);
-            }
-        } else {
-            if (get_RS_FEC_enable()) {
-                this->writeReg(rsfec_config_enable, 0x0);
-                sleep(5);
-            }
-        }
-    }
-    bool get_RS_FEC_enable() {
-        unsigned short enable_fec_status = this->readReg(rsfec_config_enable);
-        if (enable_fec_status == 0x3)
-            return true;
-        else
-            return false;
-    }
+    void initCU(const unsigned int p_id);
+    std::map<std::string, bool> linkStatus();
+    void turnOn_RS_FEC(bool enable_fec);
+    bool get_RS_FEC_enable();
 };
 }
 }

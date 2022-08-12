@@ -116,7 +116,7 @@ CXXFLAGS += -D HW_EMU_TEST
 endif
 
 #Inclue Required Host Source Files
-HOST_SRCS += $(CUR_DIR)/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
+HOST_SRCS += $(CUR_DIR)/host/main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp $(XFLIB_DIR)/network/roce_v2/sw/src/HiveNet.cpp $(XFLIB_DIR)/network/roce_v2/sw/src/cmac.cpp
 
 CXXFLAGS += -I$(CUR_DIR)/host/ -I $(XFLIB_DIR)/common/sw/include -I $(XFLIB_DIR)/network/roce_v2/sw/include
 
