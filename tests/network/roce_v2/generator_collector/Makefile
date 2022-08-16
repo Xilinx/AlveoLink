@@ -103,7 +103,7 @@ VPP_FLAGS += -t $(TARGET) --platform $(XPLATFORM) --save-temps
 VPP_LDFLAGS += --optimize 2 -R 2 
 #VPP_LDFLAGS += --debug.chipscope dv_adapter0:tx_axis --debug.chipscope dv_adapter0:rx_axis
 endif
-CXXFLAGS += $(EXTRA_CXXFLAGS)
+CXXFLAGS += -g -O0 
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)
 
 ########################## Setting up Host Variables ##########################

@@ -24,8 +24,8 @@
 #include <ctime>
 #include <stdint.h>
 
-#include "HiveNet.hpp"
-#include "cmac.hpp"
+#include "netLayer.hpp"
+#include "genColHost.hpp"
 #include "popl.hpp"
 
 using namespace popl;
@@ -36,8 +36,7 @@ int main(int argc, char** argv) {
     auto devID_1 = op.add<Value<int>, Attribute::optional>("d", "dev_1", "Device 1 PCIe number", 0);
     auto devID_2 = op.add<Value<int>, Attribute::optional>("k", "dev_2", "Device 2 PCIe number", 1);
     auto xclbin = op.add<Value<std::string> >("x", "xclbin", "xclbin", "build_dir.hw.xilinx_u55c_gen3x16_xdma_3_202210_1/binary_container_1.xclbin");
-    auto sender_ID = op.add<Value<int> >("s", "sender_id", "sender id", 1);
-    auto reciver_ID = op.add<Value<int> >("r", "reciver_id", "reciver id", 2);
+    auto sender_ID = op.add<Value<int> >("s", "sender_id", "sender id", 1); //sender device id
     auto packet_cnt = op.add<Value<int> >("c", "cnt", "packet count", 32);
 
     op.parse(argc, argv);
@@ -54,150 +53,84 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    if (reciver_ID->value() == sender_ID->value()) {
-        std::cout << "ERROR: Same ID for both sending and reciving" << std::endl;
-        return -1;
-    }
-
-    AlveoLink::common::FPGA fpga_card0, fpga_card1;
-    fpga_card0.setId(devID_1->value());
-    fpga_card1.setId(devID_2->value());
-    
-    AlveoLink::network_roce_v2::HiveNet hivenet0, hivenet1;
-    AlveoLink::network_roce_v2::KernelCMAC cmac_0, cmac_1;
-    AlveoLink::common::IP ip_gen;
-    AlveoLink::common::IP ip_coll;
-
-
+    AlveoLink::common::FPGA fpga_card[2];
+    fpga_card[0].setId(devID_1->value());
+    fpga_card[1].setId(devID_2->value());
+   
+    AlveoLink::network_roce_v2::NetLayer<2> l_netLayer[2];
+ 
     std::cout << "Loading xclbin to FPGA_" << devID_1->value() << std::endl;
-    fpga_card0.load_xclbin(xclbin->value());
+    fpga_card[0].load_xclbin(xclbin->value());
     std::cout << "Loading xclbin to FPGA_" << devID_2->value() << std::endl;
-    fpga_card1.load_xclbin(xclbin->value());
+    fpga_card[1].load_xclbin(xclbin->value());
 
-    if (sender_ID->value() == 1 || sender_ID->value() == 2) {
-        std::cout << "Configuring sender HiveNet on Fpga_" << 0 << std::endl;
-        hivenet0.fpga(&fpga_card0);
-        hivenet0.initCU((sender_ID->value()) % 2);
-        hivenet0.setIPSubnet(0x0000a8c0);
-        hivenet0.setMACSubnet(0x347844332211);
-        hivenet0.setLocalID(sender_ID->value());
-
-        std::cout << "Configuring Cmac on Fpga_" << 0 << std::endl;
-        cmac_0.fpga(&fpga_card0);
-        cmac_0.initCU((sender_ID->value()) % 2);
-        ip_gen.fpga(&fpga_card0);
-        ip_gen.getIP("generator_collector:{generator_collector_" + std::to_string((sender_ID->value()) % 2) + "}");
-
-    } else {
-        std::cout << "Configuring sender HiveNet on Fpga_" << 1 << std::endl;
-        hivenet0.fpga(&fpga_card1);
-        hivenet0.initCU((sender_ID->value()) % 2);
-        hivenet0.setIPSubnet(0x0000a8c0);
-        hivenet0.setMACSubnet(0x347844332211);
-        hivenet0.setLocalID(sender_ID->value());
-
-        std::cout << "Configuring Cmac on Fpga_" << 1 << std::endl;
-        cmac_0.fpga(&fpga_card1);
-        cmac_0.initCU((sender_ID->value()) % 2);
-        ip_gen.fpga(&fpga_card1);
-        ip_gen.getIP("generator_collector:{generator_collector_" + std::to_string((sender_ID->value()) % 2) + "}");
+    for (auto i=0; i<2; ++i) {
+        l_netLayer[i].init(&(fpga_card[i]));
+        for (auto j=0; j<2; ++j) {
+            l_netLayer[i].setIPSubnet(j, 0x0000a8c0);
+            l_netLayer[i].setMACSubnet(j, 0x347844332211);
+            l_netLayer[i].setID(j, i*2+j);
+        }
+    }
+    unsigned int l_totalDevLinksUp = 0;
+    while (l_totalDevLinksUp < 2) {
+        std::cout << "INFO: Waiting for links up on device " << l_totalDevLinksUp << std::endl;
+        if (l_netLayer[l_totalDevLinksUp].linksUp()) {
+            l_totalDevLinksUp++;
+        }
+    }
+    for (auto i=0; i<2; ++i) {
+        for (auto j=0; j<2; ++j) {
+            std::cout <<"INFO: turn on RS_FEC for device " << i << " port " <<j << std::endl;
+            l_netLayer[i].turnOn_RS_FEC(j, true);
+        }
     }
 
-    if (reciver_ID->value() == 1 || reciver_ID->value() == 2) {
-        std::cout << "Configuring reciver HiveNet on Fpga_" << 0 << std::endl;
-        hivenet0.fpga(&fpga_card0);
-        hivenet0.initCU((reciver_ID->value()) % 2);
-        hivenet0.setIPSubnet(0x0000a8c0);
-        hivenet0.setMACSubnet(0x347844332211);
-        hivenet0.setLocalID(reciver_ID->value());
-
-        std::cout << "Configuring Cmac on Fpga_" << 0 << std::endl;
-        cmac_1.fpga(&fpga_card0);
-        cmac_1.initCU((reciver_ID->value()) % 2);
-        ip_coll.fpga(&fpga_card0);
-        ip_coll.getIP("generator_collector:{generator_collector_" + std::to_string((reciver_ID->value()) % 2) + "}");
-
-    } else {
-        std::cout << "Configuring reciver HiveNet on Fpga_" << 1 << std::endl;
-        hivenet0.fpga(&fpga_card1);
-        hivenet0.initCU((reciver_ID->value()) % 2);
-        hivenet0.setIPSubnet(0x0000a8c0);
-        hivenet0.setMACSubnet(0x347844332211);
-        hivenet0.setLocalID(reciver_ID->value());
-
-        std::cout << "Configuring Cmac on Fpga_" << 0 << std::endl;
-        cmac_1.fpga(&fpga_card1);
-        cmac_1.initCU((reciver_ID->value()) % 2);
-
-        ip_coll.fpga(&fpga_card0);
-        ip_coll.getIP("generator_collector:{generator_collector_" + std::to_string((reciver_ID->value()) % 2) + "}");
+    genColHost<2> l_genColHost[2];
+    unsigned int l_genCol[2][2];
+    unsigned int l_id[2][2];
+    unsigned int l_numPkts[2][2];
+    for (auto i=0; i<2; ++i) {
+        for (auto j=0; j<2; ++j) {
+            l_id[i][j] = i*2+j;
+            if (sender_ID->value() == i) {
+                l_genCol[i][j] = 1;
+            }
+            else {
+                l_genCol[i][j] = 0;
+            }
+            l_numPkts[i][j] = packet_cnt->value();
+        }
+    }
+    for (auto i=0; i<2; ++i) {
+        l_genColHost[i].init(&(fpga_card[i]));
+        if (l_genCol[i][0] == 0) {
+            std::cout << "INFO: start collectors on device " << i << std::endl;
+            l_genColHost[i].runCollectors(l_genCol[i], l_id[i], l_numPkts[i]);
+        }
+    }
+    for (auto i=0; i<2; ++i) {
+        if (l_genCol[i][0] == 1) {
+            std::cout << "INFO: start generators on device " << i << std::endl;
+            l_genColHost[i].runGenerators(l_genCol[i], l_id[1-i], l_numPkts[i]);
+        }
+    }
+    for (auto i=0; i<2; ++i) {
+        l_genColHost[i].finish();
     }
 
-    std::cout << "Configuring RS-FEC on Cmac_0" << std::endl;
-    cmac_0.turnOn_RS_FEC(true);
-    std::cout << "Configuring RS-FEC on Cmac_1" << std::endl;
-    cmac_1.turnOn_RS_FEC(true);
-
-    std::cout << "Waiting for links on cmacs" << std::endl;
-    for (int i = 0; i < 16; ++i) {
-        int link = 0;
-        auto cmac_0_link_status = cmac_0.linkStatus();
-
-        auto it_0 = cmac_0_link_status.find("rx_aligned");
-        if (it_0 != cmac_0_link_status.end()) {
-            std::cout << "Cmac_0 rx_aligned: " << it_0->second << std::endl;
-            if (it_0->second) {
-                link++;
+    unsigned int l_errors[2];
+    for (auto i=0; i<2; ++i) {
+        if (l_genCol[i][0] == 0) {
+            l_genColHost[i].getErrors(l_errors);
+            for (auto j=0; j<2; ++j) {
+                if (l_errors[j] != 0) {
+                    std::cout << "ERROR: device " << i << " port " <<j <<" has collector errors." << std::endl;
+                    return EXIT_FAILURE;
+                }
             }
         }
-
-        auto cmac_1_link_status = cmac_1.linkStatus();
-
-        auto it_1 = cmac_1_link_status.find("rx_aligned");
-        if (it_1 != cmac_1_link_status.end()) {
-            std::cout << "Cmac_1 rx_aligned: " << it_1->second << std::endl;
-            if (it_1->second) {
-                link++;
-            }
-        }
-        if (link == 2) {
-            break;
-        }
-        std::cout << "\n";
-        sleep(1);
     }
-
-    ip_gen.writeReg(0x18, 0);  // reset
-    ip_coll.writeReg(0x18, 0); // reset
-
-    ip_gen.writeReg(0x10, 1);                   // using this as generator
-    ip_gen.writeReg(0x20, reciver_ID->value()); // remote ID
-    ip_gen.writeReg(0x48, packet_cnt->value()); // cnt
-
-    ip_coll.writeReg(0x10, 0); // using this as collector
-
-    ip_coll.writeReg(0x20, reciver_ID->value()); // remote ID
-
-    ip_coll.writeReg(0x18, 1); // start
-    ip_gen.writeReg(0x18, 1);  // start
-    sleep(1);
-
-    std::cout << std::endl << std::endl << "Packet sent:" << std::dec << ip_gen.readReg(0x38) << std::endl;
-    std::cout << "Packet recived:" << std::dec << ip_coll.readReg(0x38) << std::endl;
-    std::cout << "Error:" << std::dec << ip_coll.readReg(0x50) << std::endl << std::endl;
-
-    if (ip_gen.readReg(0x38) == ip_coll.readReg(0x38)) {
-        std::cout << "Packet count match:  PASS" << std::endl;
-    } else {
-        std::cout << "Packet count missmatch:  FAIL" << std::endl;
-        std::cout << "Errors:  FAIL" << std::endl;
-        return -1;
-    }
-
-    if (ip_coll.readReg(0x50) == 0) {
-        std::cout << "No Errors:  PASS" << std::endl;
-    } else {
-        std::cout << "Errors:  FAIL" << std::endl;
-    }
-    return 0;
+    std::cout <<"Test pass!" << std::endl;
+    return EXIT_SUCCESS;
 }
