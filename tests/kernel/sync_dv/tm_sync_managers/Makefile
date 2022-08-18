@@ -55,6 +55,7 @@ XFLIB_DIR = $(XF_PROJ_ROOT)
 # setting devault value
 TARGET ?= hw
 HOST_ARCH ?= x86
+TM ?= 1
 
 #setting PLATFORM
 ifeq ($(PLATFORM),)

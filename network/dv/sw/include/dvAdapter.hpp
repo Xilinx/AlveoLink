@@ -118,6 +118,7 @@ class dvAdapter : public AlveoLink::common::IP {
                 }
             }
             int l_status = readReg(IdStatus);
+            std::cout <<"INFO: hex value of reg 0x0c is: " << std::hex << l_status << std::endl;
             int l_laneStatus = l_status;
             for (auto i=0; i<4; ++i) {
                 if (((l_laneStatus >> i) & 0x01) == 1) {
@@ -130,6 +131,9 @@ class dvAdapter : public AlveoLink::common::IP {
             m_linkUp = m_laneStatus.all(); 
             int l_ids01 = readReg(CardID01);
             int l_ids23 = readReg(CardID23);
+            std::cout <<"INFO: hex value of reg 0x10 is: " << std::hex << l_ids01 << std::endl;
+            std::cout <<"INFO: hex value of reg 0x14 is: " << std::hex << l_ids23 << std::endl;
+            std::cout << std::dec;
             m_laneIds[0] = l_ids01 & 0x0ff;
             m_laneIds[1] = (l_ids01 >> 16) & 0x0ff;
             m_laneIds[2] = l_ids23 & 0x0ff;

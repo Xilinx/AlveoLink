@@ -20,7 +20,11 @@ INTERFACE ?= 0
 XSA := $(DEVICE)
 TEMP_DIR := _x.$(XSA)
 
+ifeq ($(TM), 1)
+LIST_XO := $(DVDIR)/dva0_1src.xo
+else
 LIST_XO := $(DVDIR)/dv_adapter0.xo
+endif
 
 ifeq ($(INTERFACE), 2)
 LIST_XO += $(DVDIR)/dv_adapter1.xo
