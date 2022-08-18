@@ -1,3 +1,0 @@
-[submodule "network/udp/hw/vnx"]
-	path = network/udp/hw/vnx
-	url = https://github.com/Xilinx/xup_vitis_network_example

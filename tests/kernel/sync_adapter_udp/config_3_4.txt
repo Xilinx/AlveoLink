@@ -1,3 +1,0 @@
-xsj-dxgradb03 192.168.1.131 /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_adapter_udp/krnl_xnikSyncAdapter.xclbin  0
-xsj-dxgradb03 192.168.1.141 /proj/rdi-xsj/staff/lingl/nobkup/xclbins/sync_adapter_udp/krnl_xnikSyncAdapter.xclbin  1
-xsj-dxgradb04 192.168.1.151 /proj/rdi-xsj/staff/lingl/nobkup/xclbins/hw_manager/krnl_xnikSyncManager.xclbin  0
