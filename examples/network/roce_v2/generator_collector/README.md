@@ -2,7 +2,7 @@
 
 This example illustrates how to use HiveNet IP in an Vitis design. The diagram below shows the system implemented in this example design.
 
-![](img/hivenet_gencol.png)
+![](../../../../img/hivenet_gencol.png)
 
 This example design is realized on 2 Alveo U55C cards. Each card has 2 QSFP ports, in total 4 QSFP ports, which are connected to a commericial ethernet switch. 4 CUs (Compute Units) of Vitis HLS kernel generator_collector are connected to their corresponding QSFP ports via HiveNet IPs and CMAC IPs. These 4 CUs communication with each other via Ethernet. The host code controls the communication patterns. For example, which CU sends packets, which CU receives packets and the number of packets being tranmitted etc. 
 

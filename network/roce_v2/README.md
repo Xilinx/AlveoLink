@@ -14,7 +14,7 @@ HiveNet IP provides low latency, high bandwidth and lossless transmission over t
 
 The diagram below shows the interfaces of HiveNet.
 
-![](img/hivenet.png) 
+![](../../img/hivenet.png) 
 
 * inputData (AXI4-Stream)
 
@@ -44,5 +44,5 @@ The diagram below shows the interfaces of HiveNet.
 
 ## Software APIs
 
-The following software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host cdoe. 
+The software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host cdoe. 
 
