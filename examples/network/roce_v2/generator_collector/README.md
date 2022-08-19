@@ -90,7 +90,7 @@ navigate to examples/network/roce_v2/generator_collector
 
 change "your_hostname" in the following command to your host machine name
 
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_3_202210_1/your_hostname/HiveNet_test.exe -x build_dir.hw.xilinx_u55c_gen3x16_xdma_3_202210_1/hiveNetTest.xclbin -s 0 -c 53
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_3_202210_1/your_hostname/HiveNet_test.exe -x build_dir.hw.xilinx_u55c_gen3x16_xdma_3_202210_1/your_hostname/hiveNetTest.xclbin -s 0 -c 53
 ```
 
 #### Allowed options:
