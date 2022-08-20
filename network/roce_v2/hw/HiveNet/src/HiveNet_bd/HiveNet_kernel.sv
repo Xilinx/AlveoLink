@@ -68,7 +68,7 @@ module HiveNet_kernel
     S00_AXI_0_wvalid,
     ap_clk,
     ref_clock,
-    ap_clk_300,
+    ap_clk_320,
     ap_rst_n,
     inputData_tdata,
     inputData_tdest,
@@ -84,7 +84,7 @@ module HiveNet_kernel
     outData_tready,
     outData_tstrb,
     outData_tvalid,
-    resetn_300,
+    resetn_320,
     rx_tdata,
     rx_tkeep,
     rx_tlast,
@@ -155,7 +155,7 @@ module HiveNet_kernel
   input S00_AXI_0_wvalid;
   input ap_clk;
   input ref_clock;
-  input ap_clk_300;
+  input ap_clk_320;
   input ap_rst_n;
   input [511:0]inputData_tdata;
   input [12:0]inputData_tdest;
@@ -171,7 +171,7 @@ module HiveNet_kernel
   input outData_tready;
   output [63:0]outData_tstrb;
   output outData_tvalid;
-  input resetn_300;
+  input resetn_320;
   input [511:0]rx_tdata;
   input [63:0]rx_tkeep;
   input rx_tlast;
@@ -243,7 +243,7 @@ module HiveNet_kernel
   wire S00_AXI_0_wvalid;
   wire ap_clk;
   wire ref_clock;
-  wire ap_clk_300;
+  wire ap_clk_320;
   wire ap_rst_n;
   wire [511:0]inputData_tdata;
   wire [12:0]inputData_tdest;
@@ -259,7 +259,7 @@ module HiveNet_kernel
   wire outData_tready;
   wire [63:0]outData_tstrb;
   wire outData_tvalid;
-  wire resetn_300;
+  wire resetn_320;
   wire [511:0]rx_tdata;
   wire [63:0]rx_tkeep;
   wire rx_tlast;
@@ -332,7 +332,7 @@ module HiveNet_kernel
         .S00_AXI_0_wvalid(S00_AXI_0_wvalid),
         .ap_clk(ap_clk),
         .ref_clock(ref_clock),
-        .ap_clk_300(ap_clk_300),
+        .ap_clk_320(ap_clk_320),
         .ap_rst_n(ap_rst_n),
         .inputData_tdata(inputData_tdata),
         .inputData_tdest(inputData_tdest),
@@ -348,7 +348,7 @@ module HiveNet_kernel
         .outData_tready(outData_tready),
         .outData_tstrb(outData_tstrb),
         .outData_tvalid(outData_tvalid),
-        .resetn_300(resetn_300),
+        .resetn_320(resetn_320),
         .rx_tdata(rx_tdata),
         .rx_tkeep(rx_tkeep),
         .rx_tlast(rx_tlast),

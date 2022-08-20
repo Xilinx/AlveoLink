@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>xilinx.com</spirit:vendor>
-  <spirit:library>hls</spirit:library>
+  <spirit:vendor>grovf.com</spirit:vendor>
+  <spirit:library>libhivenet</spirit:library>
   <spirit:name>rx_qp</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
@@ -356,7 +356,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>6b850d67</spirit:value>
+            <spirit:value>eff204e7</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -372,7 +372,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>5b75f188</spirit:value>
+            <spirit:value>c96a91d8</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -383,20 +383,6 @@
         <spirit:fileSetRef>
           <spirit:localName>xilinx_documentation_view_fileset</spirit:localName>
         </spirit:fileSetRef>
-      </spirit:view>
-      <spirit:view>
-        <spirit:name>xilinx_block_diagram</spirit:name>
-        <spirit:displayName>Block Diagram</spirit:displayName>
-        <spirit:envIdentifier>:vivado.xilinx.com:block.diagram</spirit:envIdentifier>
-        <spirit:fileSetRef>
-          <spirit:localName>xilinx_block_diagram_view_fileset</spirit:localName>
-        </spirit:fileSetRef>
-        <spirit:parameters>
-          <spirit:parameter>
-            <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>4d9b6413</spirit:value>
-          </spirit:parameter>
-        </spirit:parameters>
       </spirit:view>
       <spirit:view>
         <spirit:name>xilinx_xpgui</spirit:name>
@@ -800,6 +786,12 @@
     <spirit:fileSet>
       <spirit:name>xilinx_verilogsynthesis_view_fileset</spirit:name>
       <spirit:file>
+        <spirit:name>constraints/rx_qp.xdc</spirit:name>
+        <spirit:userFileType>xdc</spirit:userFileType>
+        <spirit:userFileType>USED_IN_implementation</spirit:userFileType>
+        <spirit:userFileType>USED_IN_synthesis</spirit:userFileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>constraints/rx_qp_ooc.xdc</spirit:name>
         <spirit:userFileType>xdc</spirit:userFileType>
         <spirit:userFileType>USED_IN_out_of_context</spirit:userFileType>
@@ -809,8 +801,8 @@
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/verilog/rx_qp_msn_V_ram.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:name>hdl/verilog/rx_qp_msn_V_ram.dat</spirit:name>
+        <spirit:userFileType>mif</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/verilog/rx_qp_regslice_both.v</spirit:name>
@@ -819,7 +811,7 @@
       <spirit:file>
         <spirit:name>hdl/verilog/rx_qp.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_be9d5a4f</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_809d3bef</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -830,9 +822,8 @@
         <spirit:userFileType>USED_IN_ipstatic</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/verilog/rx_qp_msn_V_ram.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>USED_IN_ipstatic</spirit:userFileType>
+        <spirit:name>hdl/verilog/rx_qp_msn_V_ram.dat</spirit:name>
+        <spirit:userFileType>mif</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/verilog/rx_qp_regslice_both.v</spirit:name>
@@ -853,13 +844,6 @@
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
-      <spirit:name>xilinx_block_diagram_view_fileset</spirit:name>
-      <spirit:file>
-        <spirit:name>bd/bd.tcl</spirit:name>
-        <spirit:fileType>tclSource</spirit:fileType>
-      </spirit:file>
-    </spirit:fileSet>
-    <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
         <spirit:name>xgui/rx_qp_v1_0.tcl</spirit:name>
@@ -877,7 +861,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>clk_period</spirit:name>
-      <spirit:value spirit:id="PARAM_VALUE.clk_period" spirit:order="2">5</spirit:value>
+      <spirit:value spirit:id="PARAM_VALUE.clk_period" spirit:order="2">6</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>machine</spirit:name>
@@ -906,19 +890,20 @@
       </xilinx:taxonomies>
       <xilinx:displayName>Rx_qp</xilinx:displayName>
       <xilinx:definitionSource>HLS</xilinx:definitionSource>
-      <xilinx:coreRevision>2112241637</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2022-08-02T15:43:31Z</xilinx:coreCreationDateTime>
-      <xilinx:sdxKernelAttributes>
-        <xilinx:sdx_kernel>true</xilinx:sdx_kernel>
-        <xilinx:sdx_kernel_type>hls</xilinx:sdx_kernel_type>
-      </xilinx:sdxKernelAttributes>
+      <xilinx:coreRevision>2112251652</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2022-08-12T13:38:46Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
-      <xilinx:xilinxVersion>2021.2.1</xilinx:xilinxVersion>
+      <xilinx:xilinxVersion>2022.1</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="7d7a810b"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="88bff770"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="77f46c54"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="65a46042"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="24d06d55"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="89d564a0"/>
+      <xilinx:targetDRCs>
+        <xilinx:targetDRC xilinx:tool="ipi">
+          <xilinx:targetDRCOption xilinx:name="ignore_freq_hz" xilinx:value="false"/>
+        </xilinx:targetDRC>
+      </xilinx:targetDRCs>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>

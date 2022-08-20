@@ -2,61 +2,85 @@
 // Vitis HLS - High-Level Synthesis from C, C++ and OpenCL v2020.2 (64-bit)
 // Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // ==============================================================
+`timescale 1 ns / 1 ps
+module rx_qp_msn_V_ram (addr0, ce0, q0, addr1, ce1, d1, we1,  clk);
 
-`timescale 1ns/1ps
+parameter DWIDTH = 63;
+parameter AWIDTH = 13;
+parameter MEM_SIZE = 8192;
 
-module rx_qp_msn_V
-#(parameter
-    DataWidth    = 63,
-    AddressWidth = 13,
-    AddressRange = 8192
-)(
-    input  wire                    clk,
-    input  wire                    reset,
-    input  wire [AddressWidth-1:0] address0,
-    input  wire                    ce0,
-    output wire [DataWidth-1:0]    q0,
-    input  wire [AddressWidth-1:0] address1,
-    input  wire                    ce1,
-    input  wire                    we1,
-    input  wire [DataWidth-1:0]    d1
-);
-//------------------------Local signal-------------------
-reg  [AddressRange-1:0] written = {AddressRange{1'b0}};
-wire [DataWidth-1:0]    q0_ram;
-wire [DataWidth-1:0]    q0_rom;
-wire                    q0_sel;
-reg  [0:0]              sel0_sr;
-//------------------------Instantiation------------------
-rx_qp_msn_V_ram rx_qp_msn_V_ram_u (
-    .clk   ( clk ),
-    .ce0   ( ce0 ),
-    .addr0 ( address0 ),
-    .q0    ( q0_ram ),
-    .ce1   ( ce1 ),
-    .addr1 ( address1 ),
-    .we1   ( we1 ),
-    .d1    ( d1 )
-);
-//------------------------Body---------------------------
-assign q0     = q0_sel? q0_ram : q0_rom;
-assign q0_sel = sel0_sr[0];
-assign q0_rom = 63'b000000000000000000000000000000000000000000000000000000000000000;
+input[AWIDTH-1:0] addr0;
+input ce0;
+output reg[DWIDTH-1:0] q0;
+input[AWIDTH-1:0] addr1;
+input ce1;
+input[DWIDTH-1:0] d1;
+input we1;
+input clk;
 
-always @(posedge clk) begin
-    if (reset)
-        written <= 1'b0;
-    else begin
-        if (ce1 & we1) begin
-            written[address1] <= 1'b1;
-        end
-    end
+(* ram_style = "hls_ultra", cascade_height = 1 *)reg [DWIDTH-1:0] ram[0:MEM_SIZE-1];
+
+initial begin
+    $readmemh("./rx_qp_msn_V_ram.dat", ram);
 end
 
-always @(posedge clk) begin
+
+
+always @(posedge clk)  
+begin 
     if (ce0) begin
-        sel0_sr[0] <= written[address0];
+        q0 <= ram[addr0];
     end
 end
+
+
+always @(posedge clk)  
+begin 
+    if (ce1) begin
+        if (we1) 
+            ram[addr1] <= d1; 
+    end
+end
+
 
 endmodule
+
+`timescale 1 ns / 1 ps
+module rx_qp_msn_V(
+    reset,
+    clk,
+    address0,
+    ce0,
+    q0,
+    address1,
+    ce1,
+    we1,
+    d1);
+
+parameter DataWidth = 32'd63;
+parameter AddressRange = 32'd8192;
+parameter AddressWidth = 32'd13;
+input reset;
+input clk;
+input[AddressWidth - 1:0] address0;
+input ce0;
+output[DataWidth - 1:0] q0;
+input[AddressWidth - 1:0] address1;
+input ce1;
+input we1;
+input[DataWidth - 1:0] d1;
+
+
+
+rx_qp_msn_V_ram rx_qp_msn_V_ram_U(
+    .clk( clk ),
+    .addr0( address0 ),
+    .ce0( ce0 ),
+    .q0( q0 ),
+    .addr1( address1 ),
+    .ce1( ce1 ),
+    .we1( we1 ),
+    .d1( d1 ));
+
+endmodule
+

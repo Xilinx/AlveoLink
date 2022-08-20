@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>xilinx.com</spirit:vendor>
-  <spirit:library>hls</spirit:library>
+  <spirit:vendor>grovf.com</spirit:vendor>
+  <spirit:library>libhivenet</spirit:library>
   <spirit:name>eth_stream_switch_dev</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
