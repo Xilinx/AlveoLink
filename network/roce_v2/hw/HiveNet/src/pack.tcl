@@ -5,14 +5,14 @@
 #import_files -force -norecurse
 #update_compile_order -fileset sources_1
 
-ipx::package_project -root_dir ./ -vendor user.org -force
+ipx::package_project -root_dir ./ -vendor grovf.com -library libhivenet -force
 
 set_property name HiveNet_kernel_$HIVENET_ID [ipx::current_core]
 set_property display_name HiveNet_kernel_${HIVENET_ID}_v1_0 [ipx::current_core]
 set_property description HiveNet_kernel_${HIVENET_ID}_v1_0 [ipx::current_core]
 
-ipx::infer_bus_interface ap_clk_300 xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
-ipx::infer_bus_interface resetn_300 xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]
+ipx::infer_bus_interface ap_clk_320 xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
+ipx::infer_bus_interface resetn_320 xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]
 
 ipx::infer_bus_interface ap_clk xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
 ipx::infer_bus_interface ap_rst_n xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]
@@ -22,15 +22,14 @@ ipx::infer_bus_interface ref_clock xilinx.com:signal:clock_rtl:1.0 [ipx::current
 
 ipx::associate_bus_interfaces -busif inputData -clock ap_clk [ipx::current_core]
 ipx::associate_bus_interfaces -busif outData -clock ap_clk [ipx::current_core]
-ipx::associate_bus_interfaces -busif rx -clock ap_clk_300 [ipx::current_core]
-ipx::associate_bus_interfaces -busif tx -clock ap_clk_300 [ipx::current_core]
+ipx::associate_bus_interfaces -busif rx -clock ap_clk_320 [ipx::current_core]
+ipx::associate_bus_interfaces -busif tx -clock ap_clk_320 [ipx::current_core]
 ipx::associate_bus_interfaces -busif S00_AXI_0 -clock ap_clk [ipx::current_core]
-ipx::associate_bus_interfaces -busif HBM_write -clock ap_clk_300 [ipx::current_core]
-ipx::associate_bus_interfaces -busif HBM_read -clock ap_clk_300 [ipx::current_core]
+ipx::associate_bus_interfaces -busif HBM_write -clock ap_clk_320 [ipx::current_core]
+ipx::associate_bus_interfaces -busif HBM_read -clock ap_clk_320 [ipx::current_core]
 
 set_property range 8192 [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps S00_AXI_0 -of_objects [ipx::current_core]]]
 set_property range 8192 [ipx::get_address_blocks reg0 -of_objects [ipx::get_memory_maps S00_AXI_0 -of_objects [ipx::current_core]]]
-set_property ipi_drc {ignore_freq_hz false} [ipx::current_core]
 set_property sdx_kernel true [ipx::current_core]
 set_property sdx_kernel_type rtl [ipx::current_core]
 
@@ -117,6 +116,8 @@ ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::check_integrity -kernel [ipx::current_core]
 ipx::save_core [ipx::current_core]
+set_property ipi_drc {ignore_freq_hz true} [ipx::current_core]
+
 
 package_xo  -force -xo_path ../build/HiveNet_kernel_$HIVENET_ID.xo \
  -kernel_name HiveNet_kernel_$HIVENET_ID \

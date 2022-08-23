@@ -53,7 +53,7 @@ endif
 # Building IPs
 ultraclean:
 	rm -rf $(XUPDIR) 
-	rm -rf $(NETLAYERDIR)/build/*.xo
+	rm -rf $(NETLAYERDIR)/build
 
 buildcmac: $(XUPDIR)
 	make -C $(CMACDIR) all DEVICE=$(DEVICE) INTERFACE=$(INTERFACE)

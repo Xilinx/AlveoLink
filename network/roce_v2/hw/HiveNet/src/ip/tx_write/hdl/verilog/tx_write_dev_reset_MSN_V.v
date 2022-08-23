@@ -3,9 +3,9 @@
 // Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // ==============================================================
 `timescale 1 ns / 1 ps
-module rx_qp_msn_V_ram (addr0, ce0, q0, addr1, ce1, d1, we1,  clk);
+module tx_write_dev_reset_MSN_V_ram (addr0, ce0, q0, addr1, ce1, d1, we1,  clk);
 
-parameter DWIDTH = 63;
+parameter DWIDTH = 1;
 parameter AWIDTH = 13;
 parameter MEM_SIZE = 8192;
 
@@ -18,10 +18,10 @@ input[DWIDTH-1:0] d1;
 input we1;
 input clk;
 
-(* ram_style = "hls_ultra", cascade_height = 1 *)reg [DWIDTH-1:0] ram[0:MEM_SIZE-1];
+(* ram_style = "distributed" *)reg [DWIDTH-1:0] ram[0:MEM_SIZE-1];
 
 initial begin
-    $readmemh("./rx_qp_msn_V_ram.dat", ram);
+    $readmemh("./tx_write_dev_reset_MSN_V_ram.dat", ram);
 end
 
 
@@ -46,7 +46,7 @@ end
 endmodule
 
 `timescale 1 ns / 1 ps
-module rx_qp_msn_V(
+module tx_write_dev_reset_MSN_V(
     reset,
     clk,
     address0,
@@ -57,7 +57,7 @@ module rx_qp_msn_V(
     we1,
     d1);
 
-parameter DataWidth = 32'd63;
+parameter DataWidth = 32'd1;
 parameter AddressRange = 32'd8192;
 parameter AddressWidth = 32'd13;
 input reset;
@@ -72,7 +72,7 @@ input[DataWidth - 1:0] d1;
 
 
 
-rx_qp_msn_V_ram rx_qp_msn_V_ram_U(
+tx_write_dev_reset_MSN_V_ram tx_write_dev_reset_MSN_V_ram_U(
     .clk( clk ),
     .addr0( address0 ),
     .ce0( ce0 ),

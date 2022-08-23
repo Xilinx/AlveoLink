@@ -1,6 +1,13 @@
 `timescale 1ns/1ps
 
-module ip_handler
+module ip_handler#
+(
+  parameter IN_RAW_REG_SLICE_BYPASS      = 1,
+  parameter OUT_ARP_REG_SLICE_BYPASS     = 1,
+  parameter OUT_ICMP_REG_SLICE_BYPASS    = 1,
+  parameter OUT_HIVENET_REG_SLICE_BYPASS = 1,
+  parameter OUT_OTHER_REG_SLICE_BYPASS   = 1
+)
 (
   // System Signals
   input          aclk,
@@ -96,11 +103,11 @@ wire [  3:0] ip_header_length;
 wire [ 31:0] ip_dest_ip;
 wire [ 15:0] udp_dest_port;
 
-assign ether_type       = ((first_int == 1'b1) && (axis_int_tkeep[12+:2] == 2'b11)) ? axis_int_tdata[12*8+:16] : 16'h0000;
-assign ip_prot          = ((first_int == 1'b1) && (axis_int_tkeep[23+:1] ==  1'b1)) ? axis_int_tdata[23*8+: 8] :  8'h00;
-assign ip_header_length = ((first_int == 1'b1) && (axis_int_tkeep[14+:1] ==  1'b1)) ? axis_int_tdata[14*8+: 4] : 4'h0;
-assign ip_dest_ip       = ((first_int == 1'b1) && (axis_int_tkeep[30+:4] ==  4'b1111)) ? axis_int_tdata[30*8+:32] : 32'h00000000;
-assign udp_dest_port    = ((first_int == 1'b1) && (axis_int_tkeep[36+:2] ==  2'b11)) ? axis_int_tdata[36*8+:16] : 16'h0000;
+assign ether_type          = ((first_int == 1'b1) && (axis_int_tkeep[12+:2] ==   2'b11)) ? axis_int_tdata[12*8+:16] :     16'h0000;
+assign ip_prot             = ((first_int == 1'b1) && (axis_int_tkeep[23+:1] ==    1'b1)) ? axis_int_tdata[23*8+: 8] :        8'h00;
+assign ip_header_length    = ((first_int == 1'b1) && (axis_int_tkeep[14+:1] ==    1'b1)) ? axis_int_tdata[14*8+: 4] :         4'h0;
+assign ip_dest_ip          = ((first_int == 1'b1) && (axis_int_tkeep[30+:4] == 4'b1111)) ? axis_int_tdata[30*8+:32] : 32'h00000000;
+assign udp_dest_port       = ((first_int == 1'b1) && (axis_int_tkeep[36+:2] ==   2'b11)) ? axis_int_tdata[36*8+:16] :     16'h0000;
 
 assign is_arp_packet_w     = (ether_type == 16'h0608) ? 1'b1 : 1'b0;
 
@@ -117,16 +124,16 @@ assign is_hivenet_packet_w = ((ether_type == 16'h0008) &&
 
 assign is_other_packet_w   = ((is_arp_packet_w == 1'b0) && (is_icmp_packet_w == 1'b0) && (is_hivenet_packet_w == 1'b0)) ? 1'b1 : 1'b0;
 
-assign connect_arp     = ((~first_int) & is_arp_packet_r    ) | (first_int & is_arp_packet_w    );
-assign connect_icmp    = ((~first_int) & is_icmp_packet_r   ) | (first_int & is_icmp_packet_w   );
-assign connect_hivenet = ((~first_int) & is_hivenet_packet_r) | (first_int & is_hivenet_packet_w);
-assign connect_other   = ((~first_int) & is_other_packet_r  ) | (first_int & is_other_packet_w  );
+assign connect_arp         = ((~first_int) & is_arp_packet_r    ) | (first_int & is_arp_packet_w    );
+assign connect_icmp        = ((~first_int) & is_icmp_packet_r   ) | (first_int & is_icmp_packet_w   );
+assign connect_hivenet     = ((~first_int) & is_hivenet_packet_r) | (first_int & is_hivenet_packet_w);
+assign connect_other       = ((~first_int) & is_other_packet_r  ) | (first_int & is_other_packet_w  );
 
-assign axis_int_tready = (connect_arp     == 1'b1) ? axis_arp_tready     :
-                         (connect_icmp    == 1'b1) ? axis_icmp_tready    :
-                         (connect_hivenet == 1'b1) ? axis_hivenet_tready :
-                         (connect_other   == 1'b1) ? axis_other_tready   :
-                         1'b0;
+assign axis_int_tready     = (connect_arp     == 1'b1) ? axis_arp_tready     :
+                             (connect_icmp    == 1'b1) ? axis_icmp_tready    :
+                             (connect_hivenet == 1'b1) ? axis_hivenet_tready :
+                             (connect_other   == 1'b1) ? axis_other_tready   :
+                             1'b0;
 
 assign axis_arp_tdata      = axis_int_tdata;
 assign axis_icmp_tdata     = axis_int_tdata;
@@ -217,7 +224,11 @@ always @(posedge aclk) begin
   end
 end
 
-axis_register_ip_handler axis_register_ip_handler_input_inst
+axis_register_ip_handler#
+(
+  .BYPASS (IN_RAW_REG_SLICE_BYPASS)
+)
+axis_register_ip_handler_input_inst
 (
   .aclk          (aclk             ),
   .aresetn       (aresetn          ),
@@ -233,7 +244,11 @@ axis_register_ip_handler axis_register_ip_handler_input_inst
   .m_axis_tready (axis_int_tready  )
 );
 
-axis_register_ip_handler axis_register_ip_handler_arp_inst
+axis_register_ip_handler#
+(
+  .BYPASS (OUT_ARP_REG_SLICE_BYPASS)
+)
+axis_register_ip_handler_arp_inst
 (
   .aclk          (aclk             ),
   .aresetn       (aresetn          ),
@@ -249,7 +264,11 @@ axis_register_ip_handler axis_register_ip_handler_arp_inst
   .m_axis_tready (m_axis_arp_tready)
 );
 
-axis_register_ip_handler axis_register_ip_handler_icmp_inst
+axis_register_ip_handler#
+(
+  .BYPASS (OUT_ICMP_REG_SLICE_BYPASS)
+)
+axis_register_ip_handler_icmp_inst
 (
   .aclk          (aclk              ),
   .aresetn       (aresetn           ),
@@ -266,7 +285,11 @@ axis_register_ip_handler axis_register_ip_handler_icmp_inst
 );
 
 
-axis_register_ip_handler axis_register_ip_handler_hivenet_inst
+axis_register_ip_handler#
+(
+  .BYPASS (OUT_HIVENET_REG_SLICE_BYPASS)
+)
+axis_register_ip_handler_hivenet_inst
 (
   .aclk          (aclk                 ),
   .aresetn       (aresetn              ),
@@ -283,7 +306,11 @@ axis_register_ip_handler axis_register_ip_handler_hivenet_inst
 );
 
 
-axis_register_ip_handler axis_register_ip_handler_other_inst
+axis_register_ip_handler#
+(
+  .BYPASS (OUT_OTHER_REG_SLICE_BYPASS)
+)
+axis_register_ip_handler_other_inst
 (
   .aclk          (aclk               ),
   .aresetn       (aresetn            ),
@@ -302,7 +329,10 @@ axis_register_ip_handler axis_register_ip_handler_other_inst
 
 endmodule
 
-module axis_register_ip_handler
+module axis_register_ip_handler#
+(
+  parameter BYPASS = 1
+)
 (
   input          aclk,
   input          aresetn,
@@ -320,49 +350,59 @@ module axis_register_ip_handler
   input          m_axis_tready
 );
 
-reg  [511:0] tdata_r[1:0];
-reg  [ 63:0] tkeep_r[1:0];
-reg  [  1:0] tlast_r;
-reg  [  1:0] status_r;
-reg          write_tgl_r;
-reg          read_tgl_r;
-wire         wr_en_w;
-wire         rd_en_w;
+generate
+  if(BYPASS == 0) begin
+    reg  [511:0] tdata_r[1:0];
+    reg  [ 63:0] tkeep_r[1:0];
+    reg  [  1:0] tlast_r;
+    reg  [  1:0] status_r;
+    reg          write_tgl_r;
+    reg          read_tgl_r;
+    wire         wr_en_w;
+    wire         rd_en_w;
 
-assign s_axis_tready = (status_r != 2'b11) ? 1'b1 : 1'b0;
-assign wr_en_w  = ((status_r != 2'b11) && (s_axis_tvalid == 1'b1)) ? 1'b1 : 1'b0;
-assign rd_en_w  = ((status_r[read_tgl_r] == 1'b1) && (m_axis_tready == 1'b1)) ? 1'b1 : 1'b0;
+    assign s_axis_tready = (status_r != 2'b11) ? 1'b1 : 1'b0;
+    assign wr_en_w  = ((status_r != 2'b11) && (s_axis_tvalid == 1'b1)) ? 1'b1 : 1'b0;
+    assign rd_en_w  = ((status_r[read_tgl_r] == 1'b1) && (m_axis_tready == 1'b1)) ? 1'b1 : 1'b0;
 
-assign m_axis_tdata  = tdata_r[read_tgl_r];
-assign m_axis_tkeep  = tkeep_r[read_tgl_r];
-assign m_axis_tlast  = tlast_r[read_tgl_r];
-assign m_axis_tvalid = (status_r[read_tgl_r] == 1'b1) ? 1'b1 : 1'b0;
+    assign m_axis_tdata  = tdata_r[read_tgl_r];
+    assign m_axis_tkeep  = tkeep_r[read_tgl_r];
+    assign m_axis_tlast  = tlast_r[read_tgl_r];
+    assign m_axis_tvalid = (status_r[read_tgl_r] == 1'b1) ? 1'b1 : 1'b0;
 
-always @(posedge aclk) begin
-  if(aresetn == 1'b0) begin
-    tdata_r[0]  <= 'b0;
-    tdata_r[1]  <= 'b0;
-    tkeep_r[0]  <= 'b0;
-    tkeep_r[1]  <= 'b0;
-    tlast_r[0]  <= 'b0;
-    tlast_r[1]  <= 'b0;
-    status_r    <= 'b0;
-    write_tgl_r <= 'b0;
-    read_tgl_r  <= 'b0;
+    always @(posedge aclk) begin
+      if(aresetn == 1'b0) begin
+        tdata_r[0]  <= 'b0;
+        tdata_r[1]  <= 'b0;
+        tkeep_r[0]  <= 'b0;
+        tkeep_r[1]  <= 'b0;
+        tlast_r[0]  <= 'b0;
+        tlast_r[1]  <= 'b0;
+        status_r    <= 'b0;
+        write_tgl_r <= 'b0;
+        read_tgl_r  <= 'b0;
+      end else begin
+        if(wr_en_w == 1'b1) begin
+          tdata_r[write_tgl_r]  <= s_axis_tdata;
+          tkeep_r[write_tgl_r]  <= s_axis_tkeep;
+          tlast_r[write_tgl_r]  <= s_axis_tlast;
+          status_r[write_tgl_r] <= 1'b1;
+          write_tgl_r <= ~write_tgl_r;
+        end
+
+        if(rd_en_w == 1'b1) begin
+          status_r[read_tgl_r] <= 1'b0;
+          read_tgl_r <= ~read_tgl_r;
+        end
+      end
+    end
   end else begin
-    if(wr_en_w == 1'b1) begin
-      tdata_r[write_tgl_r]  <= s_axis_tdata;
-      tkeep_r[write_tgl_r]  <= s_axis_tkeep;
-      tlast_r[write_tgl_r]  <= s_axis_tlast;
-      status_r[write_tgl_r] <= 1'b1;
-      write_tgl_r <= ~write_tgl_r;
-    end
-
-    if(rd_en_w == 1'b1) begin
-      status_r[read_tgl_r] <= 1'b0;
-      read_tgl_r <= ~read_tgl_r;
-    end
+    assign m_axis_tdata  = s_axis_tdata;
+    assign m_axis_tkeep  = s_axis_tkeep;
+    assign m_axis_tlast  = s_axis_tlast;
+    assign m_axis_tvalid = s_axis_tvalid;
+    assign s_axis_tready = m_axis_tready;
   end
-end
+endgenerate
 
 endmodule

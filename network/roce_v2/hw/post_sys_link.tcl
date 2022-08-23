@@ -119,7 +119,7 @@ if {[dict exists ${config_info} kernels]} {
             startgroup
             create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_HiveNet_0_0
             endgroup
-            set_property -dict [list CONFIG.REG_CONFIG {12}] [get_bd_cells axis_register_HiveNet_0_0]
+            set_property -dict [list CONFIG.REG_CONFIG {16}] [get_bd_cells axis_register_HiveNet_0_0]
             copy_bd_objs /  [get_bd_cells {axis_register_HiveNet_0_0}]
             delete_bd_objs [get_bd_intf_nets HiveNet_kernel_0_tx]
             connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_0/tx] [get_bd_intf_pins axis_register_HiveNet_0_0/S_AXIS]
@@ -128,15 +128,15 @@ if {[dict exists ${config_info} kernels]} {
             connect_bd_intf_net [get_bd_intf_pins cmac_0/M_AXIS] [get_bd_intf_pins axis_register_HiveNet_0_1/S_AXIS]
             connect_bd_intf_net [get_bd_intf_pins axis_register_HiveNet_0_1/M_AXIS] [get_bd_intf_pins HiveNet_kernel_0/rx]
             connect_bd_net [get_bd_pins axis_register_HiveNet_0_1/aclk] [get_bd_pins axis_register_HiveNet_0_0/aclk]
-            connect_bd_net [get_bd_pins axis_register_HiveNet_0_0/aclk] [get_bd_pins HiveNet_kernel_0/ap_clk_300]
+            connect_bd_net [get_bd_pins axis_register_HiveNet_0_0/aclk] [get_bd_pins HiveNet_kernel_0/ap_clk_320]
             connect_bd_net [get_bd_pins axis_register_HiveNet_0_0/aresetn] [get_bd_pins axis_register_HiveNet_0_1/aresetn]
-            connect_bd_net [get_bd_pins axis_register_HiveNet_0_0/aresetn] [get_bd_pins HiveNet_kernel_0/resetn_300]
+            connect_bd_net [get_bd_pins axis_register_HiveNet_0_0/aresetn] [get_bd_pins HiveNet_kernel_0/resetn_320]
         }
         if { [string equal ${__k_inst} "HiveNet_kernel_1" ] } {
             startgroup
             create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_HiveNet_1_0
             endgroup
-            set_property -dict [list CONFIG.REG_CONFIG {8}] [get_bd_cells axis_register_HiveNet_1_0]
+            set_property -dict [list CONFIG.REG_CONFIG {16}] [get_bd_cells axis_register_HiveNet_1_0]
             copy_bd_objs /  [get_bd_cells {axis_register_HiveNet_1_0}]
             delete_bd_objs [get_bd_intf_nets HiveNet_kernel_1_tx] [get_bd_intf_nets cmac_1_M_AXIS]
             connect_bd_intf_net [get_bd_intf_pins cmac_1/M_AXIS] [get_bd_intf_pins axis_register_HiveNet_1_0/S_AXIS]
@@ -144,9 +144,9 @@ if {[dict exists ${config_info} kernels]} {
             connect_bd_intf_net [get_bd_intf_pins HiveNet_kernel_1/tx] [get_bd_intf_pins axis_register_HiveNet_1_1/S_AXIS]
             connect_bd_intf_net [get_bd_intf_pins axis_register_HiveNet_1_1/M_AXIS] [get_bd_intf_pins cmac_1/S_AXIS]
             connect_bd_net [get_bd_pins axis_register_HiveNet_1_1/aclk] [get_bd_pins axis_register_HiveNet_1_0/aclk]
-            connect_bd_net [get_bd_pins axis_register_HiveNet_1_0/aclk] [get_bd_pins HiveNet_kernel_1/ap_clk_300]
+            connect_bd_net [get_bd_pins axis_register_HiveNet_1_0/aclk] [get_bd_pins HiveNet_kernel_1/ap_clk_320]
             connect_bd_net [get_bd_pins axis_register_HiveNet_1_0/aresetn] [get_bd_pins axis_register_HiveNet_1_1/aresetn]
-            connect_bd_net [get_bd_pins axis_register_HiveNet_1_1/aresetn] [get_bd_pins HiveNet_kernel_1/resetn_300]
+            connect_bd_net [get_bd_pins axis_register_HiveNet_1_1/aresetn] [get_bd_pins HiveNet_kernel_1/resetn_320]
         }
       }
     }
@@ -213,4 +213,21 @@ if {[dict exists ${config_info} kernels]} {
 
 puts "${__TCLID} QSFP GT pins TCL hook DONE!"
 
-
+#set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {SLR0_M04_AXI HiveNet_kernel_0_tx HiveNet_kernel_0_HBM_write axis_register_HiveNet_0_1_M_AXIS HiveNet_kernel_0_outData HiveNet_kernel_1_HBM_write HiveNet_kernel_1_tx HiveNet_kernel_0_HBM_read generator_collector_1_out_to_Hivenet_o generator_collector_0_out_to_Hivenet_o HiveNet_kernel_1_HBM_read HiveNet_kernel_1_outData axis_register_HiveNet_1_0_M_AXIS SLR0_M01_AXI}]
+#startgroup
+#apply_bd_automation -rule xilinx.com:bd_rule:debug -dict [list \
+#                                                          [get_bd_intf_nets axis_register_HiveNet_0_1_M_AXIS] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets axis_register_HiveNet_1_0_M_AXIS] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets generator_collector_0_out_to_Hivenet_o] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets generator_collector_1_out_to_Hivenet_o] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_0_HBM_read] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "None" AXI_W_DATA "None" AXI_W_RESPONSE "None" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_0_HBM_write] {AXI_R_ADDRESS "None" AXI_R_DATA "None" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_0_outData] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_0_tx] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_1_HBM_read] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "None" AXI_W_DATA "None" AXI_W_RESPONSE "None" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_1_HBM_write] {AXI_R_ADDRESS "None" AXI_R_DATA "None" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_1_outData] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets HiveNet_kernel_1_tx] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets SLR0_M01_AXI] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                          [get_bd_intf_nets SLR0_M04_AXI] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
+#                                                         ]
