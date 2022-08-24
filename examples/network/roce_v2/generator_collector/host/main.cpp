@@ -72,17 +72,17 @@ int main(int argc, char** argv) {
             l_netLayer[i].setID(j, i*2+j);
         }
     }
+    for (auto i=0; i<2; ++i) {
+        for (auto j=0; j<2; ++j) {
+            std::cout <<"INFO: turn on RS_FEC for device " << i << " port " <<j << std::endl;
+            l_netLayer[i].turnOn_RS_FEC(j, true);
+        }
+    }
     unsigned int l_totalDevLinksUp = 0;
     while (l_totalDevLinksUp < 2) {
         std::cout << "INFO: Waiting for links up on device " << l_totalDevLinksUp << std::endl;
         if (l_netLayer[l_totalDevLinksUp].linksUp()) {
             l_totalDevLinksUp++;
-        }
-    }
-    for (auto i=0; i<2; ++i) {
-        for (auto j=0; j<2; ++j) {
-            std::cout <<"INFO: turn on RS_FEC for device " << i << " port " <<j << std::endl;
-            l_netLayer[i].turnOn_RS_FEC(j, true);
         }
     }
 

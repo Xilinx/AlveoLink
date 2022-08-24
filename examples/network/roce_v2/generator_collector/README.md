@@ -31,16 +31,16 @@ In this mode the kernel receives the packets and checks for errors inside them. 
 ### Host application
 
 The host application expects both cards to be installed on the same host machine.
-1.  First it configures all the HiveNets IPs:
-    1.1.    IP subnet 192.168.0.0/13
-    1.2.    MAC subnet 34:78:44:33:2*:**/13
-    1.3.    set the IDs of the HiveNet IPs on card 0 with (0, 1), and the IDs of HiveNet IPs on card 1 with (2, 3).
+1. First it configures all the HiveNets IPs:
+    * IP subnet 192.168.0.0/13
+    * MAC subnet 34:78:44:33:2*:**/13
+    * Set the IDs of the HiveNet IPs on card 0 with (0, 1), and the IDs of HiveNet IPs on card 1 with (2, 3).
 
-2.  Configures CMACs by enabling RS-FEC and waiting for link to be up from the switch side.
-3.  Set the CUs of the generaor_collector kernel on one card as collectors and kick off the CUs.
-4.  Set the CUs of the generaor_collector kernel on the other card as generator and kick off the CUs.
-5.  Starts transmission between two pairs of generator collector CUs and wait until all packets are transmitted
-6.  Checks weather there is any error happened in the packets transmitted.
+2. Configures CMACs by enabling RS-FEC and waiting for link to be up from the switch side.
+3. Set the CUs of the generaor_collector kernel on one card as collectors and kick off the CUs.
+4. Set the CUs of the generaor_collector kernel on the other card as generator and kick off the CUs.
+5. Starts transmission between two pairs of generator collector CUs and wait until all packets are transmitted
+6. Checks weather there is any error happened in the packets transmitted.
 
 
 ## Build and run the design
