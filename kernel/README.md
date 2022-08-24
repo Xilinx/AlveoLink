@@ -1,6 +1,1 @@
----
-**NOTE**
-
-The XNIK kernel code and its example usage will be coming soon.
-
----
+**NOTE** The XNIK kernel code and its example usage will be coming soon.
