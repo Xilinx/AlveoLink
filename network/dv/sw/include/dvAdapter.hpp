@@ -32,6 +32,7 @@ constexpr size_t CardID01 = 0x10;
 constexpr size_t CardID23 = 0x14;
 
 constexpr size_t CardMap = 0x18;  // Card Address Map -- 1 signifies that card is present & ready
+//constexpr size_t TranStatus = 0x24;
 constexpr size_t RSVD0 = 0x00;    // Reserved0
 constexpr size_t RxCntL0 = 0x40;  // Rx Count0 Low Word
 constexpr size_t RxCntH0 = 0x44;  // Rx Count0 High Word
@@ -117,8 +118,11 @@ class dvAdapter : public AlveoLink::common::IP {
                     m_dests[i] = false;
                 }
             }
+//            int l_tranStatus = readReg(TranStatus);
+//            std::cout <<"INFO: hex value of reg 0x24 is: 0x" << std::hex << l_tranStatus << std::endl;
+
             int l_status = readReg(IdStatus);
-            std::cout <<"INFO: hex value of reg 0x0c is: " << std::hex << l_status << std::endl;
+            std::cout <<"INFO: hex value of reg 0x0c is: 0x" << std::hex << l_status << std::endl;
             int l_laneStatus = l_status;
             for (auto i=0; i<4; ++i) {
                 if (((l_laneStatus >> i) & 0x01) == 1) {
@@ -131,8 +135,8 @@ class dvAdapter : public AlveoLink::common::IP {
             m_linkUp = m_laneStatus.all(); 
             int l_ids01 = readReg(CardID01);
             int l_ids23 = readReg(CardID23);
-            std::cout <<"INFO: hex value of reg 0x10 is: " << std::hex << l_ids01 << std::endl;
-            std::cout <<"INFO: hex value of reg 0x14 is: " << std::hex << l_ids23 << std::endl;
+            std::cout <<"INFO: hex value of reg 0x10 is: 0x" << std::hex << l_ids01 << std::endl;
+            std::cout <<"INFO: hex value of reg 0x14 is: 0x" << std::hex << l_ids23 << std::endl;
             std::cout << std::dec;
             m_laneIds[0] = l_ids01 & 0x0ff;
             m_laneIds[1] = (l_ids01 >> 16) & 0x0ff;
