@@ -337,6 +337,7 @@ LOOP_XNIK2NHOP:
                 m_numDevs = 1;
                 m_waitCycles = 0;
                 m_flushCounter = 1;
+                m_startId = 0;
                 m_recStatus = -1;
             }
             void recAllPkts(const PKT_TYPE p_pktType, hls::stream<ap_uint<t_NetDataBits> >& p_inStr) {
@@ -349,7 +350,7 @@ LOOP_MANAGER_RECALL:
                     l_ctrlPkt.read(p_inStr);
                     if (l_ctrlPkt.getType() == p_pktType) {
                         ap_uint<t_DestBits> l_srcId = l_ctrlPkt.getSrcId();
-                        m_recStatus[l_srcId] = 1;
+                        m_recStatus[l_srcId-m_startId] = 1;
                     }
                     l_exit =  m_recStatus.and_reduce();
                 }
@@ -365,7 +366,7 @@ LOOP_MANAGER_RECALLDONE:
                      l_ctrlPkt.read(p_inStr);
                     if ((l_ctrlPkt.getType() == PKT_TYPE::done) || (l_ctrlPkt.getType() == PKT_TYPE::idle_after_done)) {
                         ap_uint<t_DestBits> l_srcId = l_ctrlPkt.getSrcId();
-                        m_recStatus[l_srcId] = 1;
+                        m_recStatus[l_srcId-m_startId] = 1;
                         if (l_ctrlPkt.getType() == PKT_TYPE::done) {
                             p_allIdle = false;
                         }
@@ -379,14 +380,15 @@ LOOP_MANAGER_SENDALL:
 #pragma HLS PIPELINE II=1
                     DvHopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
                     l_ctrlPkt.setType(p_pktType);
-                    l_ctrlPkt.setDest(i);
+                    l_ctrlPkt.setDest(i+m_startId);
                     l_ctrlPkt.write(p_outStr);
                 }
             }
 
             void process(uint16_t p_numDevs,
-                        uint16_t p_waitCycles,
+                        uint32_t p_waitCycles,
                         uint16_t p_flushCounter,
+                        uint16_t p_startId,
                         hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
                         hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 #pragma HLS PIPELINE off
@@ -394,10 +396,11 @@ LOOP_MANAGER_SENDALL:
                     m_numDevs = p_numDevs;
                     m_waitCycles = p_waitCycles;
                     m_flushCounter = p_flushCounter;
+                    m_startId = p_startId;
                     uint16_t l_flushCounter;
                     bool l_allIdle =true;
                     bool l_procExit = false;
-                    uint16_t l_cycleCounter;
+                    uint32_t l_cycleCounter;
 LOOP_MANAGER:
                     while (!l_procExit) {
                         switch (m_state) {
@@ -467,8 +470,9 @@ LOOP_MANAGER:
         private:
             MANAGER_STATE m_state;
             uint16_t m_numDevs;
-            uint16_t m_waitCycles;
+            uint32_t m_waitCycles;
             uint16_t m_flushCounter;
+            uint16_t m_startId;
             ap_uint<t_MaxConnections> m_recStatus; 
     };
     

@@ -40,13 +40,15 @@ class hwManagerHost {
         m_krnlManager.run();
     }
 
-    void setConfigBuf(const uint16_t p_numDevs, const uint16_t p_waitCycles, const uint16_t p_flushCounter) {
+    void setConfigBuf(const uint32_t p_numDevs, const uint32_t p_waitCycles, 
+                      const uint32_t p_flushCounter, const uint32_t p_startId) {
         assert(p_numDevs < t_MaxConnections);
-        unsigned int l_dataBytes = sizeof(uint16_t)*3;
-        uint16_t* l_configBuf = (uint16_t*)(m_krnlManager.createBO(0, l_dataBytes));
+        unsigned int l_dataBytes = sizeof(uint32_t)*16;
+        uint32_t* l_configBuf = (uint32_t*)(m_krnlManager.createBO(0, l_dataBytes));
         l_configBuf[0] = p_numDevs;
         l_configBuf[1] = p_waitCycles;
         l_configBuf[2] = p_flushCounter;
+        l_configBuf[3] = p_startId;
         m_krnlManager.setMemArg(0);
         m_krnlManagerBufs.insert({0, l_configBuf});
     }

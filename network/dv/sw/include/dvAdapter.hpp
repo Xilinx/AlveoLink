@@ -103,8 +103,19 @@ class dvAdapter : public AlveoLink::common::IP {
             }
         }
         void initCU(const unsigned int p_id) {
-            std::string l_cuName = "dv_adapter"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
+#if TM
+            if (p_id == 1) {
+                std::string l_cuName = "dva1_1src:{dv_adapter" + std::to_string(p_id) + "}";
+                getIP(l_cuName);
+            }
+            else if (p_id == 0) {
+                std::string l_cuName = "dv_adapter25_"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
+                getIP(l_cuName);
+            }
+#else 
+            std::string l_cuName = "dv_adapter25_"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
             getIP(l_cuName);
+#endif
         }
         void updateStatus() {//get dests map, my_id, and laneStatus
             int l_portMap = readReg(CardMap);

@@ -21,13 +21,17 @@ XSA := $(DEVICE)
 TEMP_DIR := _x.$(XSA)
 
 ifeq ($(TM), 1)
-LIST_XO := $(DVDIR)/dva0_1src.xo
+LIST_XO := $(DVDIR)/dva1_1src.xo
 else
 LIST_XO := $(DVDIR)/dv_adapter0.xo
 endif
 
 ifeq ($(INTERFACE), 2)
+ifeq ($(TM), 1)
+LIST_XO += $(DVDIR)/dv_adapter0.xo
+else
 LIST_XO += $(DVDIR)/dv_adapter1.xo
+endif
 endif
 
 POSTSYSLINKTCL ?= $(shell readlink -f $(DVDIR)/post_sys_link.tcl)

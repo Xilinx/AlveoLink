@@ -117,7 +117,7 @@ endif
 ifeq ($(TARGET),hw)
 HOST_SRCS += $(XFLIB_DIR)/tests/kernel/sync_dv/host/traffic_sync_managers_main.cpp $(XFLIB_DIR)/common/sw/src/xNativeFPGA.cpp
 endif
-CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2
+CXXFLAGS +=  -D AL_netDataBits=512 -D AL_maxConnections=16 -D AL_destBits=16 -D AL_numInfs=2 -D TM=$(TM)
 CXXFLAGS +=  -I $(XFLIB_DIR)/tests/kernel/sync_dv/host -I $(XFLIB_DIR)/kernel/sw/include  -I $(XFLIB_DIR)/network/dv/sw/include -I $(XFLIB_DIR)/common/sw/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 

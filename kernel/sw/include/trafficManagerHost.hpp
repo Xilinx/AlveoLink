@@ -70,6 +70,11 @@ class trafficManagerHost {
         m_krnlManager.sendBO(0); 
         //m_krnlManager.sendBO(1);
     }
+    void* getBufRes() { 
+        m_krnlManager.syncBO(0);
+        void* l_outBuf = m_krnlManagerBufs.find(0)->second;
+        return l_outBuf;
+    }
     void finish() { m_krnlManager.wait(); }
 
    private:

@@ -92,16 +92,14 @@ ifeq ($(HOST_ARCH), x86)
 CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed -lxrt_core -lrt -lstdc++ -luuid -lxrt_coreutil 
 VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl -t $(TARGET) --platform $(XPLATFORM) --save-temps 
-#VPP_LDFLAGS += --optimize 2 -R 2
+VPP_LDFLAGS += --optimize 2 -R 2
 
-VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_1:p_XNIKinStr --debug.chipscope krnl_xnik_wide_1:p_DVoutStr0 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr1 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr2 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr3
 else ifeq ($(HOST_ARCH), aarch64)
 CXXFLAGS +=  -fmessage-length=0 --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(SYSROOT)/usr/lib -L$(XILINX_VITIS_AIETOOLS)/lib/aarch64.o -Wl,--as-needed -lxilinxopencl -lxrt_coreutil 
 VPP_FLAGS += --hls.pre_tcl $(XFLIB_DIR)/adapter/dv/hw/hls_config.tcl -t $(TARGET) --platform $(XPLATFORM) --save-temps
  
-#VPP_LDFLAGS += --optimize 2 -R 2 
-VPP_LDFLAGS += --debug.chipscope krnl_xnik_wide_1:p_XNIKinStr --debug.chipscope krnl_xnik_wide_1:p_DVoutStr0 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr1 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr2 --debug.chipscope krnl_xnik_wide_1:p_DVoutStr3
+VPP_LDFLAGS += --optimize 2 -R 2 
 endif
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)
@@ -147,7 +145,6 @@ VPP_FLAGS_krnl_testApp +=  -D KERNEL_NAME=krnl_testApp
 VPP_FLAGS_krnl_testApp += --hls.clock 300000000:krnl_testApp
 VPP_FLAGS_krnl_xnikSyncTX += --hls.clock 300000000:krnl_xnikSyncTX
 VPP_FLAGS_krnl_xnikSyncRX += --hls.clock 300000000:krnl_xnikSyncRX
-VPP_FLAGS_krnl_xnik_wide += --hls.clock 300000000:krnl_xnik_wide
 ifneq ($(HOST_ARCH), x86)
 VPP_LDFLAGS_krnl_testApp += --clock.defaultFreqHz 150000000 
 else
@@ -177,15 +174,9 @@ $(TEMP_DIR)/krnl_xnikSyncRX.xo: $(XFLIB_DIR)/kernel/hw/src/krnl_xnikSyncRX_DV.cp
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_krnl_xnikSyncRX) $(VPP_FLAGS) -k krnl_xnikSyncRX -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
 
-$(TEMP_DIR)/krnl_xnik_wide.xo: $(XFLIB_DIR)/adapter/dv/hw/src/krnl_xnik_wide.cpp 
-	$(ECHO) "Compiling Kernel: krnl_xnik_wide"
-	mkdir -p $(TEMP_DIR)
-	$(VPP) -c $(VPP_FLAGS_krnl_xnik_wide) $(VPP_FLAGS) -k krnl_xnik_wide -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' '$<'
-
 BINARY_CONTAINER_krnl_testApp_OBJS += $(TEMP_DIR)/krnl_testApp.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncTX.xo
 BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnikSyncRX.xo
-BINARY_CONTAINER_xnik_OBJS += $(TEMP_DIR)/krnl_xnik_wide.xo
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_krnl_testApp_OBJS)
 BINARY_CONTAINERS_DEPS += $(BINARY_CONTAINER_xnik_OBJS)
 BINARY_CONTAINERS_DEPS += $(LIST_XO)

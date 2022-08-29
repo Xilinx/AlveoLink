@@ -36,7 +36,7 @@ constexpr unsigned int t_DestBytes = AL_destBits / 8;
 int main(int argc, char** argv) {
     if (argc <5  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <xclbin> <devId> <waitCycles> <flushCounter>" << std::endl;
+        std::cout << argv[0] << " <xclbin> <devId> <waitCycles> <flushCounter> [startId]" << std::endl;
         std::cout << "manager.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
@@ -47,8 +47,14 @@ int main(int argc, char** argv) {
     unsigned int l_devId = atoi(argv[l_idx++]);
     unsigned int l_waitCycles = atoi(argv[l_idx++]);
     unsigned int l_flushCounter = atoi(argv[l_idx++]);
+    unsigned int l_startId = 0;
+    
+    if (argc > 5) {
+        l_startId = atoi(argv[l_idx++]);
+    }
 
-    int l_numDevs;
+    unsigned int l_numDevs = 0;
+    unsigned int l_syncManagerId = 0;
 
 
     AlveoLink::common::FPGA l_card;
@@ -73,18 +79,22 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
     }
-    l_numDevs = l_ids[1];
+    l_syncManagerId = l_ids[0];
+    l_numDevs = l_syncManagerId - l_startId;
+
+    std::cout <<"INFO: sync manager id is " << l_syncManagerId << std::endl;
+    std::cout <<"INFO: number of devices is " << l_numDevs << std::endl;
 
     l_manager.init(&l_card);
     l_manager.createCU(0);
-    l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter);
+    l_manager.setConfigBuf(l_numDevs, l_waitCycles, l_flushCounter, l_startId);
     l_manager.sendBO();
     int l_option = 0;
     l_manager.runCU();
 
     l_trafficManager.init(&l_card);
     l_trafficManager.createCU(0);
-    l_trafficManager.setConfigBuf(l_ids[0], l_ids[0], l_numDevs, l_waitCycles, (uint32_t)((256<<20)-1));
+    l_trafficManager.setConfigBuf(l_ids[1], l_ids[1], l_syncManagerId, l_waitCycles, (uint32_t)((256<<20)-1));
 //    size_t l_pktBytes = 1;
   //  l_pktBytes = l_pktBytes << 30;
     //uint8_t* l_pktStore = (uint8_t*)(l_trafficManager.createPktStore(l_pktBytes));
@@ -93,6 +103,9 @@ int main(int argc, char** argv) {
 
     l_manager.finish();
     l_trafficManager.finish();
+    uint32_t* l_tmBuf = (uint32_t*)(l_trafficManager.getBufRes());
+    std::cout << "INFO TM::rdAddr = " << l_tmBuf[0] << std::endl; 
+    std::cout << "INFO TM::wrAddr = " << l_tmBuf[1] << std::endl;
     std::cout << "INFO: system run finished!" << std::endl;
     return EXIT_SUCCESS;
 }
