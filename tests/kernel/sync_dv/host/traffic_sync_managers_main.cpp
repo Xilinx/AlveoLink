@@ -103,9 +103,9 @@ int main(int argc, char** argv) {
 
     l_manager.finish();
     l_trafficManager.finish();
-    uint32_t* l_tmBuf = (uint32_t*)(l_trafficManager.getBufRes());
-    std::cout << "INFO TM::rdAddr = " << l_tmBuf[0] << std::endl; 
-    std::cout << "INFO TM::wrAddr = " << l_tmBuf[1] << std::endl;
-    std::cout << "INFO: system run finished!" << std::endl;
+    //uint32_t* l_tmBuf = (uint32_t*)(l_trafficManager.getBufRes());
+    //std::cout << "INFO TM::rdAddr = " << l_tmBuf[16] << std::endl; 
+    //std::cout << "INFO TM::wrAddr = " << l_tmBuf[17] << std::endl;
+    //std::cout << "INFO: system run finished!" << std::endl;
     return EXIT_SUCCESS;
 }

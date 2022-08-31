@@ -45,7 +45,7 @@ class trafficManagerHost {
 
     void setConfigBuf(const uint32_t p_myId, const uint32_t p_tmId, const uint32_t p_numDevs,
                       const uint32_t p_waitCycles, const uint32_t p_maxAddr) {
-        unsigned int l_dataBytes = sizeof(uint32_t)*5;
+        unsigned int l_dataBytes = sizeof(uint32_t)*32;
         uint32_t* l_configBuf = (uint32_t*)(m_krnlManager.createBO(0, l_dataBytes));
         l_configBuf[0] = p_myId;
         l_configBuf[1] = p_tmId;
