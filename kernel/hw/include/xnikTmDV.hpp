@@ -41,8 +41,8 @@
                     m_numDevs = 0;
                     m_waitCycles = 0;
                     m_maxAddr = 0;
-                    m_rdAddr = 1;
-                    m_wrAddr = 1;
+                    m_rdAddr = 0;
+                    m_wrAddr = 0;
                 }
                 void incrWrAddr(){
     #pragma HLS INLINE
@@ -95,20 +95,16 @@ LOOP_TM_RECEIVING:
                         incrRdAddr();
                     }
                 }
-                void process(uint32_t p_myId,
-                            uint32_t p_tmId,
-                            uint32_t p_numDevs,
-                            uint32_t p_waitCycles,
-                            uint32_t p_maxAddr, //number of 512-bit words that the memory can store - 1
+                void process(uint32_t* p_config,
                             ap_uint<t_NetDataBits>* p_memPtr,
                             hls::stream<ap_uint<t_NetDataBits> >& p_inStr,
                             hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
                     bool l_procExit = false;
-                    m_myId = p_myId;
-                    m_tmId = p_tmId;
-                    m_numDevs = p_numDevs;
-                    m_waitCycles = p_waitCycles;
-                    m_maxAddr = p_maxAddr;
+                    m_myId =  p_config[0];
+                    m_tmId = p_config[1];
+                    m_numDevs = p_config[2];
+                    m_waitCycles = p_config[3];
+                    m_maxAddr = p_config[4]; //number of 512-bit words that the memory can store - 1
                     while (!l_procExit || (m_state != TM_STATE::tm_idle)) {
 //#pragma HLS PIPELINE off
                         DvHopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
@@ -155,8 +151,8 @@ LOOP_TM_RECEIVING:
                     }
                 }
 
-                p_memPtr[0](31,0) = m_rdAddr;
-                p_memPtr[0](63,32) = m_wrAddr;
+                p_config[16] = m_rdAddr;
+                p_config[17] = m_wrAddr;
             }
 
         private:

@@ -29,11 +29,5 @@ extern "C" void krnl_xnikTM(uint32_t* p_config,
 
     AlveoLink::kernel::xnikTraffic_Manager<AL_netDataBits, AL_destBits> l_tm;
 
-    uint32_t l_myId = p_config[0];
-    uint32_t l_tmId = p_config[1];
-    uint32_t l_numDevs = p_config[2];
-    uint32_t l_waitCycles = p_config[3];
-    uint32_t l_maxAddr = p_config[4];
-
-    l_tm.process(l_myId, l_tmId, l_numDevs, l_waitCycles, l_maxAddr, p_memPtr, p_inStr, p_outStr);
+    l_tm.process(p_config, p_memPtr, p_inStr, p_outStr);
 }
