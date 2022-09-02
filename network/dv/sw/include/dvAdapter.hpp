@@ -112,6 +112,9 @@ class dvAdapter : public AlveoLink::common::IP {
                 std::string l_cuName = "dv_adapter25_"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
                 getIP(l_cuName);
             }
+#elif TM_2
+            std::string l_cuName = "dva"+std::to_string(p_id)+"_1src:{dv_adapter" + std::to_string(p_id) + "}";
+            getIP(l_cuName);
 #else 
             std::string l_cuName = "dv_adapter25_"+std::to_string(p_id)+":{dv_adapter" + std::to_string(p_id) + "}";
             getIP(l_cuName);

@@ -22,6 +22,8 @@ TEMP_DIR := _x.$(XSA)
 
 ifeq ($(TM), 1)
 LIST_XO := $(DVDIR)/dva1_1src.xo
+else ifeq ($(TM_2), 1)
+LIST_XO := $(DVDIR)/dva0_1src.xo
 else
 LIST_XO := $(DVDIR)/dv_adapter0.xo
 endif
@@ -29,6 +31,8 @@ endif
 ifeq ($(INTERFACE), 2)
 ifeq ($(TM), 1)
 LIST_XO += $(DVDIR)/dv_adapter0.xo
+else ifeq ($(TM_2), 1)
+LIST_XO += $(DVDIR)/dva1_1src.xo
 else
 LIST_XO += $(DVDIR)/dv_adapter1.xo
 endif
