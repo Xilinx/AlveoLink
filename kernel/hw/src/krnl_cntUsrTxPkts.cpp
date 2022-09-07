@@ -16,10 +16,10 @@
 #include "interface.hpp"
 #include "xnikSyncDV.hpp"
 
-extern "C" void krnl_cntUsrPkts(int& p_numPkts,
+extern "C" void krnl_cntUsrTxPkts(int& p_numPkts,
+                                hls::stream<ap_uint<1> >& p_ctrlStr,
                                 hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
-                                hls::stream<ap_uint<AL_netDataBits> >& p_outStr,
-                                hls::stream<ap_uint<1> >& p_ctrlStr) {
+                                hls::stream<ap_uint<AL_netDataBits> >& p_outStr) {
     AXIS(p_inStr)
     AXIS(p_outStr)
     AXIS(p_ctrlStr)
@@ -31,12 +31,14 @@ extern "C" void krnl_cntUsrPkts(int& p_numPkts,
     int l_numPkts = 0;
     while (!l_exit) {
 #pragma HLS PIPELINE II=1
-        ap_uint<AL_netDataBits> l_val = p_inStr.read();
-        p_outStr.write(l_val);
-        l_numPkts++;
-        l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::done); 
+        ap_uint<AL_netDataBits> l_val;
+        if (p_inStr.read_nb(l_val)) {
+            p_outStr.write(l_val);
+            l_numPkts++;
+        }
+        ap_uint<1> l_tmp;
+        l_exit = p_ctrlStr.read_nb(l_tmp); 
     }
-    p_ctrlStr.write(1);
     p_numPkts = l_numPkts;
 
 }
