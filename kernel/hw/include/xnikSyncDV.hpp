@@ -105,6 +105,26 @@ namespace kernel {
         }
     }
 
+    template <unsigned int t_NetDataBits>
+    void fwdKrnl2TxStr(hls::stream<ap_uint<t_NetDataBits> >& p_inKrnlStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_inRxStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_outKrnlStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_outRxStr) {
+        bool l_exit = false;
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_uint<t_NetDataBits> l_krnlVal;
+            ap_uint<t_NetDataBits> l_rxVal;
+            if (p_inKrnlStr.read_nb(l_krnlVal)) {
+                p_outKrnlStr.write(l_krnlVal);
+            }
+            if (p_inRxStr.read_nb(l_rxVal)) {
+                p_outRxStr.write(l_rxVal);
+                l_exit = (l_rxVal(23,20) == AlveoLink::kernel::PKT_TYPE::terminate);
+            }
+        }
+    }
+
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
     void writeAxis(const uint16_t p_numDevs,

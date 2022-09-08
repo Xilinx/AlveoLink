@@ -29,7 +29,13 @@ extern "C" void krnl_xnikSyncTX(hls::stream<ap_uint<AL_netDataBits> >& p_nhop2xn
 
     AlveoLink::kernel::xnikSync_TX<AL_netDataBits, AL_destBits> l_xnikSyncTX;
     hls::stream<ap_uint<AL_netDataBits> > l_netStr;
+#pragma HLS STREAM variable = l_netStr depth=16
+    hls::stream<ap_uint<AL_netDataBits> > l_rxStr;
+    hls::stream<ap_uint<AL_netDataBits> > l_nhop2xnikStr;
+#pragma HLS STREAM variable = l_rxStr depth=16
+#pragma HLS STREAM variable = l_nhop2xnikStr depth=16
 #pragma HLS DATAFLOW
-    l_xnikSyncTX.process(p_nhop2xnikStr,p_rxStr,p_txStr,l_netStr);
+    AlveoLink::kernel::fwdKrnl2TxStr<AL_netDataBits>(p_nhop2xnikStr, p_rxStr, l_nhop2xnikStr, l_rxStr);
+    l_xnikSyncTX.process(l_nhop2xnikStr,l_rxStr,p_txStr,l_netStr);
     AlveoLink::kernel::writeAxis<AL_netDataBits, AL_destBits>(l_netStr, p_outStr);
 }

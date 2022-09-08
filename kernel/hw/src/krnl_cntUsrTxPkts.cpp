@@ -16,29 +16,37 @@
 #include "interface.hpp"
 #include "xnikSyncDV.hpp"
 
-extern "C" void krnl_cntUsrTxPkts(int& p_numPkts,
+extern "C" void krnl_cntUsrTxPkts(uint32_t* p_numPktsPtr,
                                 hls::stream<ap_uint<1> >& p_ctrlStr,
                                 hls::stream<ap_uint<AL_netDataBits> >& p_inStr,
                                 hls::stream<ap_uint<AL_netDataBits> >& p_outStr) {
     AXIS(p_inStr)
     AXIS(p_outStr)
     AXIS(p_ctrlStr)
-    SCALAR(p_numPkts)
-#pragma HLS INTERFACE mode=ap_vld port=p_numPkts
+    POINTER(p_numPktsPtr, p_numPktsPtr)
     SCALAR(return)
 
     bool l_exit = false;
-    int l_numPkts = 0;
+    uint32_t l_numDonePkts = 0;
+    uint32_t l_numWorkLoadPkts = 0;
+    uint32_t l_totalPkts = 0;
     while (!l_exit) {
 #pragma HLS PIPELINE II=1
         ap_uint<AL_netDataBits> l_val;
         if (p_inStr.read_nb(l_val)) {
             p_outStr.write(l_val);
-            l_numPkts++;
+            l_totalPkts++;
+            if (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::done) {
+                l_numDonePkts++;
+            }
+            if (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::workload) {
+                l_numWorkLoadPkts++;
+            }
         }
         ap_uint<1> l_tmp;
         l_exit = p_ctrlStr.read_nb(l_tmp); 
     }
-    p_numPkts = l_numPkts;
-
+    p_numPktsPtr[0] = l_totalPkts;
+    p_numPktsPtr[1] = l_numWorkLoadPkts;
+    p_numPktsPtr[2] = l_numDonePkts;
 }
