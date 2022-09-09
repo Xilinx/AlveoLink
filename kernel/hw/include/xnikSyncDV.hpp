@@ -237,6 +237,9 @@ LOOP_NHOP2XNIK:
                                 }
                             }
                             else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {//do nothing, just avoid FIFO block
+                                if (l_ctrlPkt.isWorkload()) {
+                                    l_ctrlPkt.write(p_outStr);
+                                }
                                 m_state = SYNC_STATE::state_done;
                             }
                             break;
