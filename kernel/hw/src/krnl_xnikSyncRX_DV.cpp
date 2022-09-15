@@ -31,12 +31,18 @@ extern "C" void krnl_xnikSyncRX(hls::stream<ap_axiu<AL_netDataBits, 0, 0, AL_des
 
     AlveoLink::kernel::xnikSync_RX<AL_netDataBits, AL_destBits> l_xnikSyncRX;
     hls::stream<ap_uint<AL_netDataBits> > l_netStr;
+    hls::stream<ap_uint<AL_netDataBits> > l_net2xnikStr;
+    hls::stream<ap_uint<AL_netDataBits> > l_txStr;
+#pragma HLS STREAM variable = l_netStr depth=16
+#pragma HLS STREAM variable = l_net2xnikStr depth=16
+#pragma HLS STREAM variable = l_txStr depth=16
     hls::stream<ap_uint<AL_netDataBits> > l_toKernelStr;
 #pragma HLS stream variable = l_toKernelStr depth=4096
 //#pragma HLS stream variable = l_toKernelStr depth=16
 #pragma HLS bind_storage variable = l_toKernelStr type = ram_2p impl = uram
 #pragma HLS DATAFLOW
     AlveoLink::kernel::readAxis<AL_netDataBits, AL_destBits>(p_inStr, l_netStr);
-    l_xnikSyncRX.process(l_netStr, p_txStr, p_rxStr, l_toKernelStr);
+    AlveoLink::kernel::fwdNet2RxStr<AL_netDataBits>(l_netStr, p_txStr, l_net2xnikStr, l_txStr);
+    l_xnikSyncRX.process(l_net2xnikStr, l_txStr, p_rxStr, l_toKernelStr);
     AlveoLink::kernel::fwdStr<AL_netDataBits>(l_toKernelStr, p_xnik2nhopStr);
 }

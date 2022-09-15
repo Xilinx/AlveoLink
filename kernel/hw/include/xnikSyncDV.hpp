@@ -56,6 +56,27 @@ namespace kernel {
             l_exit = (l_val(23,20) == AlveoLink::kernel::PKT_TYPE::terminate); 
         }
     }
+    template <unsigned int t_NetDataBits>
+    void fwdNet2RxStr(hls::stream<ap_uint<t_NetDataBits> >& p_inNetStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_inTxStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_outNetStr,
+                   hls::stream<ap_uint<t_NetDataBits> >& p_outTxStr) {
+        bool l_exit = false;
+        while (!l_exit) {
+#pragma HLS PIPELINE II=1
+            ap_uint<t_NetDataBits> l_netVal;
+            ap_uint<t_NetDataBits> l_txVal;
+            if (!p_inNetStr.empty() && !p_outNetStr.full()) {
+                l_netVal = p_inNetStr.read();
+                p_outNetStr.write(l_netVal);
+                l_exit = (l_netVal(23,20) == AlveoLink::kernel::PKT_TYPE::terminate);
+            }
+            if (!p_inTxStr.empty() && !p_outTxStr.full()) {
+                l_txVal = p_inTxStr.read();
+                p_outTxStr.write(l_txVal);
+            }
+        }
+    }
 
     template <unsigned int t_NetDataBits,
               unsigned int t_DestBits>
@@ -115,10 +136,12 @@ namespace kernel {
 #pragma HLS PIPELINE II=1
             ap_uint<t_NetDataBits> l_krnlVal;
             ap_uint<t_NetDataBits> l_rxVal;
-            if (p_inKrnlStr.read_nb(l_krnlVal)) {
+            if (!p_inKrnlStr.empty() && !p_outKrnlStr.full()) {
+                l_krnlVal=p_inKrnlStr.read();
                 p_outKrnlStr.write(l_krnlVal);
             }
-            if (p_inRxStr.read_nb(l_rxVal)) {
+            if (!p_inRxStr.empty() && !p_outRxStr.full()) {
+                l_rxVal = p_inRxStr.read();
                 p_outRxStr.write(l_rxVal);
                 l_exit = (l_rxVal(23,20) == AlveoLink::kernel::PKT_TYPE::terminate);
             }
@@ -164,10 +187,11 @@ namespace kernel {
                          hls::stream<ap_uint<t_NetDataBits> >& p_outStr) {
 
                 bool l_exit = false;
+                bool l_exitActive = false;
                 uint32_t l_batchPkts, l_timeOutCycles;
 LOOP_NHOP2XNIK:
                 while(!l_exit) {
-#pragma HLS PIPELINE II=1
+//#pragma HLS PIPELINE II=1
                     DvHopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
                     switch(m_state) {
                         case SYNC_STATE::idle:
@@ -190,38 +214,55 @@ LOOP_NHOP2XNIK:
                             if (l_ctrlPkt.readNB(p_rxStr)) {
                                 if (l_ctrlPkt.isStart()) {//rec start pkt from manager
                                     m_response = true;
+                                    l_exitActive = false;
                                     m_state = SYNC_STATE::active; 
                                 }
                             }
                             break;
                         case SYNC_STATE::active:
-                            if (l_ctrlPkt.readNB(p_rxStr)) {
-                                if (l_ctrlPkt.isWorkload()) {
-                                    l_ctrlPkt.write2Dest(m_tmId, p_outStr);
+LOOP_TX_ACTIVE:
+                            while (!l_exitActive) {
+#pragma HLS PIPELINE II=1
+                                if (l_ctrlPkt.readNB(p_rxStr)) {
+                                    if (l_ctrlPkt.isWorkload()) {
+                                        l_ctrlPkt.write2Dest(m_tmId, p_outStr);
+                                    }
+                                    if (l_ctrlPkt.isQueryStatus()) {
+                                        m_response = true;
+                                    }
                                 }
-                                if (l_ctrlPkt.isQueryStatus()) {
-                                    m_response = true;
+                                else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {
+                                    if (l_ctrlPkt.isDoneWork()) {
+                                        /*if (m_response) {
+                                            l_ctrlPkt.setSrcId(m_myId);
+                                            l_ctrlPkt.setType(PKT_TYPE::done);
+                                            l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
+                                            m_response = false;
+                                        }
+                                        l_ctrlPkt.write(p_txStr);*/
+                                        l_exitActive = true;
+                                        //m_state = SYNC_STATE::state_done;
+                                    }
+                                    else if (l_ctrlPkt.isWorkload()) {
+                                        l_ctrlPkt.write(p_outStr);
+                                    }
                                 }
                             }
-                            else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {
-                                if (l_ctrlPkt.isDoneWork()) {
-                                    if (m_response) {
-                                        l_ctrlPkt.setSrcId(m_myId);
-                                        l_ctrlPkt.setType(PKT_TYPE::done);
-                                        l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
-                                        m_response = false;
-                                    }
-                                    l_ctrlPkt.write(p_txStr);
-                                    m_state = SYNC_STATE::state_done;
+                            if (l_exitActive) {
+                                if (m_response) {
+                                    l_ctrlPkt.setSrcId(m_myId);
+                                    l_ctrlPkt.setType(PKT_TYPE::done);
+                                    l_ctrlPkt.write2Dest(m_numDevs, p_outStr);
+                                    m_response = false;
                                 }
-                                else if (l_ctrlPkt.isWorkload()) {
-                                    l_ctrlPkt.write(p_outStr);
-                                }
+                                l_ctrlPkt.write(p_txStr);
+                                m_state = SYNC_STATE::state_done;
                             }
                             break;
                         case SYNC_STATE::state_done:
                             if (l_ctrlPkt.readNB(p_rxStr)) {
                                 if (l_ctrlPkt.isWorkload()) {
+                                    l_exitActive = false;
                                     m_state = SYNC_STATE::active;
                                 }
                                 else if (l_ctrlPkt.isQueryStatus()) {
@@ -239,8 +280,9 @@ LOOP_NHOP2XNIK:
                             else if (l_ctrlPkt.readNB(p_nhop2xnikStr)) {//do nothing, just avoid FIFO block
                                 if (l_ctrlPkt.isWorkload()) {
                                     l_ctrlPkt.write(p_outStr);
+                                    l_exitActive = false;
+                                    m_state = SYNC_STATE::active;
                                 }
-                                m_state = SYNC_STATE::state_done;
                             }
                             break;
                     }
@@ -268,9 +310,10 @@ LOOP_NHOP2XNIK:
                          hls::stream<ap_uint<t_NetDataBits> >& p_rxStr,
                          hls::stream<ap_uint<t_NetDataBits> >& p_xnik2nhopStr) {
                 bool l_exit = false;
+                bool l_exitActive = false;
 LOOP_XNIK2NHOP:
                 while (!l_exit) {
-#pragma HLS PIPELINE II=1
+//#pragma HLS PIPELINE II=1
                     DvHopCtrlPkt<t_NetDataBits, t_DestBits> l_ctrlPkt;
                     switch (m_state) {
                         case SYNC_STATE::idle:
@@ -287,6 +330,7 @@ LOOP_XNIK2NHOP:
                             if (l_ctrlPkt.readNB(p_inStr)) {
                                 if (l_ctrlPkt.isStart()) {
                                     l_ctrlPkt.write(p_rxStr);
+                                    l_exitActive = false;
                                     m_state = SYNC_STATE::active;
                                 }
                                 else {
@@ -295,40 +339,52 @@ LOOP_XNIK2NHOP:
                             }
                             break;
                         case SYNC_STATE::active:
-                            if (l_ctrlPkt.readNB(p_txStr)) {
-                                if (l_ctrlPkt.isDoneWork()) {
-                                    m_state = SYNC_STATE::state_done;
-                                }
-                            }
-                            else if (l_ctrlPkt.readNB(p_inStr)) {
-                                if (l_ctrlPkt.isQueryStatus()) {
-                                    l_ctrlPkt.write(p_rxStr);
-                                }
-                                else if (l_ctrlPkt.isWorkload()) {
-                                    if (!p_xnik2nhopStr.full() || (m_myId == m_tmId)) {
-                                        l_ctrlPkt.write(p_xnik2nhopStr);
+LOOP_RX_ACTIVE:
+                            while (!l_exitActive) {
+#pragma HLS PIPELINE II=1
+                                if (l_ctrlPkt.readNB(p_txStr)) {
+                                    if (l_ctrlPkt.isDoneWork()) {
+                                        l_exitActive = true;
+                                        //m_state = SYNC_STATE::state_done;
                                     }
-                                    else {
-                                        l_ctrlPkt.setDest(m_tmId);
+                                }
+                                else if (l_ctrlPkt.readNB(p_inStr)) {
+                                    if (l_ctrlPkt.isQueryStatus()) {
                                         l_ctrlPkt.write(p_rxStr);
                                     }
+                                    else if (l_ctrlPkt.isWorkload()) {
+                                        if (!p_xnik2nhopStr.full() || (m_myId == m_tmId)) {
+                                            l_ctrlPkt.write(p_xnik2nhopStr);
+                                        }
+                                        else {
+                                            l_ctrlPkt.setDest(m_tmId);
+                                            l_ctrlPkt.write(p_rxStr);
+                                        }
+                                    }
+    #ifdef HLS_SIM
+                                    else if (l_ctrlPkt.isTerminate()) {
+                                        l_ctrlPkt.write(p_rxStr);
+                                        l_ctrlPkt.setType(PKT_TYPE::done);
+                                        l_ctrlPkt.write(p_xnik2nhopStr);
+                                        l_exit = true;
+                                        m_state = SYNC_STATE::idle;
+                                    }
+    #endif
                                 }
-#ifdef HLS_SIM
-                                else if (l_ctrlPkt.isTerminate()) {
-                                    l_ctrlPkt.write(p_rxStr);
-                                    l_ctrlPkt.setType(PKT_TYPE::done);
-                                    l_ctrlPkt.write(p_xnik2nhopStr);
-                                    l_exit = true;
-                                    m_state = SYNC_STATE::idle;
-                                }
-#endif
+                            }
+                            if (l_exitActive) {
+                                m_state = SYNC_STATE::state_done;
                             }
                         break;
                         case SYNC_STATE::state_done:
-                            if (l_ctrlPkt.readNB(p_inStr)) {
+                            if (!p_txStr.empty()) {
+                                ap_uint<t_NetDataBits> l_tmp = p_txStr.read(); //read out redundant tx data
+                            }
+                            else if (l_ctrlPkt.readNB(p_inStr)) {
                                 l_ctrlPkt.write(p_rxStr);
                                 if (l_ctrlPkt.isWorkload()) {
                                     l_ctrlPkt.write(p_xnik2nhopStr);
+                                    l_exitActive = false;
                                     m_state = SYNC_STATE::active;
                                 }
                                 else { //pkt is query_status or terminate

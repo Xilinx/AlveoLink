@@ -41,7 +41,7 @@ class hwManagerHost {
     }
 
     void setConfigBuf(const uint32_t p_numDevs, const uint32_t p_waitCycles, 
-                      const uint32_t p_flushCounter, const uint32_t p_startId) {
+                      const uint32_t p_flushCounter, const uint32_t p_startId=0) {
         assert(p_numDevs < t_MaxConnections);
         unsigned int l_dataBytes = sizeof(uint32_t)*16;
         uint32_t* l_configBuf = (uint32_t*)(m_krnlManager.createBO(0, l_dataBytes));
