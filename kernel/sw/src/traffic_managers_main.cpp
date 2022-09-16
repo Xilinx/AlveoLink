@@ -87,6 +87,8 @@ int main(int argc, char** argv) {
         uint32_t* l_tmBuf = (uint32_t*)(l_trafficManager[i].getBufRes());
         std::cout << "INFO TM[" <<i<<"]::rdAddr = " << l_tmBuf[16] << std::endl; 
         std::cout << "INFO TM[" <<i<<"]::wrAddr = " << l_tmBuf[17] << std::endl;
+        std::cout<< "INFO TM::totalPkts = " << l_tmBuf[18] << std::endl;
+        std::cout<< "INFO TM::numFulls = " << l_tmBuf[19] << std::endl;
     }
     std::cout << "INFO: system run finished!" << std::endl;
     return EXIT_SUCCESS;

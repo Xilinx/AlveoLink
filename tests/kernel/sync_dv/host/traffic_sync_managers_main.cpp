@@ -36,7 +36,7 @@ constexpr unsigned int t_DestBytes = AL_destBits / 8;
 int main(int argc, char** argv) {
     if (argc <5  || (std::string(argv[1]) == "-help")) {
         std::cout << "Usage: " << std::endl;
-        std::cout << argv[0] << " <xclbin> <devId> <waitCycles> <flushCounter> [startId]" << std::endl;
+        std::cout << argv[0] << " <xclbin> <devId> <trafficIdleCycles> <waitCycles> <flushCounter> [startId]" << std::endl;
         std::cout << "manager.exe -help";
         std::cout << "    -- print out this usage:" << std::endl;
         return EXIT_FAILURE;
@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
     int l_idx = 1;
     std::string l_xclbinName = argv[l_idx++];
     unsigned int l_devId = atoi(argv[l_idx++]);
+    unsigned int l_trafficIdleCycles = atoi(argv[l_idx++]);
     unsigned int l_waitCycles = atoi(argv[l_idx++]);
     unsigned int l_flushCounter = atoi(argv[l_idx++]);
     unsigned int l_startId = 0;
@@ -92,9 +93,10 @@ int main(int argc, char** argv) {
     int l_option = 0;
     l_manager.runCU();
 
+    uint32_t l_maxAddr = 256 * 1024 * 1024 -1;
     l_trafficManager.init(&l_card);
     l_trafficManager.createCU(0);
-    l_trafficManager.setConfigBuf(l_ids[1], l_ids[1], l_syncManagerId, l_waitCycles, (uint32_t)((256<<20)-1));
+    l_trafficManager.setConfigBuf(l_ids[1], l_ids[1], l_syncManagerId, l_trafficIdleCycles, l_maxAddr);
 //    size_t l_pktBytes = 1;
   //  l_pktBytes = l_pktBytes << 30;
     //uint8_t* l_pktStore = (uint8_t*)(l_trafficManager.createPktStore(l_pktBytes));
@@ -106,6 +108,8 @@ int main(int argc, char** argv) {
     uint32_t* l_tmBuf = (uint32_t*)(l_trafficManager.getBufRes());
     std::cout << "INFO TM::rdAddr = " << l_tmBuf[16] << std::endl; 
     std::cout << "INFO TM::wrAddr = " << l_tmBuf[17] << std::endl;
+    std::cout<< "INFO TM::totalPkts = " << l_tmBuf[18] << std::endl;
+    std::cout<< "INFO TM::numFulls = " << l_tmBuf[19] << std::endl;
     std::cout << "INFO: system run finished!" << std::endl;
     return EXIT_SUCCESS;
 }

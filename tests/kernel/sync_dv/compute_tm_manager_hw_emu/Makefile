@@ -126,7 +126,7 @@ CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 EXE_NAME := manager_compute.exe
 EXE_FILE := $(BUILD_DIR)/$(EXE_NAME)
 EXE_FILE_DEPS := $(HOST_SRCS) $(EXE_FILE_DEPS)
-HOST_ARGS := $(BUILD_DIR)/xnikSyncDV_manager_compute.xclbin 0 64 10 1 
+HOST_ARGS := $(BUILD_DIR)/xnikSyncDV_manager_compute.xclbin 0 8192 10 1 
 
 
 ########################## Kernel compiler global settings ##########################
