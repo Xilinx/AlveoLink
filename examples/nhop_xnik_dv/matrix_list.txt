@@ -1,0 +1,7 @@
+europe_osm
+cit-Patents
+as-Skitter
+soc-LiveJournal1
+coPapersDBLP
+coPapersCiteseer
+hollywood
