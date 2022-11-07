@@ -48,7 +48,7 @@ help::
 ############################## Setting up Project Variables ##############################
 
 MK_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/L2/*}')
+XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/examples/*}')
 CUR_DIR := $(patsubst %/,%,$(dir $(MK_PATH)))
 XFLIB_DIR = $(XF_PROJ_ROOT)
 
@@ -123,11 +123,11 @@ endif
 
 #Inclue Required Host Source Files
 HOST_SRCS += \
-    $(XFLIB_DIR)/L2/nhop_xnik_dv/host/nhop_with_manager_main.cpp \
-    $(XFLIB_DIR)/L2/nhop_xnik_dv/host/nhop_functions.cpp \
+    $(XFLIB_DIR)/examples/nhop_xnik_dv/host/nhop_with_manager_main.cpp \
+    $(XFLIB_DIR)/examples/nhop_xnik_dv/host/nhop_functions.cpp \
     $(AL_PATH)/common/sw/src/xNativeFPGA.cpp
 
-CXXFLAGS +=  -I $(XFLIB_DIR)/L2/nhop_xnik_dv/host  -I $(AL_PATH)/kernel/hw/include -I $(AL_PATH)/kernel/sw/include -I $(AL_PATH)/network/dv/sw/include -I $(AL_PATH)/common/sw/include -I $(XFLIB_DIR)/../database/L1/include -I $(XFLIB_DIR)/nhop_xnik_dv -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
+CXXFLAGS +=  -I $(XFLIB_DIR)/examples/nhop_xnik_dv/host  -I $(AL_PATH)/kernel/hw/include -I $(AL_PATH)/kernel/sw/include -I $(AL_PATH)/network/dv/sw/include -I $(AL_PATH)/common/sw/include -I $(XFLIB_DIR)/../database/L1/include -I $(XFLIB_DIR)/nhop_xnik_dv -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
 #CXXFLAGS += -O3 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
@@ -157,10 +157,10 @@ else
 VPP_LDFLAGS +=   --config $(CUR_DIR)/conn_u55.cfg
 endif
 
-VPP_FLAGS +=  -I $(XFLIB_DIR)/L2/nhop_xnik_dv -I $(XFLIB_DIR)/L2/nhop_xnik_dv/kernel -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
+VPP_FLAGS +=  -I $(XFLIB_DIR)/examples/nhop_xnik_dv -I $(XFLIB_DIR)/examples/nhop_xnik_dv/kernel -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
 
 else 
-VPP_FLAGS +=  -I $(XFLIB_DIR)/L2/nhop_xnik_dv -I $(XFLIB_DIR)/L2/nhop_xnik_dv/kernel -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
+VPP_FLAGS +=  -I $(XFLIB_DIR)/examples/nhop_xnik_dv -I $(XFLIB_DIR)/examples/nhop_xnik_dv/kernel -I $(XFLIB_DIR)/../database/L1/include/hw -I $(XFLIB_DIR)/../quantitative_finance/L1/include -I $(XFLIB_DIR)/../utils/L1/include
 
 endif
 
@@ -175,7 +175,7 @@ else
 VPP_LDFLAGS_nHop_kernel += --kernel_frequency 150 
 endif
 
-nHop_kernel_ARGS += $(XFLIB_DIR)/L2/nhop_xnik_dv/kernel/hls_memfifo4Xnik.cpp
+nHop_kernel_ARGS += $(XFLIB_DIR)/examples/nhop_xnik_dv/kernel/hls_memfifo4Xnik.cpp
 
 ifeq ($(HOST_ARCH), x86)
 BINARY_CONTAINERS += $(BUILD_DIR)/nhop_dv.xclbin
@@ -185,7 +185,7 @@ BINARY_CONTAINERS_PKG += $(BUILD_DIR)/nhop_dv.xclbin
 endif
 
 # ################ Setting Rules for Binary Containers (Building Kernels) ################
-$(TEMP_DIR)/nHop_kernel.xo: $(XFLIB_DIR)/L2/nhop_xnik_dv/kernel/nHop_kernel4Xnik.cpp $(nHop_kernel_ARGS)
+$(TEMP_DIR)/nHop_kernel.xo: $(XFLIB_DIR)/examples/nhop_xnik_dv/kernel/nHop_kernel4Xnik.cpp $(nHop_kernel_ARGS)
 	$(ECHO) "Compiling Kernel: nHop_kernel"
 	mkdir -p $(TEMP_DIR)
 	$(VPP) -c $(VPP_FLAGS_nHop_kernel) $(VPP_FLAGS) -k nHop_kernel -I'$(<D)' --temp_dir $(TEMP_DIR) --report_dir $(TEMP_REPORT_DIR) -o'$@' $^ 
