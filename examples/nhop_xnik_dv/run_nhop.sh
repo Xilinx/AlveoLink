@@ -3,14 +3,13 @@
 #usage ./run_compile.sh numKernel filepath hopnumber batchsize
 
 CUR_DIR=$(pwd)
-graphanalyticsPath=$(awk 'sub(/graphanalytics.*/, "")' <<< "$CUR_DIR")graphanalytics
-AL_PATH=$graphanalyticsPath/../AlveoLink
+AL_PATH=$CUR_DIR/../../AlveoLink
 
-ssh -f xsj-dxgradb04  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash nhop.sh xsj-dxgradb04 1 2 0 $1 $2 $3 $4"
+ssh -f host04  "cd $CUR_DIR; bash nhop.sh host04 1 2 0 $1 $2 $3 $4"
 sleep 1
 
-ssh -f xsj-dxgradb04  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash nhop.sh xsj-dxgradb04 0 2 2 $1 $2 $3 $4"
+ssh -f host04  "cd $CUR_DIR; bash nhop.sh host04 0 2 2 $1 $2 $3 $4"
 sleep 1
 
-ssh -f xsj-dxgradb03  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash nhop.sh xsj-dxgradb03 1 1 4 $1 $2 $3 $4"
+ssh -f host03  "cd $CUR_DIR; bash nhop.sh host03 1 1 4 $1 $2 $3 $4"
 sleep 1

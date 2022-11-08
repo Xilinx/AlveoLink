@@ -30,7 +30,7 @@ help::
 ############################## Setting up Project Variables ##############################
 
 MK_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/L2/*}')
+XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/examples/*}')
 CUR_DIR := $(patsubst %/,%,$(dir $(MK_PATH)))
 XFLIB_DIR = $(XF_PROJ_ROOT)
 
@@ -44,8 +44,8 @@ CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include --sysro
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -lxrt_coreutil -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed
 
 #Inclue Required Host Source Files
-HOST_SRCS += $(XFLIB_DIR)/L2/nhop_xnik_dv/host/merge_main.cpp  
-CXXFLAGS +=  -I $(XFLIB_DIR)/L2/nhop_xnik_dv/host -I $(AL_PATH)/common/sw/include 
+HOST_SRCS += $(XFLIB_DIR)/examples/nhop_xnik_dv/host/merge_main.cpp  
+CXXFLAGS +=  -I $(XFLIB_DIR)/examples/nhop_xnik_dv/host -I $(AL_PATH)/common/sw/include 
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 

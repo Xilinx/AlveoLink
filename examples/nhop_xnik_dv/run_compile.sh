@@ -3,20 +3,19 @@
 #usage ./run_compile.sh
 
 CUR_DIR=$(pwd)
-graphanalyticsPath=$(awk 'sub(/graphanalytics.*/, "")' <<< "$CUR_DIR")graphanalytics
-AL_PATH=$graphanalyticsPath/../AlveoLink
+AL_PATH=$CUR_DIR/../../AlveoLink
 
-ssh -f xsj-dxgradb01  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash compile.sh xsj-dxgradb01"
+ssh -f host01  "cd $CUR_DIR; bash compile.sh host01"
 sleep 1
 
-ssh -f xsj-dxgradb03  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash compile.sh xsj-dxgradb03"
+ssh -f host03  "cd $CUR_DIR; bash compile.sh host03"
 sleep 1
 
-ssh -f xsj-dxgradb04  "cd $graphanalyticsPath/L2/nhop_xnik_dv; bash compile.sh xsj-dxgradb04"
+ssh -f host04  "cd $CUR_DIR; bash compile.sh host04"
 sleep 1
 
-ssh -f xsj-dxgradb03  "cd $AL_PATH/tests/kernel/sync_dv/tm_managers; bash compile.sh xsj-dxgradb03"
+ssh -f host03  "cd $AL_PATH/tests/kernel/sync_dv/tm_managers; bash compile.sh host03"
 sleep 1
 
-ssh -f xsj-dxgradb01  "cd $AL_PATH/tests/kernel/sync_dv/tm_managers; bash compile.sh xsj-dxgradb01"
+ssh -f host01  "cd $AL_PATH/tests/kernel/sync_dv/tm_managers; bash compile.sh host01"
 sleep 1

@@ -1,72 +1,79 @@
-# DV+XNIK(with HW manager)+nHop+traffic manager
-# 2 nHop kernels running on card1 on db1, hw manager and traffic manager running on card 0
+# run nHop on 6 Alveo U55C cards
+# 10 nHop kernels running on  on host01,3,4  hw manager and traffic manager running on host01 card 0
  
 ## 1. set up Vitis 2021.2_released environemnts and env DVDIR and AL_PATH
 
 ```sh
-source /proj/xbuilds/2022.1_released/installs/lin64/Vitis/2022.1/settings64.sh
+source /opt/xilinx/Vitis/2022.1/settings64.sh
 source /opt/xilinx/xrt/setup.sh
-export DVDIR=/proj/rdi-xsj/staff/lingl/DataVortex/packages/Aug_24_2022/xos
-export AL_PATH=/proj/rdi-xsj/staff/lingl/nobkup/FaaSApps/AlveoLink
+export DVDIR=xos_dir
+export AL_PATH=$PWD/../../AlveoLink
 ```
 
 
-## 2. build hw .xclbin and host executable with dv adapter for u55c on db1
+## 2. build hw .xclbin dv dapter for u55c
 
 ```sh
-navigate to graphanalytics/L2/nhop_xnik_dv
+navigate to examples/nhop_xnik_dv
 
-make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
-
-make clean TARGET=hw
-make host TARGET=hw
+make xclbin TARGET=hw DEVICE=/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
 
 navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers
 
-make xclbin TARGET=hw DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+make xclbin TARGET=hw DEVICE=/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+
+navigate to AlveoLink/tests/kernel/sync_dv/tm_managers
+
+make xclbin TARGET=hw DEVICE=/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+
+```
+
+## 3. compile host executable
+
+```sh
+on host01 navigate to examples/nhop_xnik_dv
+
+./run_compile.sh
+
+on host01 navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers
 
 make clean TARGET=hw HOST=xsj-dxgradb01
 make host TARGET=hw HOST=xsj-dxgradb01
 
 ```
-## 3. compile partition and aggregation executables
+## 4. compile partition and aggregation executables
 
 ```sh
-navigate to graphanalytics/L2/nhop_xnik_dv
+navigate to examples/nhop_xnik_dv
 
-make -f partition.Makefile host TARGET=hw  PLATFORM_REPO_PATHS=/proj/xbuilds/2022.1_qualified_latest/internal_platforms
-make -f merge.Makefile host TARGET=hw  PLATFORM_REPO_PATHS=/proj/xbuilds/2022.1_qualified_latest/internal_platforms
+make -f partition.Makefile host TARGET=hw  PLATFORM_REPO_PATHS=/opt/xilinx/platforms
+make -f merge.Makefile host TARGET=hw  PLATFORM_REPO_PATHS=/opt/xilinx/platforms
 ```
 
-## 4. Partition input graph and pairs
+## 5. Partition input graph and pairs
 
 ```sh
- ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/partition.exe --graph /proj/xsjhdstaff5/yunleiz/Demo_For_webinary_WT/as-Skitter-wt.mtx --pair /proj/xsjhdstaff5/yunleiz/zmq/push/L2/nHop_v6/gen/pair10k/as-Skitter-twoHopPair.mtx --numKernel 2
+ ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/partition.exe --graph europe_osm-wt.mtx --pair europe_osm-twoHopPair.mtx --numKernel 6 
 ```
 
-## 5. Run test 
+## 6. Run test 
 
 ```sh
-1. on db1, start one terminal and navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers, and run (note: wait until you see the link is up before going to step 2)
+1. on host01, start one terminal and navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers, and run (note: wait until you see the link is up before going to step 2)
 
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe /proj/rdi-xsj/staff/lingl/nobkup/xclbins/nhop_xnik_dv/xnikSyncTraffic_managers.xclbin 0 1048576 65536 3 12
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe xnikSyncTraffic_managers.xclbin 0 1048576 65536 3 4 (note: wait until you see INFO: my id is: 10 my TM id is: 10 before going to step 3)
 
-2. on db1, start another terminal and navigate to graphanalytics/L2/nhop_xnik_dv, and run
+2. on host01, start another terminal and navigate to AlveoLink/tests/kernel/sync_dv/tm_managers, and run
 
- ./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/host.exe --xclbin /proj/rdi-xsj/staff/lingl/nobkup/xclbins/nhop_xnik_dv/nhop_dv.xclbin --devId 1 --hostId 0 --startId 0 --numIds 2 --numKernel 2 --filepath ./as-Skitter-twoHopPair --netfile ./netconfig_01.txt --hop 3  --batch 512 
+./run_tm_managers.sh 524288
 
+3. on host04, start one terminal and navigate to examples/nhop_xnik_dv, and run
+
+./run_nhop.sh 6 ./europe_osm-twoHopPair 3 32
 ```
 
-## 6. aggregate Results
+## 7. aggregate Results
 
 ```sh
-build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/merge.exe --filepath ./as-Skitter-twoHopPair --numKernel 2
-```
-
-## 7. run hw_emu for C2C (2 kernels) with hw manager
-
-```sh
-navigate to L2/nhop_xnik_dv/nhop_manager_hw_emu, and run
-
-make run TARGET=hw_emu DEVICE=/proj/xbuilds/2021.2_released/xbb/dsadev/opt/xilinx/platforms/xilinx_u55c_gen3x16_xdma_2_202110_1/xilinx_u55c_gen3x16_xdma_2_202110_1.xpfm INTERFACE=2
+build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/merge.exe --filepath ./europe_osm-twoHopPair --numKernel 6
 ```

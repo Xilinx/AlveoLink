@@ -29,7 +29,7 @@ help::
 ############################## Setting up Project Variables ##############################
 
 MK_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/L2/*}')
+XF_PROJ_ROOT ?= $(shell bash -c 'export MK_PATH=$(MK_PATH); echo $${MK_PATH%/examples/*}')
 CUR_DIR := $(patsubst %/,%,$(dir $(MK_PATH)))
 XFLIB_DIR = $(XF_PROJ_ROOT)
 
@@ -38,12 +38,12 @@ TARGET ?= sw_emu
 
 BUILD_DIR := build_dir.$(TARGET).xilinx_u55c_gen3x16_xdma_2_202110_1
 
-CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/src/ -I$(XILINX_XRT)/include --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -I$(XF_PROJ_ROOT)/ext -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
+CXXFLAGS += -fmessage-length=0 -I$(CUR_DIR)/host/ -I$(XILINX_XRT)/include --sysroot=$(SYSROOT)  -I$(SYSROOT)/usr/include/xrt -I$(XILINX_HLS)/include -I$(XF_PROJ_ROOT)/ext -std=c++14 -Wall -Wno-unknown-pragmas -Wno-unused-label 
 LDFLAGS += -pthread -L$(XILINX_XRT)/lib -lxrt_coreutil -L$(XILINX_HLS)/lnx64/tools/fpo_v7_0  -Wl,--as-needed
 
 #Inclue Required Host Source Files
-HOST_SRCS += $(XFLIB_DIR)/L2/nhop_xnik_dv/host/partition_main.cpp  
-CXXFLAGS +=  -I $(XFLIB_DIR)/L2/nhop_xnik_dv/host -I $(AL_PATH)/common/sw/include
+HOST_SRCS += $(XFLIB_DIR)/examples/nhop_xnik_dv/host/partition_main.cpp  
+CXXFLAGS +=  -I $(XFLIB_DIR)/examples/nhop_xnik_dv/host -I $(AL_PATH)/common/sw/include
 CXXFLAGS += -g -O0 
 CXXFLAGS += -Wno-unused-variable -Wno-format -Wno-sign-compare
 
