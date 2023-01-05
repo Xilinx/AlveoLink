@@ -24,7 +24,7 @@
 source /opt/xilinx/Vitis/2022.1/settings64.sh
 source /opt/xilinx/xrt/setup.sh
 export DVDIR=xos_dir
-export AL_PATH=$PWD/../../AlveoLink
+export AL_PATH=$PWD/../../../AlveoLink
 ```
 
 
@@ -54,8 +54,8 @@ on host01 navigate to examples/nhop_xnik_dv
 
 on host01 navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers
 
-make clean TARGET=hw HOST=xsj-dxgradb01
-make host TARGET=hw HOST=xsj-dxgradb01
+make clean TARGET=hw HOST=host01
+make host TARGET=hw HOST=host01
 
 ```
 ## 4. compile partition and aggregation executables
@@ -78,7 +78,7 @@ make -f merge.Makefile host TARGET=hw  PLATFORM_REPO_PATHS=/opt/xilinx/platforms
 ```sh
 1. on host01, start one terminal and navigate to AlveoLink/tests/kernel/sync_dv/tm_sync_managers, and run (note: wait until you see the link is up before going to step 2)
 
-./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/xsj-dxgradb01/manager.exe xnikSyncTraffic_managers.xclbin 0 1048576 65536 3 4 (note: wait until you see INFO: my id is: 10 my TM id is: 10 before going to step 3)
+./build_dir.hw.xilinx_u55c_gen3x16_xdma_2_202110_1/host01/manager.exe xnikSyncTraffic_managers.xclbin 0 1048576 65536 3 4 (note: wait until you see INFO: my id is: 10 my TM id is: 10 before going to step 3)
 
 2. on host01, start another terminal and navigate to AlveoLink/tests/kernel/sync_dv/tm_managers, and run
 
