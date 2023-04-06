@@ -63,13 +63,16 @@ ifeq ($(INTERFACE), 0)
 buildhivenet:
 else ifeq ($(INTERFACE), 3)
 buildhivenet:
-	cd $(ROCEV2_DIR)/hw && ./build_hivenet.sh def
+	cd $(ROCEV2_DIR)/hw; bash ./build_hivenet.sh def
 	cd $(CUR_DIR)
 endif
 
 $(XUPDIR):
 	git clone https://github.com/Xilinx/xup_vitis_network_example.git $(XUPDIR)
-	cd $(XUPDIR)
-	#git checkout @{c16cba6598099f87e203659d7f8d6a536d97ef86}
-	cp $(ROCEV2_DIR)/hw/cmac/template.xml $(CMACDIR)
-	cp $(ROCEV2_DIR)/hw/cmac/bd_cmac.tcl $(CMACDIR) 
+	cd $(XUPDIR);\
+	git checkout c16cba6598099f87e203659d7f8d6a536d97ef86;\
+	cp $(ROCEV2_DIR)/hw/cmac/template.xml $(CMACDIR);\
+	cp $(ROCEV2_DIR)/hw/cmac/bd_cmac.tcl $(CMACDIR);\
+	cp -r $(ROCEV2_DIR)/hw/cmac/ip $(CMACDIR)/src;\
+	cp $(ROCEV2_DIR)/hw/cmac/package_cmac.tcl $(CMACDIR);\
+	cp $(ROCEV2_DIR)/hw/cmac/template_top.v $(CMACDIR)/src;

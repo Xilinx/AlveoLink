@@ -44,8 +44,22 @@ class NetLayer {
         void setIPSubnet(const unsigned int p_portId, const unsigned int p_ipSubnet) {
             m_hiveNet[p_portId].setIPSubnet(p_ipSubnet);
         }
+        void setVlanPFC(const unsigned int p_portId, uint8_t turnON_VLAN, uint32_t pfc_code, uint32_t vlan_id){
+            m_hiveNet[p_portId].set_VLAN(turnON_VLAN, pfc_code, vlan_id);
+        }
+        void setVlanPFC(const unsigned int p_portId, uint8_t turnON_VLAN){
+            m_hiveNet[p_portId].set_VLAN(turnON_VLAN, 0, 0);
+        }
         void turnOn_RS_FEC(const unsigned int p_portId, const bool p_setFEC) {
             m_cmac[p_portId].turnOn_RS_FEC(p_setFEC);
+        }
+        void turnOn_flow_control(const unsigned int p_portId,const bool global){
+            if(global){
+                m_cmac[p_portId].set_FlowControlType(0x100);
+            }
+        }
+        void turnOn_flow_control(const unsigned int p_portId,const bool global,const short pfc_code){
+            m_cmac[p_portId].set_FlowControlType(pfc_code);
         }
 
         bool linksUp() {
