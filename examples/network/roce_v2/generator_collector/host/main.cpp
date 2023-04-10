@@ -106,7 +106,7 @@ int main(int argc,char** argv) {
     }
     for (auto i=0; i<2; ++i) {
         for (auto j=0; j<2; ++j) {
-            std::cout <<"INFO: turn on RS_FEC for device " << i << " port " <<j << std::endl;
+            std::cout <<"INFO: turn on RS_FEC and configuring flow control for device " << i << " port " <<j << std::endl;
             l_netLayer[i].turnOn_RS_FEC(j, true);            //turning on the RS_FEC
             l_netLayer[i].turnOn_flow_control(j,true);       //turning on the GLOBAL PAUSE IEEE 802.3x in order to turn on the PFC
                                                              //turnOn_flow_control(const unsigned int p_portId,false,const short pfc_code)

@@ -42,7 +42,8 @@ class genColHost {
                 m_krnl[i].getIP(l_cuName);
                 m_krnl[i].writeReg(gen_col_i_offset, (p_genCol[i]==collector?0:1));
                 m_krnl[i].writeReg(id_i_offset, p_id);
-                m_krnl[i].writeReg(packets_to_send_i_offset, p_numPkts);
+                m_krnl[i].writeReg(packets_to_send_i_offset_1, p_numPkts);
+                m_krnl[i].writeReg(packets_to_send_i_offset_2, p_numPkts>>32);
                 m_krnl[i].writeReg(dim_i_offset, dim);
 
             }
@@ -66,9 +67,9 @@ class genColHost {
         int stopIP(int port,GEN_COLL_TYPE type){
             if(m_card != nullptr && getType(port)==type){
                 m_krnl[port].writeReg(start_i_offset, 0);
-                for(int i=0;m_krnl[port].readReg(pkt_cnt_o_offset) && i<20;i++){
+                for(int i=0;m_krnl[port].readReg(pkt_cnt_o_offset_1) && i<20;i++){
                 }
-                if(m_krnl[port].readReg(pkt_cnt_o_offset)){
+                if(m_krnl[port].readReg(pkt_cnt_o_offset_1)){
                     return -1;
                 }
             }
@@ -76,7 +77,11 @@ class genColHost {
         }
 
         unsigned long long getCurrPkts(int port) {
-            return m_krnl[port].readReg(pkt_cnt_o_offset);
+            unsigned long long temp_cnt;
+            temp_cnt =  m_krnl[port].readReg(pkt_cnt_o_offset_2);
+            temp_cnt = temp_cnt<<32;
+            temp_cnt += m_krnl[port].readReg(pkt_cnt_o_offset_1);
+            return temp_cnt;
         }
        
         bool getErrors(int port) {
@@ -87,15 +92,15 @@ class genColHost {
         AlveoLink::common::IP m_krnl[t_NumPorts];
 
 
-        static const int gen_col_i_offset           =0x10;
-		static const int start_i_offset             =0x18;
-		static const int id_i_offset                =0x20;
-		static const int pkt_cnt_o_offset           =0x28;
-		static const int packets_to_send_i_offset   =0x40;
-	    static const int error_o_offset             =0x4c;
-		static const int  dim_i_offset              =0x5c;
-
-
+        static const unsigned int gen_col_i_offset           =0x10;
+		static const unsigned int start_i_offset             =0x18;
+		static const unsigned int id_i_offset                =0x20;
+		static const unsigned int pkt_cnt_o_offset_1         =0x28;
+        static const unsigned int pkt_cnt_o_offset_2         =0x2c;
+		static const unsigned int packets_to_send_i_offset_1 =0x40;
+        static const unsigned int packets_to_send_i_offset_2 =0x44;
+	    static const unsigned int error_o_offset             =0x4c;
+		static const unsigned int  dim_i_offset              =0x5c;
         GEN_COLL_TYPE getType(int port) {
             return static_cast<GEN_COLL_TYPE>(m_krnl[port].readReg(gen_col_i_offset));
         }

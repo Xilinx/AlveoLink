@@ -60,5 +60,5 @@ The diagram below shows the interfaces of HiveNet.
 
 ## Software APIs
 
-The software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host cdoe. 
+The software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host code. 
 

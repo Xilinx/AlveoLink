@@ -16,11 +16,11 @@
 
 # HiveNet Usage Example 
 
-This example illustrates how to use HiveNet IP in an Vitis design. The diagram below shows the system implemented in this example design.
+This example illustrates how to use HiveNet IP in a Vitis design. The diagram below shows the system implemented in this example design.
 
 ![](../../../../img/hivenet_gencol.png)
 
-This example design is realized on 2 Alveo U55C cards. Each card has 2 QSFP ports, in total 4 QSFP ports, which are connected to a commercial ethernet switch. 4 CUs (Compute Units) of Vitis HLS kernel generator_collector are connected to their corresponding QSFP ports via HiveNet IPs and CMAC IPs. These 4 CUs communication with each other via Ethernet. The host code controls the communication patterns. For example, which CU sends packets, which CU receives packets and the number of packets being transmitted etc. 
+This example design is realized on 2 Alveo U55C cards. Each card has 2 QSFP ports, in total 4 QSFP ports, which are connected to a commercial ethernet switch. 4 CUs (Compute Units) of Vitis HLS kernel generator_collector are connected to their corresponding QSFP ports via HiveNet IPs and CMAC IPs. These 4 CUs communicate with each other via Ethernet. The host code controls the communication patterns. For example, which CU sends packets, which CU receives packets and the number of packets being transmitted etc. 
 
 ## Design details
 
@@ -50,9 +50,9 @@ The host application expects both cards to be installed on the same host machine
 1. First it configures all the HiveNets IPs:
     * IP subnet 192.168.0.0/13
     * MAC subnet 34:78:44:33:2*:**/13
-    * Set the IDs of the HiveNet IPs on card 0 with (0, 1), and the IDs of HiveNet IPs on card 1 with (2, 3).
+    * Set the IDs of the HiveNet IPs on card 0 with (1, 2), and the IDs of HiveNet IPs on card 1 with (3, 4).
 
-2. Configures CMACs by enabling RS-FEC and Flow control(Global PAUSE) and waiting for link to be up from the switch side.
+2. Configures CMACs by enabling RS-FEC and Flow control(Global PAUSE or Priority Flow Control) and waiting for link to be up from the switch side.
 3. Set the CUs of the generator_collector kernel on one card as collector and kick off the CUs.
 4. Set the other CUs of the generator_collector kernel as generators and kick off the CUs.
 5. Starts transmission between two pairs of generator collector CUs and stops once the timeout is reached or there is an error in the collector kernel.
@@ -62,12 +62,12 @@ The host application expects both cards to be installed on the same host machine
 
 ## Build and run the design
 
-This example design assume end users have two Alveo U55C cards installed on the same host machine. To run this design on your local machine, the end users needs to follow the steps below.
+This example design assumes that end users have two Alveo U55C cards installed on the same host machine. To run this design, the end users needs to follow the steps below.
 
 * Set up Vitis environment
 * Build .xclbin 
 * Build host executable
-* Running the design
+* Run the design
 
 
 ### 1. Set up Vitis environment
@@ -77,7 +77,7 @@ To build and run this example design, users need to install xilinx_u55c_gen3x16_
 After the installation, users need to set up Vitis 2022.1 environment variables and the environment variable AL_PATH to point to the AlveoLink repository location. The following commands are normally used to set up those environment variables on an Linux machine. Users need to adjust the path to their local Vitis installation path and the AlveoLink repository path.
 
 ```sh
-source /opt/xilinx/Vitis/settings64.sh
+source /opt/xilinx/Vitis/2022.1/settings64.sh
 source /opt/xilinx/xrt/setup.sh
 export AL_PATH=/opt/xilinx/apps/AlveoLink
 ```

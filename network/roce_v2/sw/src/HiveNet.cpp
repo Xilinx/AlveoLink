@@ -23,7 +23,7 @@ void HiveNet::initCU(const unsigned int p_id) {
     std::string l_cuName = "HiveNet_kernel_" + std::to_string(p_id) /*+ ":{HiveNet_kernel_" + std::to_string(p_id) + "}"*/;
     this->getIP(l_cuName);
     resetARPTable();
-    setTimeOut(0xffff);
+    setTimeOut(0xffffff);
     setNretransmissions(3);
     setUDPPort(0x12b7);
     this->writeReg(ecnTimeout_off,50);
