@@ -27,10 +27,11 @@ constexpr size_t localID_off = 0x10;
 constexpr size_t timeout_off = 0x18;
 constexpr size_t IPsubnet_off = 0x24;
 constexpr size_t MACSubnet_off = 0x2c;
-constexpr size_t retranssmitions_off = 0x38;
+constexpr size_t retransmissions_off = 0x38;
 constexpr size_t UDPPort_off = 0x40;
 constexpr size_t resetARP_off = 0x48;
 constexpr size_t buffSize_off = 0x100;
+constexpr size_t ecnTimeout_off = 0x180;
 
 //--------------------------------------------------------------------------------//
 // HiveNet Class
@@ -80,12 +81,12 @@ class HiveNet : public AlveoLink::common::IP {
     void setMACSubnet(const unsigned long macSubnet);
 
     /**
-    * @brief setting the retranssmitions.
+    * @brief setting the retransmissions.
     *
-    * @param retranssmitions number of retranssmisions in case of packet loss in network, default value 3.
+    * @param retransmissions number of retransmissions in case of packet loss in network, default value 3.
     *
     */
-    void setNretranssmitions(const unsigned short retranssmitions);
+    void setNretransmissions(const unsigned short retransmissions);
 
     /**
     * @brief setting the udpPort, the UDP port should be the same on all HiveNet IPs.
@@ -97,6 +98,18 @@ class HiveNet : public AlveoLink::common::IP {
 
     /**
     * @brief resetting ARP table.
+    */
+
+   void set_VLAN(uint8_t turnON_VLAN, uint32_t pfc_code, uint32_t vlan_id);
+
+   /**
+    * @brief turing on VLAN with the parameters
+    * 
+    * @param turnON_VLAN enable the VLAN
+    * 
+    * @param pfc_code the pfc id for the vlan if the turnON_VLAN is true
+    * 
+    * @param vlan_id the vlan id for the vlan if the turnON_VLAN is true
     */
     void resetARPTable();
 
@@ -123,7 +136,7 @@ class HiveNet : public AlveoLink::common::IP {
     /**
     * @brief getting number of retransmissions. 
     */
-    uint16_t getNretranssmitions();
+    uint16_t getNretransmissions();
 
     /**
     * @brief getting UDPPort number. 

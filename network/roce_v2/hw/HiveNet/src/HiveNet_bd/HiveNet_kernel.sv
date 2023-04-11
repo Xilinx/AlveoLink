@@ -4,7 +4,7 @@
 //Date        : Thu Jul  7 23:58:00 2022
 //Host        : grovfDEV running 64-bit Ubuntu 20.04.4 LTS
 //Command     : generate_target HiveNet_wrapper.bd
-//Design      : HiveNet_wrapper
+//Design      : HiveNet_wrapper_Erik
 //Purpose     : IP block netlist
 //--------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
@@ -69,6 +69,7 @@ module HiveNet_kernel
     ap_clk,
     ref_clock,
     ap_clk_320,
+    ap_clk_400,
     ap_rst_n,
     inputData_tdata,
     inputData_tdest,
@@ -85,6 +86,7 @@ module HiveNet_kernel
     outData_tstrb,
     outData_tvalid,
     resetn_320,
+    resetn_400,
     rx_tdata,
     rx_tkeep,
     rx_tlast,
@@ -134,11 +136,11 @@ module HiveNet_kernel
   input HBM_write_wready;
   output [31:0]HBM_write_wstrb;
   output HBM_write_wvalid;
-  input [8:0]S00_AXI_0_araddr;
+  input [9:0]S00_AXI_0_araddr;
   input [2:0]S00_AXI_0_arprot;
   output S00_AXI_0_arready;
   input S00_AXI_0_arvalid;
-  input [8:0]S00_AXI_0_awaddr;
+  input [9:0]S00_AXI_0_awaddr;
   input [2:0]S00_AXI_0_awprot;
   output S00_AXI_0_awready;
   input S00_AXI_0_awvalid;
@@ -156,6 +158,7 @@ module HiveNet_kernel
   input ap_clk;
   input ref_clock;
   input ap_clk_320;
+  input ap_clk_400;
   input ap_rst_n;
   input [511:0]inputData_tdata;
   input [12:0]inputData_tdest;
@@ -172,6 +175,7 @@ module HiveNet_kernel
   output [63:0]outData_tstrb;
   output outData_tvalid;
   input resetn_320;
+  input resetn_400;
   input [511:0]rx_tdata;
   input [63:0]rx_tkeep;
   input rx_tlast;
@@ -222,11 +226,11 @@ module HiveNet_kernel
   wire HBM_write_wready;
   wire [31:0]HBM_write_wstrb;
   wire HBM_write_wvalid;
-  wire [8:0]S00_AXI_0_araddr;
+  wire [9:0]S00_AXI_0_araddr;
   wire [2:0]S00_AXI_0_arprot;
   wire S00_AXI_0_arready;
   wire S00_AXI_0_arvalid;
-  wire [8:0]S00_AXI_0_awaddr;
+  wire [9:0]S00_AXI_0_awaddr;
   wire [2:0]S00_AXI_0_awprot;
   wire S00_AXI_0_awready;
   wire S00_AXI_0_awvalid;
@@ -244,6 +248,7 @@ module HiveNet_kernel
   wire ap_clk;
   wire ref_clock;
   wire ap_clk_320;
+  wire ap_clk_400;
   wire ap_rst_n;
   wire [511:0]inputData_tdata;
   wire [12:0]inputData_tdest;
@@ -260,6 +265,7 @@ module HiveNet_kernel
   wire [63:0]outData_tstrb;
   wire outData_tvalid;
   wire resetn_320;
+  wire resetn_400;
   wire [511:0]rx_tdata;
   wire [63:0]rx_tkeep;
   wire rx_tlast;
@@ -333,6 +339,7 @@ module HiveNet_kernel
         .ap_clk(ap_clk),
         .ref_clock(ref_clock),
         .ap_clk_320(ap_clk_320),
+        .ap_clk_400(ap_clk_400),
         .ap_rst_n(ap_rst_n),
         .inputData_tdata(inputData_tdata),
         .inputData_tdest(inputData_tdest),
@@ -349,6 +356,7 @@ module HiveNet_kernel
         .outData_tstrb(outData_tstrb),
         .outData_tvalid(outData_tvalid),
         .resetn_320(resetn_320),
+        .resetn_400(resetn_400),
         .rx_tdata(rx_tdata),
         .rx_tkeep(rx_tkeep),
         .rx_tlast(rx_tlast),

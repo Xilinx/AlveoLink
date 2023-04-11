@@ -55,7 +55,7 @@ The XNIK kernel is responsible for synchronizing the Vitis kernels and caching t
 └── img
 ~~~
 
-* network: this folder contains the 100Gb/s networking IPs. The roce_v2 subfolder contains the lossless communication support, that is HiveNet IP built on roce_v2 protocal and CMAC IP.
+* network: this folder contains the 100Gb/s networking IPs. The roce_v2 subfolder contains the lossless communication support, that is HiveNet IP built on roce_v2 protocol and CMAC IP.
 * kernel: this folder contains the Xilinx Network Interface Kernels (XNIK) for synchronization control and data caching support. 
 ---
 **NOTE**

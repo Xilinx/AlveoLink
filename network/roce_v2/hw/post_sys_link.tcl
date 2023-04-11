@@ -212,22 +212,3 @@ if {[dict exists ${config_info} kernels]} {
 }
 
 puts "${__TCLID} QSFP GT pins TCL hook DONE!"
-
-#set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {SLR0_M04_AXI HiveNet_kernel_0_tx HiveNet_kernel_0_HBM_write axis_register_HiveNet_0_1_M_AXIS HiveNet_kernel_0_outData HiveNet_kernel_1_HBM_write HiveNet_kernel_1_tx HiveNet_kernel_0_HBM_read generator_collector_1_out_to_Hivenet_o generator_collector_0_out_to_Hivenet_o HiveNet_kernel_1_HBM_read HiveNet_kernel_1_outData axis_register_HiveNet_1_0_M_AXIS SLR0_M01_AXI}]
-#startgroup
-#apply_bd_automation -rule xilinx.com:bd_rule:debug -dict [list \
-#                                                          [get_bd_intf_nets axis_register_HiveNet_0_1_M_AXIS] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets axis_register_HiveNet_1_0_M_AXIS] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets generator_collector_0_out_to_Hivenet_o] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets generator_collector_1_out_to_Hivenet_o] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_0_HBM_read] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "None" AXI_W_DATA "None" AXI_W_RESPONSE "None" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_0_HBM_write] {AXI_R_ADDRESS "None" AXI_R_DATA "None" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_0_outData] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_0_tx] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_1_HBM_read] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "None" AXI_W_DATA "None" AXI_W_RESPONSE "None" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_1_HBM_write] {AXI_R_ADDRESS "None" AXI_R_DATA "None" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_1_outData] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets HiveNet_kernel_1_tx] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/clk_wiz/clk_out2" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets SLR0_M01_AXI] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                          [get_bd_intf_nets SLR0_M04_AXI] {AXI_R_ADDRESS "Data and Trigger" AXI_R_DATA "Data and Trigger" AXI_W_ADDRESS "Data and Trigger" AXI_W_DATA "Data and Trigger" AXI_W_RESPONSE "Data and Trigger" CLK_SRC "/clk_wiz/clk_out1" SYSTEM_ILA "Auto" APC_EN "0" } \
-#                                                         ]

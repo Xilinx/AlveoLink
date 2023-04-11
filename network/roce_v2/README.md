@@ -22,7 +22,7 @@ HiveNet IP provides low latency, high bandwidth and lossless transmission over t
 
 * Lossless connection between 2 or more kernels with or without Ethernet switch.
 * Up to 8192 lossless flows (connections) for each card / IP. Round-trip data transfer latency between two user kernels is 1us.
-* Line rate bandwidth for packet sizes >= 128B
+* 100 GB/s Line rate bandwidth for 64B packets
 * ~5% resource usage of Alveo U55C card
 
 
@@ -60,5 +60,5 @@ The diagram below shows the interfaces of HiveNet.
 
 ## Software APIs
 
-The software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host cdoe. 
+The software APIs declared in [HiveNet.hpp](sw/include/HiveNet.hpp) allow Vitis users to control HiveNet in the host code. 
 

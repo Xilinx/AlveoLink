@@ -113,7 +113,90 @@ if {${projPart} eq "xcu50-fsvh2104-2L-e"} {
   return -1
 }
 
+
+
+
+set list_check_ips "\ 
+xilinx.com:ip:axis_clock_converter:1.1\
+xilinx.com:ip:axi_gpio:2.0\
+xilinx.com:ip:axis_data_fifo:2.0\
+grovf.com:libhivenet:cmac_flowcontrol_rx_dev:1.0\
+grovf.com:libhivenet:cmac_flowcontrol_tx_dev:1.0\
+xilinx.com:ip:cmac_usplus:3.1\
+xilinx.com:ip:fifo_generator:13.2\
+xilinx.com:ip:proc_sys_reset:5.0\
+xilinx.com:ip:smartconnect:1.0\
+xilinx.com:ip:util_vector_logic:2.0\
+xilinx.com:ip:xlconstant:1.1\
+xilinx.com:ip:xpm_cdc_gen:1.0\
+"
+
+set list_ips_missing ""
+common::send_gid_msg -ssname BD::TCL -id 2011 -severity "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
+
+foreach ip_vlnv $list_check_ips {
+  set ip_obj [get_ipdefs -all $ip_vlnv]
+  if { $ip_obj eq "" } {
+      lappend list_ips_missing $ip_vlnv
+  }
+}
+
+if { $list_ips_missing ne "" } {
+  catch {common::send_gid_msg -ssname BD::TCL -id 2012 -severity "ERROR" "The following IPs are not found in the IP Catalog:\n  $list_ips_missing\n\nResolution: Please add the repository containing the IP(s) to the project." }
+  set bCheckIPsPassed 0
+}
+
+
+set list_check_mods "\ 
+cmac_sync\
+"
+
+set list_mods_missing ""
+common::send_gid_msg -ssname BD::TCL -id 2020 -severity "INFO" "Checking if the following modules exist in the project's sources: $list_check_mods ."
+
+foreach mod_vlnv $list_check_mods {
+  if { [can_resolve_reference $mod_vlnv] == 0 } {
+      lappend list_mods_missing $mod_vlnv
+  }
+}
+
+if { $list_mods_missing ne "" } {
+  catch {common::send_gid_msg -ssname BD::TCL -id 2021 -severity "ERROR" "The following module(s) are not found in the project: $list_mods_missing" }
+  common::send_gid_msg -ssname BD::TCL -id 2022 -severity "INFO" "Please add source files for the missing module(s) above."
+  set bCheckIPsPassed 0
+}
+
+# Create instance: xlconstant_2, and set properties
+set xlconstant_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_2 ]
+set_property -dict [ list \
+  CONFIG.CONST_VAL {0x0000FFFF} \
+  CONFIG.CONST_WIDTH {32} \
+] $xlconstant_2
+
+# Create instance: xlconstant_3, and set properties
+set xlconstant_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_3 ]
+set_property -dict [ list \
+  CONFIG.CONST_VAL {0} \
+  CONFIG.CONST_WIDTH {32} \
+] $xlconstant_3
+
+# Create instance: axis_data_fifo_0, and set properties
+set axis_data_fifo_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_0 ]
+set_property -dict [ list \
+  CONFIG.FIFO_DEPTH {8192} \
+  CONFIG.FIFO_MEMORY_TYPE {ultra} \
+  CONFIG.HAS_TKEEP {1} \
+  CONFIG.HAS_TLAST {1} \
+  CONFIG.HAS_WR_DATA_COUNT {1} \
+  CONFIG.TDATA_NUM_BYTES {64} \
+] $axis_data_fifo_0
+
+# Create instance: cmac_flowcontrol_rx_0, and set properties
+set cmac_flowcontrol_rx_0 [ create_bd_cell -type ip -vlnv grovf.com:libhivenet:cmac_flowcontrol_rx_dev:1.0 cmac_flowcontrol_rx_0 ]
+
+
 set cmac_name cmac_uplus_${interface_number}
+set cmac_rx_clk cmac_bd_cmac_uplus_${interface_number}_0_gt_rxusrclk2
 set gt_clk_freq [expr int(${gt_ref_clk} * 1000000)]
 puts "Generating IPI for ${cmac_name} with GT clock running at ${gt_clk_freq} Hz"
 
@@ -134,11 +217,11 @@ set_property -dict [ list \
   CONFIG.LANE9_GT_LOC                {NA} \
   CONFIG.LANE10_GT_LOC               {NA} \
   CONFIG.OPERATING_MODE              {Duplex} \
-  CONFIG.TX_FLOW_CONTROL             {0} \
-  CONFIG.RX_FLOW_CONTROL             {0} \
+  CONFIG.TX_FLOW_CONTROL             {1} \
+  CONFIG.RX_FLOW_CONTROL             {1} \
   CONFIG.ENABLE_AXI_INTERFACE        {1} \
   CONFIG.INCLUDE_STATISTICS_COUNTERS {1} \
-  CONFIG.RX_CHECK_ACK                {1} \
+  CONFIG.RX_CHECK_ACK                {0} \
   CONFIG.ENABLE_TIME_STAMPING        {0} \
   CONFIG.TX_PTP_1STEP_ENABLE         {2} \
   CONFIG.PTP_TRANSPCLK_MODE          {0} \
@@ -150,6 +233,7 @@ set_property -dict [ list \
 ###### Create interface ports ######
 
 set clk_gt_freerun [ create_bd_port -dir I -type clk -freq_hz [expr ${freerunningclock} * 1000000] clk_gt_freerun ]
+    
 
 set M_AXIS [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS ]
 set_property -dict [ list \
@@ -158,7 +242,7 @@ set_property -dict [ list \
 
 set S_AXILITE [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXILITE ]
 set_property -dict [ list \
-  CONFIG.ADDR_WIDTH {13} \
+  CONFIG.ADDR_WIDTH {14} \
   CONFIG.ARUSER_WIDTH {0} \
   CONFIG.AWUSER_WIDTH {0} \
   CONFIG.BUSER_WIDTH {0} \
@@ -234,6 +318,17 @@ set_property -dict [ list \
   CONFIG.TUSER_WIDTH {0} \
 ] $acc_kernel_tx_cdc
 
+  # Create instance: axi_gpio_0, and set properties
+  set axi_gpio_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_0 ]
+  set_property -dict [ list \
+   CONFIG.C_ALL_OUTPUTS {1} \
+   CONFIG.C_DOUT_DEFAULT {0x00000100} \
+   CONFIG.C_GPIO_WIDTH {9} \
+ ] $axi_gpio_0
+
+  # Create instance: cmac_flowcontrol_tx_0, and set properties
+  set cmac_flowcontrol_tx_0 [ create_bd_cell -type ip -vlnv grovf.com:libhivenet:cmac_flowcontrol_tx_dev:1.0 cmac_flowcontrol_tx_0 ]
+
 # Create instance: fifo_cmac_rx_cdc, and set properties
 set fifo_cmac_rx_cdc [ create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator fifo_cmac_rx_cdc ]
 set_property -dict [ list \
@@ -299,6 +394,8 @@ set_property -dict [ list \
 
 # Create instance: cmac_sync, and set properties
 set cmac_sync [ create_bd_cell -type module -reference cmac_sync cmac_sync ]
+  set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
+
 
 # Create instance: util_vector_logic_0, and set properties
 set util_vector_logic_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic util_vector_logic_0 ]
@@ -330,56 +427,107 @@ set_property -dict [ list \
   CONFIG.CONST_VAL {0} \
 ] $xlconstant_0
 
-# Create instance: smartconnect, and set properties
-set smartconnect [create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect smartconnect]
-set_property -dict [list \
-  CONFIG.NUM_SI {2} \
-  CONFIG.NUM_MI {1} \
-] [get_bd_cells smartconnect]
+   # Create instance: xlconstant_5, and set properties
+  set xlconstant_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_5 ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {0} \
+ ] $xlconstant_5
 
-# Create instance: frame_padding, and set properties
-set frame_padding [ create_bd_cell -type module -reference frame_padding frame_padding ]
+  # Create instance: smartconnect, and set properties
+  set smartconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect smartconnect ]
+  set_property -dict [ list \
+   CONFIG.NUM_CLKS {2} \
+   CONFIG.NUM_MI {2} \
+   CONFIG.NUM_SI {2} \
+ ] $smartconnect
 
-# Create interface connections
-connect_bd_intf_net -intf_net S_AXILITE_1 -boundary_type lower [get_bd_intf_ports S_AXILITE] [get_bd_intf_pins smartconnect/S00_AXI]
-connect_bd_intf_net -intf_net smartconnect_M00_AXI -boundary_type lower [get_bd_intf_pins smartconnect/M00_AXI] [get_bd_intf_pins ${cmac_name}/s_axi]
-connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_ports S_AXIS] [get_bd_intf_pins frame_padding/S_AXIS]
-connect_bd_intf_net -intf_net frame_padding_M_AXIS [get_bd_intf_pins frame_padding/M_AXIS] [get_bd_intf_pins acc_kernel_tx_cdc/S_AXIS]
-connect_bd_intf_net -intf_net acc_kernel_tx_cdc_M_AXIS [get_bd_intf_pins acc_kernel_tx_cdc/M_AXIS] [get_bd_intf_pins fifo_cmac_tx/S_AXIS]
-connect_bd_intf_net -intf_net ${cmac_name}_axis_rx [get_bd_intf_pins ${cmac_name}/axis_rx] [get_bd_intf_pins fifo_cmac_rx_cdc/S_AXIS]
-connect_bd_intf_net -intf_net ${cmac_name}_gt_serial_port [get_bd_intf_ports gt_serial_port] [get_bd_intf_pins ${cmac_name}/gt_serial_port]
-connect_bd_intf_net -intf_net fifo_cmac_rx_cdc_M_AXIS [get_bd_intf_ports M_AXIS] [get_bd_intf_pins fifo_cmac_rx_cdc/M_AXIS]
-connect_bd_intf_net -intf_net fifo_cmac_tx_M_AXIS [get_bd_intf_pins ${cmac_name}/axis_tx] [get_bd_intf_pins fifo_cmac_tx/M_AXIS]
-connect_bd_intf_net -intf_net gt_ref_clk_1 [get_bd_intf_ports gt_ref_clk] [get_bd_intf_pins ${cmac_name}/gt_ref_clk]
-connect_bd_intf_net -intf_net cmac_sync_s_axi [get_bd_intf_pins cmac_sync/s_axi] [get_bd_intf_pins smartconnect/S01_AXI]
+  # Create instance: xpm_cdc_gen_0, and set properties
+  set xpm_cdc_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xpm_cdc_gen:1.0 xpm_cdc_gen_0 ]
+  set_property -dict [ list \
+   CONFIG.DEST_SYNC_FF {2} \
+   CONFIG.WIDTH {32} \
+ ] $xpm_cdc_gen_0
 
-###### Create port connections ######
+   # Create instance: xpm_cdc_gen_1, and set properties
+  set xpm_cdc_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xpm_cdc_gen:1.0 xpm_cdc_gen_1 ]
+  set_property -dict [ list \
+   CONFIG.DEST_SYNC_FF {5} \
+   CONFIG.WIDTH {9} \
+ ] $xpm_cdc_gen_1
 
-connect_bd_net -net ap_rst_n [get_bd_ports ap_rst_n] [get_bd_pins acc_kernel_tx_cdc/s_axis_aresetn] [get_bd_pins util_vector_logic_1/Op1] [get_bd_pins smartconnect/aresetn] [get_bd_pins frame_padding/S_AXI_ARESETN]
-connect_bd_net -net s_aclk_0_1 [get_bd_ports ap_clk] [get_bd_pins acc_kernel_tx_cdc/s_axis_aclk] [get_bd_pins ${cmac_name}/s_axi_aclk] [get_bd_pins fifo_cmac_rx_cdc/m_aclk] [get_bd_pins smartconnect/aclk] [get_bd_pins cmac_sync/s_axi_aclk] [get_bd_pins frame_padding/S_AXI_ACLK]
-connect_bd_net -net usr_rx_reset [get_bd_pins ${cmac_name}/usr_rx_reset] [get_bd_pins util_vector_logic_0/Op1] [get_bd_pins cmac_sync/usr_rx_reset]
-connect_bd_net -net usr_tx_reset [get_bd_pins ${cmac_name}/usr_tx_reset] [get_bd_pins util_vector_logic_2/Op1] [get_bd_pins cmac_sync/usr_tx_reset]
-connect_bd_net -net ${cmac_name}_usr_rx_clk [get_bd_pins ${cmac_name}/gt_rxusrclk2] [get_bd_pins fifo_cmac_rx_cdc/s_aclk] [get_bd_pins ${cmac_name}/rx_clk]
-connect_bd_net -net ${cmac_name}_usr_tx_clk [get_bd_pins acc_kernel_tx_cdc/m_axis_aclk] [get_bd_pins ${cmac_name}/gt_txusrclk2] [get_bd_pins fifo_cmac_tx/s_aclk]
-connect_bd_net -net clk_gt_freerun_net [get_bd_ports clk_gt_freerun] [get_bd_pins ${cmac_name}/init_clk]
-connect_bd_net -net util_vector_logic_0_Res [get_bd_pins fifo_cmac_rx_cdc/s_aresetn] [get_bd_pins util_vector_logic_0/Res]
-connect_bd_net -net util_vector_logic_1_Res [get_bd_pins util_vector_logic_1/Res] [get_bd_pins ${cmac_name}/sys_reset] [get_bd_pins ${cmac_name}/s_axi_sreset] [get_bd_pins cmac_sync/s_axi_sreset]
-connect_bd_net -net util_vector_logic_2_Res [get_bd_pins acc_kernel_tx_cdc/m_axis_aresetn] [get_bd_pins fifo_cmac_tx/s_aresetn] [get_bd_pins util_vector_logic_2/Res]
-connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_pins ${cmac_name}/core_rx_reset] [get_bd_pins ${cmac_name}/pm_tick] [get_bd_pins ${cmac_name}/gtwiz_reset_tx_datapath] [get_bd_pins ${cmac_name}/gtwiz_reset_rx_datapath] [get_bd_pins ${cmac_name}/core_tx_reset] [get_bd_pins ${cmac_name}/core_drp_reset] [get_bd_pins ${cmac_name}/drp_clk]
-connect_bd_net -net cmac_stat_rx_aligned [get_bd_pins ${cmac_name}/stat_rx_aligned] [get_bd_pins cmac_sync/stat_rx_aligned]
+   # Create instance: xpm_cdc_gen_2, and set properties
+  set xpm_cdc_gen_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xpm_cdc_gen:1.0 xpm_cdc_gen_2 ]
+  set_property -dict [ list \
+   CONFIG.DEST_SYNC_FF {5} \
+   CONFIG.WIDTH {1} \
+ ] $xpm_cdc_gen_2
 
-###### Create address segments ######
+  # Create instance: xpm_cdc_gen_3, and set properties
+  set xpm_cdc_gen_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xpm_cdc_gen:1.0 xpm_cdc_gen_3 ]
+  set_property -dict [ list \
+   CONFIG.DEST_SYNC_FF {5} \
+   CONFIG.INIT_SYNC_FF {false} \
+   CONFIG.WIDTH {9} \
+ ] $xpm_cdc_gen_3
+ 
+   # Create interface connections
+  connect_bd_intf_net -intf_net S_AXILITE_1 [get_bd_intf_ports S_AXILITE] [get_bd_intf_pins smartconnect/S00_AXI]
+  connect_bd_intf_net -intf_net S_AXIS_1 [get_bd_intf_ports S_AXIS] [get_bd_intf_pins acc_kernel_tx_cdc/S_AXIS]
+  connect_bd_intf_net -intf_net acc_kernel_tx_cdc_M_AXIS [get_bd_intf_pins acc_kernel_tx_cdc/M_AXIS] [get_bd_intf_pins cmac_flowcontrol_tx_0/tx_i]
+  connect_bd_intf_net -intf_net axis_data_fifo_0_M_AXIS [get_bd_intf_ports M_AXIS] [get_bd_intf_pins axis_data_fifo_0/M_AXIS]
+  connect_bd_intf_net -intf_net cmac_flowcontrol_tx_0_tx_o [get_bd_intf_pins cmac_flowcontrol_tx_0/tx_o] [get_bd_intf_pins fifo_cmac_tx/S_AXIS]
+  connect_bd_intf_net -intf_net cmac_sync_s_axi [get_bd_intf_pins cmac_sync/s_axi] [get_bd_intf_pins smartconnect/S01_AXI]
+  connect_bd_intf_net -intf_net ${cmac_name}_axis_rx [get_bd_intf_pins ${cmac_name}/axis_rx] [get_bd_intf_pins fifo_cmac_rx_cdc/S_AXIS]
+  connect_bd_intf_net -intf_net ${cmac_name}_gt_serial_port [get_bd_intf_ports gt_serial_port] [get_bd_intf_pins ${cmac_name}/gt_serial_port]
+  connect_bd_intf_net -intf_net fifo_cmac_rx_cdc_M_AXIS [get_bd_intf_pins axis_data_fifo_0/S_AXIS] [get_bd_intf_pins fifo_cmac_rx_cdc/M_AXIS]
+  connect_bd_intf_net -intf_net fifo_cmac_tx_M_AXIS [get_bd_intf_pins ${cmac_name}/axis_tx] [get_bd_intf_pins fifo_cmac_tx/M_AXIS]
+  connect_bd_intf_net -intf_net gt_ref_clk_1 [get_bd_intf_ports gt_ref_clk] [get_bd_intf_pins ${cmac_name}/gt_ref_clk]
+  connect_bd_intf_net -intf_net smartconnect_M00_AXI [get_bd_intf_pins ${cmac_name}/s_axi] [get_bd_intf_pins smartconnect/M00_AXI]
+  connect_bd_intf_net -intf_net smartconnect_M01_AXI [get_bd_intf_pins axi_gpio_0/S_AXI] [get_bd_intf_pins smartconnect/M01_AXI]
 
-assign_bd_address -target_address_space [get_bd_addr_spaces S_AXILITE] [get_bd_addr_segs ${cmac_name}/s_axi/Reg0] -force
-assign_bd_address -target_address_space [get_bd_addr_spaces cmac_sync/s_axi] [get_bd_addr_segs ${cmac_name}/s_axi/Reg0] -force
+  # Create port connections
+  connect_bd_net -net ap_rst_n [get_bd_ports ap_rst_n] [get_bd_pins acc_kernel_tx_cdc/s_axis_aresetn] [get_bd_pins axis_data_fifo_0/s_axis_aresetn] [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins smartconnect/aresetn] [get_bd_pins util_vector_logic_1/Op1]
+  connect_bd_net -net axi_gpio_0_gpio_io_o [get_bd_pins axi_gpio_0/gpio_io_o] [get_bd_pins xpm_cdc_gen_3/src_in]
+  connect_bd_net -net axis_data_fifo_0_axis_wr_data_count [get_bd_pins axis_data_fifo_0/axis_wr_data_count] [get_bd_pins xpm_cdc_gen_0/src_in]
+  connect_bd_net -net clk_gt_freerun_net [get_bd_ports clk_gt_freerun] [get_bd_pins ${cmac_name}/init_clk]
+  connect_bd_net -net cmac_flowcontrol_rx_0_cmac_tx_pause_req_o [get_bd_pins cmac_flowcontrol_rx_0/cmac_tx_pause_req_o] [get_bd_pins ${cmac_name}/ctl_tx_pause_req]
+  connect_bd_net -net cmac_stat_rx_aligned [get_bd_pins cmac_sync/stat_rx_aligned] [get_bd_pins ${cmac_name}/stat_rx_aligned]
+  connect_bd_net -net ${cmac_name}_stat_rx_pause [get_bd_pins ${cmac_name}/stat_rx_pause] [get_bd_pins xpm_cdc_gen_2/src_in]
+  connect_bd_net -net ${cmac_name}_stat_rx_pause_req [get_bd_pins ${cmac_name}/stat_rx_pause_req] [get_bd_pins xpm_cdc_gen_1/src_in]
+  connect_bd_net -net ${cmac_name}_usr_rx_clk [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins cmac_flowcontrol_rx_0/ap_clk] [get_bd_pins ${cmac_name}/gt_rxusrclk2] [get_bd_pins ${cmac_name}/rx_clk] [get_bd_pins fifo_cmac_rx_cdc/s_aclk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins xpm_cdc_gen_0/dest_clk] [get_bd_pins smartconnect/aclk1] [get_bd_pins xpm_cdc_gen_1/src_clk] [get_bd_pins xpm_cdc_gen_2/src_clk] [get_bd_pins xpm_cdc_gen_3/dest_clk] [get_bd_pins xpm_cdc_gen_3/src_clk]
+  connect_bd_net -net ${cmac_name}_usr_tx_clk [get_bd_pins acc_kernel_tx_cdc/m_axis_aclk] [get_bd_pins cmac_flowcontrol_tx_0/ap_clk] [get_bd_pins ${cmac_name}/gt_txusrclk2] [get_bd_pins fifo_cmac_tx/s_aclk] [get_bd_pins xpm_cdc_gen_1/dest_clk] [get_bd_pins xpm_cdc_gen_2/dest_clk]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins cmac_flowcontrol_rx_0/ap_rst] [get_bd_pins proc_sys_reset_0/peripheral_reset]
+  connect_bd_net -net s_aclk_0_1 [get_bd_ports ap_clk] [get_bd_pins acc_kernel_tx_cdc/s_axis_aclk] [get_bd_pins axis_data_fifo_0/s_axis_aclk] [get_bd_pins cmac_sync/s_axi_aclk] [get_bd_pins ${cmac_name}/s_axi_aclk] [get_bd_pins fifo_cmac_rx_cdc/m_aclk] [get_bd_pins smartconnect/aclk] [get_bd_pins xpm_cdc_gen_0/src_clk]
+  connect_bd_net -net usr_rx_reset [get_bd_pins cmac_sync/usr_rx_reset] [get_bd_pins ${cmac_name}/usr_rx_reset] [get_bd_pins util_vector_logic_0/Op1]
+  connect_bd_net -net usr_tx_reset [get_bd_pins cmac_sync/usr_tx_reset] [get_bd_pins ${cmac_name}/usr_tx_reset] [get_bd_pins util_vector_logic_2/Op1]
+  connect_bd_net -net util_vector_logic_0_Res [get_bd_pins fifo_cmac_rx_cdc/s_aresetn] [get_bd_pins util_vector_logic_0/Res]
+  connect_bd_net -net util_vector_logic_1_Res [get_bd_pins cmac_sync/s_axi_sreset] [get_bd_pins ${cmac_name}/s_axi_sreset] [get_bd_pins ${cmac_name}/sys_reset] [get_bd_pins util_vector_logic_1/Res]
+  connect_bd_net -net util_vector_logic_2_Res [get_bd_pins acc_kernel_tx_cdc/m_axis_aresetn] [get_bd_pins cmac_flowcontrol_tx_0/ap_rst_n] [get_bd_pins fifo_cmac_tx/s_aresetn] [get_bd_pins util_vector_logic_2/Res]
+  connect_bd_net -net xlconstant_0_dout [get_bd_pins ${cmac_name}/core_drp_reset] [get_bd_pins ${cmac_name}/core_rx_reset] [get_bd_pins ${cmac_name}/core_tx_reset] [get_bd_pins ${cmac_name}/drp_clk] [get_bd_pins ${cmac_name}/gtwiz_reset_rx_datapath] [get_bd_pins ${cmac_name}/gtwiz_reset_tx_datapath] [get_bd_pins ${cmac_name}/pm_tick] [get_bd_pins xlconstant_0/dout]
+  connect_bd_net -net xlconstant_2_dout [get_bd_pins cmac_flowcontrol_rx_0/fifo_rx_max] [get_bd_pins xlconstant_2/dout]
+  connect_bd_net -net xlconstant_3_dout [get_bd_pins cmac_flowcontrol_rx_0/fifo_rx_min] [get_bd_pins xlconstant_3/dout]
+  connect_bd_net -net xlconstant_5_dout [get_bd_pins cmac_flowcontrol_rx_0/drop_err] [get_bd_pins cmac_flowcontrol_rx_0/drop_nrdy] [get_bd_pins xlconstant_5/dout]
+  connect_bd_net -net xpm_cdc_gen_0_dest_out [get_bd_pins cmac_flowcontrol_rx_0/fifo_rx_rd_data_count] [get_bd_pins xpm_cdc_gen_0/dest_out]
+  connect_bd_net -net xpm_cdc_gen_1_dest_out [get_bd_pins cmac_flowcontrol_tx_0/cmac_rx_pause_req] [get_bd_pins xpm_cdc_gen_1/dest_out]
+  connect_bd_net -net xpm_cdc_gen_2_dest_out [get_bd_pins cmac_flowcontrol_tx_0/stat_rx_pause] [get_bd_pins xpm_cdc_gen_2/dest_out]
+  connect_bd_net -net xpm_cdc_gen_3_dest_out [get_bd_pins cmac_flowcontrol_rx_0/cmac_pfc_val] [get_bd_pins xpm_cdc_gen_3/dest_out]
+
+  assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces cmac_sync/s_axi] [get_bd_addr_segs ${cmac_name}/s_axi/Reg] -force
+  assign_bd_address -offset 0x00002000 -range 0x00001000 -target_address_space [get_bd_addr_spaces S_AXILITE] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
+  assign_bd_address -offset 0x00000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces S_AXILITE] [get_bd_addr_segs ${cmac_name}/s_axi/Reg] -force
+
+  # Exclude Address Segments
+  exclude_bd_addr_seg -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces cmac_sync/s_axi] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg]
 
 ###### Validate and save the IPI ######
 
-validate_bd_design
-save_bd_design
+startgroup
+set_property -dict [list CONFIG.CONST_VAL {6000}] [get_bd_cells xlconstant_2]
+endgroup
+startgroup
+set_property -dict [list CONFIG.CONST_VAL {3000}] [get_bd_cells xlconstant_3]
+endgroup
 
-
-delete_bd_objs [get_bd_intf_nets S_AXIS_1] [get_bd_intf_nets frame_padding_M_AXIS] [get_bd_cells frame_padding]
-connect_bd_intf_net [get_bd_intf_ports S_AXIS] [get_bd_intf_pins acc_kernel_tx_cdc/S_AXIS]
 validate_bd_design
 save_bd_design

@@ -104,6 +104,7 @@ VPP_LDFLAGS += --optimize 2 -R 2
 #VPP_LDFLAGS += --debug.chipscope dv_adapter0:tx_axis --debug.chipscope dv_adapter0:rx_axis
 endif
 CXXFLAGS += -g -O0 
+EXTRA_VPP_FLAGS += --vivado.prop run.impl_1.strategy=Performance_Auto_3
 VPP_FLAGS += $(EXTRA_VPP_FLAGS)
 
 ########################## Setting up Host Variables ##########################
@@ -139,7 +140,7 @@ endif
 
 ######################### binary container global settings ##########################
 VPP_FLAGS_generator_collector +=  -D KERNEL_NAME=generator_collector
-VPP_FLAGS_generator_collector += --hls.clock 300000000:generator_collector
+VPP_FLAGS_generator_collector += --hls.clock 200000000:generator_collector
 #ifneq ($(HOST_ARCH), x86)
 #VPP_LDFLAGS_generator_collector += --clock.defaultFreqHz 200000000 
 #else
