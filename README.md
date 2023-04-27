@@ -55,14 +55,24 @@ The XNIK kernel is responsible for synchronizing the Vitis kernels and caching t
 └── img
 ~~~
 
-* network: this folder contains the 100Gb/s networking IPs. The roce_v2 subfolder contains the lossless communication support, that is HiveNet IP built on roce_v2 protocol and CMAC IP.
+* network: this folder contains the 100Gb/s networking IPs. The roce_v2 subfolder contains the lossless communication support, that is HiveNet IP built on roce_v2 protocol and CMAC IP. HiveNet IP has following features:
+
+    * It is lossless communication mechanism between FPGA cards over ethernet
+network which is tuned for the small package transfers (like: 64B, 128B etc).
+It means we achieve near 95 Gbps for these small packages.
+    * It has a hardware retransmission mechanism which guarantees packet delivery
+    *  Its transport layer is very close to RD (reliable datagram) of RDMA protocol.
+By saying close I mean that structurally it is the same but there are certain fields in
+the packet which we use differently to achieve our design goals.
+    * In general it is not a connection based as the TCP or traditional RDMA (RC). But it has some
+aspects of connection based communication. In the HiveNet the connection is based on the ID.
+Each Alveo card in the network has its own ID and every Alveo card can target up to 8K other cards.
+   * Protocol supports PFC and ECN based congestion control tuned to achieve our design goals.
+
+Overall the HiveNet solution is meant for the use cases where many FPGAs should continuously transfer small
+amounts of data across the network very efficiently."
+
 * kernel: this folder contains the Xilinx Network Interface Kernels (XNIK) for synchronization control and data caching support. 
----
-**NOTE**
-
-XNIK code and examples will be included soon. Stay tunned.
-
----
 * examples: this folder contains Vitis example designs built on top of network and kernel components.
 * img: this folder contains images.
 
